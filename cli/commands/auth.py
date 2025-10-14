@@ -2,17 +2,15 @@
 Commandes d'authentification pour la CLI Alexa Voice Control.
 
 Ce module gère toutes les opérations liées à l'authentification:
-- login: Connexion à l'API Alexa
-- logout: Déconnexion
+- create: Créer une nouvelle session d'authentification
+- delete: Supprimer les cookies d'authentification
 - status: Vérifier l'état de connexion
-- refresh: Rafraîchir le token d'authentification
 
 Auteur: M@nu
 Date: 7 octobre 2025
 """
 
 import argparse
-import subprocess
 from pathlib import Path
 
 from cli.base_command import BaseCommand
@@ -21,7 +19,6 @@ from cli.help_texts.auth_help import (
     AUTH_DESCRIPTION,
     CREATE_HELP,
     STATUS_HELP,
-    REFRESH_HELP,
 )
 from core.state_machine import ConnectionState
 
@@ -30,19 +27,15 @@ class AuthCommand(BaseCommand):
     """
     Commande d'authentification Alexa.
 
-    Gère login, logout, status et refresh token.
+    Gère la création et vérification de l'authentification.
 
     Actions:
-        - login: Se connecter à l'API Alexa
-        - logout: Se déconnecter
+        - create: Créer une nouvelle session d'authentification
         - status: Vérifier l'état de connexion
-        - refresh: Rafraîchir le token
 
     Example:
-        >>> python alexa.py auth login
+        >>> python alexa.py auth create
         >>> python alexa.py auth status
-        >>> python alexa.py auth refresh
-        >>> python alexa.py auth logout
     """
 
     def setup_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -103,15 +96,6 @@ class AuthCommand(BaseCommand):
             add_help=False,
         )
 
-        # Action: refresh
-        refresh_parser = subparsers.add_parser(
-            "refresh",
-            help="Rafraîchir le token d'authentification",
-            description=REFRESH_HELP,
-            formatter_class=ActionHelpFormatter,
-            add_help=False,
-        )
-
     def execute(self, args: argparse.Namespace) -> bool:
         """
         Exécute la commande d'authentification.
@@ -126,8 +110,6 @@ class AuthCommand(BaseCommand):
             return self._create(args)
         elif args.action == "status":
             return self._status(args)
-        elif args.action == "refresh":
-            return self._refresh(args)
         else:
             self.error(f"Action '{args.action}' non reconnue")
             return False
@@ -151,11 +133,15 @@ class AuthCommand(BaseCommand):
             else:
                 # Vérifier s'il y a des cookies valides sans --force
                 if self._has_valid_cookies():
-                    self.logger.info("ℹ️  Session d'authentification déjà active")
-                    self.logger.info("💡 Utilisez 'alexa auth create --force' pour forcer une nouvelle authentification")
-                    self.logger.info("💡 Ou utilisez 'alexa auth refresh' pour rafraîchir les tokens existants")
-                    self.logger.info("💡 Ou utilisez 'alexa auth status' pour vérifier l'état détaillé")
-                    return False
+                    # Afficher le status d'abord
+                    self._status(args)
+                    # Puis le message d'avertissement
+                    print("\033[1;33m⚠️  Session d'authentification déjà active\033[0m")
+                    print()
+                    print("\033[1;30m💡 Pour forcer une nouvelle authentification:\033[0m")
+                    print("   \033[1;36malexa auth create --force\033[0m")
+                    print()
+                    return True  # Retourner True car ce n'est pas une erreur
 
             # Vérifications préalables complètes
             if not self._check_prerequisites():
@@ -242,6 +228,56 @@ class AuthCommand(BaseCommand):
         cookie_json_status = "\033[32mPrésent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
         print(f"\033[1;30m  Fichier cookie-resultat.json\033[0m {cookie_json_status}")
 
+        # Afficher les infos du cookie même sans --verbose
+        if cookie_json_exists:
+            try:
+                import json
+                from datetime import datetime
+                
+                with open(cookie_json, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                
+                # Domaine Amazon
+                domain = None
+                if "donneesCompletes" in data and "amazonPage" in data["donneesCompletes"]:
+                    domain = data["donneesCompletes"]["amazonPage"]
+                elif "recapitulatif" in data and "amazonPage" in data["recapitulatif"]:
+                    domain = data["recapitulatif"]["amazonPage"]
+                
+                if domain:
+                    print(f"\033[1;30m  Domaine Amazon\033[0m               {domain}")
+                
+                # Date de création et âge
+                token_date = None
+                if "recapitulatif" in data and "tokenDate" in data["recapitulatif"]:
+                    token_date = data["recapitulatif"]["tokenDate"]
+                elif "donneesCompletes" in data and "tokenDate" in data["donneesCompletes"]:
+                    token_date = data["donneesCompletes"]["tokenDate"]
+                
+                if token_date:
+                    dt = datetime.fromtimestamp(token_date / 1000)  # Convertir ms en s
+                    date_str = dt.strftime("%d/%m/%Y %H:%M:%S")
+                    
+                    # Calculer l'âge
+                    age_seconds = (datetime.now() - dt).total_seconds()
+                    if age_seconds < 3600:
+                        age_str = f"{int(age_seconds / 60)} minutes"
+                    elif age_seconds < 86400:
+                        age_str = f"{int(age_seconds / 3600)} heures"
+                    else:
+                        age_str = f"{int(age_seconds / 86400)} jours"
+                    
+                    print(f"\033[1;30m  Date de création\033[0m             {date_str}")
+                    print(f"\033[1;30m  Âge du cookie\033[0m                {age_str}")
+                
+                # CSRF token (juste indiquer présence)
+                if "recapitulatif" in data and "csrf" in data["recapitulatif"]:
+                    csrf_status = "\033[32mPrésent\033[0m"
+                    print(f"\033[1;30m  CSRF token\033[0m                   {csrf_status}")
+                
+            except Exception as e:
+                self.logger.debug(f"Erreur lecture cookie-resultat.json: {e}")
+
         # Utiliser l'option globale --verbose si elle existe
         verbose = getattr(args, 'verbose', False)
         if verbose:
@@ -264,61 +300,6 @@ class AuthCommand(BaseCommand):
 
         print()
         return True
-
-    def _refresh(self, args: argparse.Namespace) -> bool:
-        """
-        Rafraîchit le token d'authentification.
-
-        Args:
-            args: Arguments
-
-        Returns:
-            True si succès
-        """
-        self.logger.info("🔄 Rafraîchissement du token...")
-
-        try:
-            # Vérifier si connecté
-            if not self._check_existing_auth():
-                self.logger.error("❌ Pas de token existant. Utilisez 'auth create' d'abord.")
-                return False
-
-            # Transition state machine
-            self.state_machine.refresh_token()
-
-            # Import du script de refresh Node.js
-            refresh_script = Path("alexa_auth/nodejs/auth-refresh.js")
-
-            if not refresh_script.exists():
-                self.logger.error(f"📁 Script de refresh non trouvé: {refresh_script}")
-                return False
-
-            # Exécuter le script Node.js
-            result = subprocess.run(
-                ["node", str(refresh_script)], capture_output=True, text=True, timeout=30
-            )
-
-            if result.returncode == 0:
-                self.state_machine.on_connected()
-                self.logger.success("✅ Token rafraîchi avec succès")
-                print("🔄 Token rafraîchi avec succès")
-                return True
-            else:
-                self.state_machine.error()
-                self.logger.error(f"❌ Échec du rafraîchissement: {result.stderr}")
-                print("❌ Échec du rafraîchissement")
-                return False
-
-        except subprocess.TimeoutExpired:
-            self.state_machine.error()
-            self.logger.error("⏰ Timeout lors du rafraîchissement")
-            return False
-
-        except Exception as e:
-            self.logger.exception("💥 Erreur lors du refresh")
-            self.state_machine.error()
-            self.logger.error(f"❌ Erreur: {e}")
-            return False
 
     def _has_valid_cookies(self) -> bool:
         """
@@ -352,6 +333,8 @@ class AuthCommand(BaseCommand):
         except Exception as e:
             self.logger.debug(f"❌ Erreur lors de la vérification du cache: {e}")
             return False
+
+    def _delete_existing_cookies(self) -> None:
         """
         Supprime les cookies existants avant de créer de nouveaux.
         """

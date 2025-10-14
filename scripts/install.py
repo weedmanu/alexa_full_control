@@ -406,8 +406,9 @@ class PackageInstaller:
     def upgrade_pip(self) -> None:
         """Met à jour pip dans le .venv."""
         Logger.step("Mise à jour de pip")
-        venv_pip = self.get_venv_pip()
-        self.run_command([str(venv_pip), "install", "--upgrade", "pip"])
+        venv_python = self.get_venv_python()
+        # Utiliser python -m pip pour éviter les problèmes de verrouillage
+        self.run_command([str(venv_python), "-m", "pip", "install", "--upgrade", "pip"])
         Logger.success("pip mis à jour")
 
     def install_python_packages(self) -> None:
@@ -453,8 +454,17 @@ class PackageInstaller:
         nodejs_dir = self.install_dir / "alexa_auth" / "nodejs" / ".nodeenv"
 
         if platform.system() == "Windows":
+            # Sur Windows, nodeenv peut échouer à créer nodejs.exe
+            # Essayer d'abord nodejs.exe, sinon utiliser node.exe directement
             node_path = nodejs_dir / "node.exe"
-            npm_path = nodejs_dir / "npm.cmd"
+            if not node_path.exists():
+                # Chercher dans le sous-dossier node_modules
+                node_modules_bin = nodejs_dir / "Scripts" / "node.exe"
+                if node_modules_bin.exists():
+                    node_path = node_modules_bin
+            npm_path = nodejs_dir / "Scripts" / "npm.cmd"
+            if not npm_path.exists():
+                npm_path = nodejs_dir / "npm.cmd"
         else:
             bin_dir = nodejs_dir / "bin"
             node_path = bin_dir / "node"
@@ -466,6 +476,7 @@ class PackageInstaller:
         """Installe les packages npm."""
         Logger.step("Installation des packages npm")
 
+        nodejs_dir = self.install_dir / "alexa_auth" / "nodejs"
         node_path, npm_path = self.get_nodejs_paths()
 
         # Vérification que Node.js fonctionne
@@ -475,12 +486,12 @@ class PackageInstaller:
         except RuntimeError:
             raise RuntimeError("Node.js n'est pas fonctionnel")
 
-        # Installation des packages
+        # Installation des packages dans le dossier nodejs
         packages = ["alexa-cookie2", "yargs"]
         for package in packages:
             Logger.progress(f"Installation de {package}")
             try:
-                self.run_command([str(npm_path), "install", package])
+                self.run_command([str(npm_path), "install", package], cwd=nodejs_dir)
                 Logger.success(f"{package} installé")
             except RuntimeError:
                 Logger.warning(f"Échec d'installation de {package}")
@@ -574,6 +585,7 @@ class InstallationManager:
                 Logger.info(f"[dry-run] Suppression simulée: {venv_path}")
             else:
                 shutil.rmtree(venv_path, ignore_errors=True)
+                Logger.success("✓ .venv supprimé")
 
         # Suppression de nodeenv
         nodeenv_path = self.install_dir / "alexa_auth" / "nodejs" / ".nodeenv"
@@ -582,6 +594,31 @@ class InstallationManager:
                 Logger.info(f"[dry-run] Suppression simulée: {nodeenv_path}")
             else:
                 shutil.rmtree(nodeenv_path, ignore_errors=True)
+                Logger.success("✓ nodeenv supprimé")
+
+        # Suppression des cookies
+        cookie_dir = self.install_dir / "alexa_auth" / "data"
+        cookie_files = ["cookie.txt", "cookie-resultat.json"]
+        for cookie_file in cookie_files:
+            cookie_path = cookie_dir / cookie_file
+            if cookie_path.exists():
+                if self.dry_run:
+                    Logger.info(f"[dry-run] Suppression simulée: {cookie_path}")
+                else:
+                    cookie_path.unlink()
+                    Logger.success(f"✓ {cookie_file} supprimé")
+
+        # Suppression des fichiers cache
+        cache_dir = self.install_dir / "data" / "cache"
+        if cache_dir.exists():
+            cache_files = list(cache_dir.glob("*.json")) + list(cache_dir.glob("*.json.gz"))
+            if cache_files:
+                for cache_file in cache_files:
+                    if self.dry_run:
+                        Logger.info(f"[dry-run] Suppression simulée: {cache_file}")
+                    else:
+                        cache_file.unlink()
+                Logger.success(f"✓ {len(cache_files)} fichier(s) cache supprimé(s)")
 
         Logger.success("Nettoyage terminé")
 
@@ -591,18 +628,26 @@ class InstallationManager:
         # VULTURE_KEEP
         Logger.header("DÉSINSTALLATION TERMINÉE", "🗑️")
         print()
-        Logger.success("Les fichiers .venv et nodeenv ont été supprimés (si présents)")
+        Logger.success("Éléments supprimés :")
+        Logger.success("  ✓ .venv (environnement virtuel Python)")
+        Logger.success("  ✓ nodeenv (environnement Node.js)")
+        Logger.success("  ✓ Fichiers cookies (cookie.txt, cookie-resultat.json)")
+        Logger.success("  ✓ Fichiers cache (data/cache/*.json)")
         print()
-        Logger.header("COMMANDES UTILES APRÈS DÉSINSTALLATION", "⌨️")
+        Logger.header("VÉRIFICATION POST-DÉSINSTALLATION", "🔍")
         print()
         if platform.system() == "Windows":
-            print("Vérifier suppression .venv: Test-Path .\\.venv  # PowerShell")
+            print("Vérifier suppression .venv:")
+            print("  Test-Path .\\.venv  # PowerShell (doit retourner False)")
+            print()
+            print("Vérifier suppression nodeenv:")
+            print("  Test-Path .\\alexa_auth\\nodejs\\.nodeenv  # PowerShell (doit retourner False)")
         else:
-            print("Vérifier suppression .venv: [ -d .venv ] && echo exist || echo missing  # Bash")
-        # Show the removal command on a separate indented line to avoid very long lines
-        print("Supprimer nodeenv manuellement:")
-        print("  Remove-Item -Recurse -Force .\\alexa_auth\\nodejs\\.nodeenv  # PowerShell")
-        print("ou: rm -rf alexa_auth/nodejs/.nodeenv  # Bash")
+            print("Vérifier suppression .venv:")
+            print("  [ -d .venv ] && echo 'existe' || echo 'supprimé'  # Bash")
+            print()
+            print("Vérifier suppression nodeenv:")
+            print("  [ -d alexa_auth/nodejs/.nodeenv ] && echo 'existe' || echo 'supprimé'  # Bash")
         print()
         Logger.info("Pour réinstaller: python scripts/install.py")
 
@@ -803,7 +848,7 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
             Logger.header("DÉSINSTALLATION", "🗑️")
             if manager.check_existing_installation():
                 manager.cleanup_existing_installation()
-                Logger.success("Désinstallation terminée")
+                manager.show_uninstall_summary()
             else:
                 Logger.info("Aucune installation trouvée")
             return

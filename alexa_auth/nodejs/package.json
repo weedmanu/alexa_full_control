@@ -14,6 +14,7 @@
     "cookie"
   ],
   "dependencies": {
+    "alexa-cookie2": "^5.0.3",
     "cookie": "^0.6.0",
     "express": "^4.21.2",
     "http-proxy-middleware": "^2.0.9",

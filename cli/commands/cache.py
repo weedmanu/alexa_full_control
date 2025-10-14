@@ -140,7 +140,7 @@ class CacheCommand(BaseCommand):
         try:
             if not self.context.auth:
                 print("\n❌ Authentification requise pour la synchronisation")
-                print("   Utilisez 'alexa auth login' d'abord")
+                print("   Utilisez 'alexa auth create' d'abord")
                 return
 
             if not self.context.sync_service:

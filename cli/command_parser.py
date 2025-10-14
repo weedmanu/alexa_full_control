@@ -12,7 +12,7 @@ Architec            # Ajouter de la couleur au titre de l'architecture (bleu com
     python alexa_voice_control.py <CATEGORY> <ACTION> [OPTIONS]
 
 Catégories supportées:
-    - auth: Authentification (login, logout, status, refresh)
+    - auth: Authentification (create, status)
     - device: Gestion appareils (list, info, control, volume)
     - music: Contrôle musique (play, radio, control, queue)
     - timer: Gestion timers (create, list, cancel, pause, resume)

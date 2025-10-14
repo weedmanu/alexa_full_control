@@ -190,7 +190,7 @@ class HelpComponents:
         subcategories = ["countdown", "alarm", "reminder", "playback", "volume", "equalizer", "light", "thermostat", "security", "camera", "library", "tunein"]
         actions = [
             "create", "list", "delete", "update", "play", "pause", "stop", "on", "off", 
-            "status", "refresh", "show", "set", "get", "enable", "disable", "info", 
+            "status", "show", "set", "get", "enable", "disable", "info", 
             "send", "clear", "read", "add", "remove", "complete", "execute", "start",
             "cancel", "resume", "skip", "next", "previous", "mute", "unmute", "shuffle",
             "repeat", "search", "tune", "station"
@@ -260,10 +260,10 @@ class HelpComponents:
         categories = ["auth", "device", "music", "announcement", "routine", "activity", 
                      "smarthome", "lists", "timers", "multiroom", "dnd", "cache"]
         subcategories = ["countdown", "alarm", "reminder", "library", "playback", "tunein"]
-        actions = ["login", "logout", "status", "list", "info", "volume", "create", "delete", 
-                  "update", "play", "pause", "stop", "next", "previous", "shuffle", "repeat",
+        actions = ["create", "delete", "status", "list", "info", "volume", "update", 
+                  "play", "pause", "stop", "next", "previous", "shuffle", "repeat",
                   "track", "playlist", "radio", "queue", "on", "off", "set", "get", "enable",
-                  "disable", "start", "cancel", "show", "clear", "refresh"]
+                  "disable", "start", "cancel", "show", "clear"]
         
         seen_category = False
         for part in words:
@@ -976,7 +976,7 @@ def create_main_help() -> str:
         ])
         .add_main_more_help()  # Nouvelle méthode pour l'aide principale
         .add_prerequisites([
-            "Authentification Alexa configurée (alexa auth login)",
+            "Authentification Alexa configurée (alexa auth create)",
             "Appareils Alexa connectés et accessibles",
             "Connexion internet stable",
             "Cookies d'authentification valides"

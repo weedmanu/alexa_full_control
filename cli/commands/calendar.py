@@ -189,7 +189,7 @@ class CalendarCommand(BaseCommand):
         """
         # Vérifier l'authentification
         if not self.context.auth:
-            self.error("Authentification requise. Exécutez 'alexa auth login' d'abord.")
+            self.error("Authentification requise. Exécutez 'alexa auth create' d'abord.")
             return False
 
         # Router vers la bonne action

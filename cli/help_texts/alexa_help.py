@@ -62,7 +62,7 @@ def get_main_help() -> str:
     
     # Catégories
     sections.append(format_categories([
-        {"name": "auth", "desc": "Gestion de l'authentification et connexion"},
+        {"name": "auth", "desc": "Authentification (create, status)"},
         {"name": "device", "desc": "Contrôle et gestion des appareils"},
         {"name": "timers", "desc": "Gestion du temps (minuteurs, alarmes, rappels)"},
         {"name": "music", "desc": "Contrôle musical et médias"},
@@ -112,7 +112,7 @@ def get_main_help() -> str:
     
     # Prérequis
     sections.append(format_prerequisites([
-        "Authentification Alexa configurée (alexa auth login)",
+        "Authentification Alexa configurée (alexa auth create)",
         "Appareils Alexa connectés et accessibles",
         "Connexion internet stable",
         "Cookies d'authentification valides"
