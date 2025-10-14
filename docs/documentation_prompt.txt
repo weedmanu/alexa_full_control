@@ -1,0 +1,74 @@
+Prompt guide (FR) — Page d'accueil `docs/documentation.html`
+
+Objectif :
+Rédiger et maintenir la page d'accueil de la documentation (`docs/documentation.html`) qui présente l'application "Alexa Advanced Control" de façon claire, visuelle et navigable. La page doit s'inspirer du style de `docs/CACHE_SYSTEM.html` mais avec un titre en dégradé pastel rouge → jaune → vert. Le menu doit contenir les onglets : Accueil, Installation, Cache System, Authentification, Commandes, API, Contact. Les sections doivent renvoyer vers des ancres internes et, lorsque pertinent, vers d'autres pages HTML/MD du dossier `docs`.
+
+Structure recommandée (ordre et contenu) :
+1) META & HEAD
+   - Charset UTF-8, viewport responsive, titre descriptif
+   - Styles CSS intégrés (variables CSS, palette pastel pour le header)
+   - Police système lisible
+
+2) HEADER
+   - H1 centré avec texte en dégradé pastel du rouge vers le jaune puis le vert.
+   - Sous-titre court décrivant l'app.
+   - Petit badge de version/date facultatif.
+
+3) NAV (menu principal)
+   - Liens : Accueil (#home), Installation (#installation), Cache System (docs/CACHE_SYSTEM.html), Authentification (#auth), Commandes (#commands), API (#api), Contact (#contact)
+   - Menu sticky en haut pour navigation rapide
+
+4) SECTION Accueil (#home)
+   - Présentation générale : raison d'être du projet, cas d'usage, public cible
+   - Points clés : contrôle d'appareils, gestion médias, automatisations, offline support
+   - CTA (ex: lien vers Installation, Quickstart)
+
+5) SECTION Installation (#installation)
+   - Prérequis (Python, Node.js optionnel), activation venv
+   - Commandes d'installation essentielles (pip install -r requirements.txt, scripts/install.py)
+   - Note sur nodeenv et intégration Node.js pour cookie retrieval
+
+6) SECTION Cache System
+   - Bref résumé et lien vers `CACHE_SYSTEM.html` pour détails
+
+7) SECTION Authentification (#auth)
+   - Expliquer le workflow: `alexa auth create`, `alexa auth status` (pas de refresh)
+   - Où sont stockés les cookies (`alexa_auth/data/cookie-resultat.json`, `alexa_auth/data/cookie.txt`)
+   - Lien vers `cli/commands/auth.py` pour référence technique
+
+8) SECTION Commandes (#commands)
+   - Exemples d'utilisation CLI courants (device list, music play, timers create)
+   - Mentionner `--verbose`, `--debug`, `--json`
+
+9) SECTION API (#api)
+   - Inventaire rapide d'endpoints internes (services/*) et comment les appeler ou mocker
+   - Lien vers docs/API ou README si existant
+
+10) SECTION Contact & Contribution (#contact)
+   - Lien GitHub, issues, PRs, guide de contribution
+
+11) FOOTER
+   - Copyright, lien repo GitHub, date de génération
+
+Style & UX :
+- Palette : utiliser un header titre avec un gradient pastel (ex: #ffb3b3 → #fff2b2 → #c8ffd0)
+- Corps clair, sections en cartes (shadow, border-radius)
+- Nav contrastée et accessible (contraste texte suffisant)
+- Ajout de petites icônes emoji pour rendre la page plus lisible
+
+Accessibilité & Réutilisabilité :
+- Sections identifiables par id pour lien direct
+- Code lisible, balises sémantiques (<header>, <nav>, <section>, <footer>)
+- Fichier `.html` autonome (pas de dépendances externes) pour faciliter hébergement statique
+
+Contenu initial minimal :
+- Texte descriptif court pour chaque section (1-3 paragraphes)
+- Exemples de commandes (bloc code)
+- Lien visible vers `CACHE_SYSTEM.html` et autres docs
+
+Instructions pour l'édition future :
+- Conserver la structure de sections ; ajouter un nouvel item de menu si on ajoute une nouvelle page
+- Utiliser le prompt-guide pour choisir couleurs et sections
+- Pour ajouter diagrammes, utiliser la même structure d'iframe PlantUML que `CACHE_SYSTEM.html`
+
+— Fin du prompt guide —
