@@ -166,7 +166,7 @@ class CacheService:
                     if old_file.exists():
                         old_file.unlink()
 
-                    log_msg = f"Cache saved (compressed): {key} (TTL: {ttl_seconds}s, {original_size}→{compressed_size} bytes, -{compression_ratio:.1f}%)"
+                    log_msg = f"💾 Cache saved (compressed): {key} (TTL: {ttl_seconds}s, {original_size}→{compressed_size} bytes, -{compression_ratio:.1f}%)"
                 else:
                     # Sauvegarder version non compressée (avec indentation pour lisibilité)
                     cache_file = self.cache_dir / f"{key}.json"
@@ -181,7 +181,7 @@ class CacheService:
                     if old_file.exists():
                         old_file.unlink()
 
-                    log_msg = f"Cache saved: {key} (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
+                    log_msg = f"💾 Cache saved: {key} (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
 
                 # Sauvegarder aussi une copie JSON lisible si demandé
                 if self.save_json_copy and self.use_compression:
@@ -190,7 +190,7 @@ class CacheService:
                         json_file.write_text(
                             json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
                         )
-                        logger.debug(f"Copie JSON sauvegardée: {key}.json")
+                        logger.debug(f"📄 Copie JSON sauvegardée: {key}.json")
                     except OSError as e:
                         logger.warning(f"Impossible de sauvegarder copie JSON {key}: {e}")
 
@@ -271,7 +271,7 @@ class CacheService:
 
             if deleted:
                 self._stats["invalidations"] += 1
-                logger.info(f"Cache invalidated: {key}")
+                logger.info(f"🗑️  Cache invalidated: {key}")
 
             return deleted
 
@@ -297,7 +297,7 @@ class CacheService:
                 if self.invalidate(key):
                     count += 1
 
-            logger.info(f"{count} cache(s) supprimé(s), {len(preserve_keys)} préservé(s)")
+            logger.info(f"🗑️  {count} cache(s) supprimé(s), {len(preserve_keys)} préservé(s)")
             return count
 
     def clean_expired(self) -> int:
@@ -320,7 +320,7 @@ class CacheService:
                     count += 1
 
             if count > 0:
-                logger.info(f"{count} cache(s) expiré(s) nettoyé(s)")
+                logger.info(f"🧹 {count} cache(s) expiré(s) nettoyé(s)")
 
             return count
 

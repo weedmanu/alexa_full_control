@@ -11,16 +11,12 @@ from typing import Callable, Dict, List
 
 # Utiliser logger standard si loguru n'est pas disponible
 try:
-    from utils.logger import get_logger
-    logger = get_logger("state_machine")
+    from loguru import logger
 except ImportError:
-    try:
-        from loguru import logger
-    except ImportError:
-        import logging
+    import logging
 
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(__name__)  # type: ignore
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)  # type: ignore
 
 
 class ConnectionState(Enum):
@@ -100,8 +96,7 @@ class AlexaStateMachine:
         self._state_history: List[ConnectionState] = [initial_state]
         self._callbacks: Dict[ConnectionState, List[Callable[[], None]]] = {}
 
-        logger.info("Initialisation de la State Machine")
-        logger.success(f"State Machine initialisée: {initial_state.name}")
+        logger.info(f"🔧 State Machine initialisée: {initial_state.name}")
 
     @property
     def state(self) -> ConnectionState:

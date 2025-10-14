@@ -19,11 +19,9 @@ Date: 7 octobre 2025
 import time
 from typing import Any, Dict, List, Optional
 
-from utils.logger import get_logger
+from loguru import logger
 
 from services.cache_service import CacheService
-
-logger = get_logger("sync_service")
 
 
 class SyncService:
@@ -71,8 +69,7 @@ class SyncService:
             "activities": False,
         }
 
-        logger.info("Initialisation du SyncService (lazy loading activé)")
-        logger.success("SyncService initialisé (lazy loading activé)")
+        logger.info("SyncService initialisé (lazy loading activé)")
 
     def sync_devices_only(self, force: bool = False) -> Dict[str, Any]:
         """
@@ -100,15 +97,14 @@ class SyncService:
             "failed": [],
         }
 
-        logger.info("Démarrage de la synchronisation des appareils (lazy loading)")
-        logger.success("Démarrage synchronisation des appareils (lazy loading)...")
+        logger.info("🔄 Démarrage synchronisation des appareils (lazy loading)...")
 
         # 1. Devices Alexa uniquement
         try:
             devices = self._sync_alexa_devices()
             stats["synced"]["devices"] = len(devices)
             self._lazy_loaded["devices"] = True
-            logger.success(f"{len(devices)} appareils Alexa synchronisés")
+            logger.success(f"✅ {len(devices)} appareils Alexa synchronisés")
         except Exception as e:
             logger.error(f"❌ Erreur sync devices: {e}")
             stats["failed"].append({"category": "devices", "error": str(e)})
@@ -124,7 +120,7 @@ class SyncService:
 
         total_synced = sum(stats["synced"].values())
         logger.success(
-            f"Synchronisation appareils terminée: {total_synced} éléments en {duration:.1f}s"
+            f"🎉 Synchronisation appareils terminée: {total_synced} éléments en {duration:.1f}s"
         )
 
         return stats

@@ -15,16 +15,12 @@ from typing import Any, Callable, TypeVar
 
 # Utiliser logger standard si loguru n'est pas disponible
 try:
-    from utils.logger import get_logger
-    logger = get_logger("circuit_breaker")
+    from loguru import logger
 except ImportError:
-    try:
-        from loguru import logger
-    except ImportError:
-        import logging
+    import logging
 
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(__name__)  # type: ignore
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)  # type: ignore
 
 T = TypeVar("T")
 
@@ -78,9 +74,8 @@ class CircuitBreaker:
 
         self._lock = threading.RLock()
 
-        logger.info("Initialisation du Circuit Breaker")
-        logger.success(
-            f"Circuit Breaker initialisé: threshold={failure_threshold}, timeout={timeout}s"
+        logger.info(
+            f"🔧 Circuit Breaker initialisé: " f"threshold={failure_threshold}, timeout={timeout}s"
         )
 
     @property

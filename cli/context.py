@@ -14,14 +14,12 @@ Date: 7 octobre 2025
 from pathlib import Path
 from typing import Optional
 
-from utils.logger import get_logger
+from loguru import logger
 
 from core.circuit_breaker import CircuitBreaker
 from core.config import Config
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
-
-logger = get_logger("context")
 
 
 class Context:
@@ -412,16 +410,15 @@ class Context:
             auth_instance: Instance de AlexaAuth
         """
         self.auth = auth_instance
-        logger.info("Initialisation de l'authentification dans le contexte")
-        logger.success("Authentification initialisée dans le contexte")
+        logger.info("Authentification initialisée dans le contexte")
 
         # Lancer synchronisation automatique
         if self.sync_service:
             try:
-                logger.info("Lancement de la synchronisation initiale (appareils uniquement)")
+                logger.info("🔄 Lancement synchronisation initiale (appareils uniquement)...")
                 stats = self.sync_service.sync_devices_only()
                 total = sum(stats.get("synced", {}).values())
-                logger.success(f"Synchronisation appareils terminée: {total} éléments en cache")
+                logger.success(f"✅ Synchronisation appareils terminée: {total} éléments en cache")
             except Exception as e:
                 logger.warning(f"⚠️  Erreur synchronisation initiale: {e}")
 
@@ -458,8 +455,7 @@ class Context:
         self._bluetooth_mgr = None
         self._device_settings_mgr = None
 
-        logger.info("Nettoyage du contexte")
-        logger.success("Contexte nettoyé")
+        logger.info("Contexte nettoyé")
 
     def __enter__(self):
         """Support context manager."""

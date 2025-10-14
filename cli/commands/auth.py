@@ -258,57 +258,42 @@ class AuthCommand(BaseCommand):
         Returns:
             True toujours (ne peut pas échouer)
         """
-        self.logger.log("AUTH", "État de connexion")
-        print()
+        self.logger.log("AUTH", "État de connexion:")
 
         # État de la state machine
         state_name = self.state_machine.state.name if self.state_machine else "UNKNOWN"
         can_execute = self.state_machine.can_execute_commands if self.state_machine else False
 
-        # Affichage avec couleurs et style amélioré
-        print("\033[1;4;30m🔐 ÉTAT DE CONNEXION\033[0m")  # Gris gras souligné avec emoji
-        print()
-
-        # Colorer l'état en vert si authentifié
-        state_display = "\033[32mAUTHENTICATED\033[0m" if state_name == "AUTHENTICATED" else state_name
-        cmd_status = "\033[32mOui\033[0m" if can_execute else "\033[31mNon\033[0m"
-        print(f"\033[1;30m  État\033[0m                         {state_display}")
-        print(f"\033[1;30m  Peut exécuter commandes\033[0m      {cmd_status}")
+        print(f"  État: {state_name}")
+        print(f"  Peut exécuter commandes: {'✅ Oui' if can_execute else '❌ Non'}")
 
         # Vérifier existence des fichiers
         auth_data_dir = Path("alexa_auth/data")
         cookie_file = auth_data_dir / "cookie.txt"
         cookie_json = auth_data_dir / "cookie-resultat.json"
 
-        cookie_txt_exists = cookie_file.exists()
-        cookie_txt_status = "\033[32mPrésent\033[0m" if cookie_txt_exists else "\033[31mManquant\033[0m"
-        print(f"\033[1;30m  Fichier cookie.txt\033[0m           {cookie_txt_status}")
-
-        cookie_json_exists = cookie_json.exists()
-        cookie_json_status = "\033[32mPrésent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
-        print(f"\033[1;30m  Fichier cookie-resultat.json\033[0m {cookie_json_status}")
+        print(f"  Fichier cookie.txt: {'✅' if cookie_file.exists() else '❌'}")
+        print(f"  Fichier cookie-resultat.json: {'✅' if cookie_json.exists() else '❌'}")
 
         # Utiliser l'option globale --verbose si elle existe
         verbose = getattr(args, 'verbose', False)
         if verbose:
-            print()
-            print(f"\033[1;30m  Répertoire auth\033[0m              {auth_data_dir}")
+            # Informations détaillées
+            print("\n📋 Détails:")
+            print(f"  Répertoire auth: {auth_data_dir.absolute()}")
 
             if cookie_file.exists():
                 size = cookie_file.stat().st_size
-                size_formatted = f"{size:,}".replace(",", " ")
-                print(f"\033[1;30m  Taille cookie.txt\033[0m            {size_formatted} octets")
+                print(f"  Taille cookie.txt: {size} octets")
 
             if cookie_json.exists():
                 size = cookie_json.stat().st_size
-                size_formatted = f"{size:,}".replace(",", " ")
-                print(f"\033[1;30m  Taille cookie-resultat.json\033[0m  {size_formatted} octets")
+                print(f"  Taille cookie-resultat.json: {size} octets")
 
         # Recommandation
         if not can_execute:
             print("\n💡 Utilisez 'alexa auth create' pour créer une session")
 
-        print()
         return True
 
     def _refresh(self, args: argparse.Namespace) -> bool:

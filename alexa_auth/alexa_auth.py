@@ -14,9 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import requests
-from utils.logger import get_logger
-
-logger = get_logger("alexa_auth")
+from loguru import logger
 
 
 class AlexaAuth:
@@ -95,18 +93,16 @@ class AlexaAuth:
         # Essai 1: cookie-resultat.json (format complet)
         cookie_json = self.data_dir / "cookie-resultat.json"
         if cookie_json.exists():
-            logger.info("Chargement des cookies depuis cookie-resultat.json")
             if self._load_from_json(cookie_json):
-                logger.success("Cookies chargés depuis cookie-resultat.json")
+                logger.info("Cookies chargés depuis cookie-resultat.json")
                 self.cookies_loaded = True
                 return True
 
         # Essai 2: cookie.txt (format Netscape)
         cookie_txt = self.data_dir / "cookie.txt"
         if cookie_txt.exists():
-            logger.info("Chargement des cookies depuis cookie.txt")
             if self._load_from_txt(cookie_txt):
-                logger.success("Cookies chargés depuis cookie.txt")
+                logger.info("Cookies chargés depuis cookie.txt")
                 self.cookies_loaded = True
                 return True
 
