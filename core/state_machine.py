@@ -96,7 +96,7 @@ class AlexaStateMachine:
         self._state_history: List[ConnectionState] = [initial_state]
         self._callbacks: Dict[ConnectionState, List[Callable[[], None]]] = {}
 
-        logger.info(f"🔧 State Machine initialisée: {initial_state.name}")
+        logger.info(f" State Machine initialise: {initial_state.name}")
 
     @property
     def state(self) -> ConnectionState:
@@ -142,11 +142,11 @@ class AlexaStateMachine:
             # Vérifier si la transition est valide
             if new_state not in self.VALID_TRANSITIONS.get(current, []):
                 error_msg = f"Transition invalide: {current.name} → {new_state.name}"
-                logger.error(f"❌ {error_msg}")
+                logger.error(f" {error_msg}")
                 raise StateTransitionError(error_msg)
 
             # Effectuer la transition
-            logger.info(f"🔄 Transition: {current.name} → {new_state.name}")
+            logger.info(f" Transition: {current.name}  {new_state.name}")
             self._state = new_state
             self._state_history.append(new_state)
 
@@ -171,7 +171,7 @@ class AlexaStateMachine:
             if state not in self._callbacks:
                 self._callbacks[state] = []
             self._callbacks[state].append(callback)
-            logger.debug(f"📌 Callback enregistré pour l'état {state.name}")
+            logger.debug(f" Callback enregistr pour l'tat {state.name}")
 
     def _execute_callbacks(self, state: ConnectionState) -> None:
         """Exécute tous les callbacks pour un état donné."""
@@ -180,7 +180,7 @@ class AlexaStateMachine:
             try:
                 callback()
             except Exception as e:
-                logger.error(f"❌ Erreur dans callback pour {state.name}: {e}")
+                logger.error(f" Erreur dans callback pour {state.name}: {e}")
 
     def get_history(self, limit: int = 10) -> List[ConnectionState]:
         """
@@ -198,7 +198,7 @@ class AlexaStateMachine:
     def reset(self) -> None:
         """Réinitialise la machine à l'état DISCONNECTED."""
         with self._lock:
-            logger.warning("🔄 Réinitialisation de la State Machine")
+            logger.log("PROCESS", "Rinitialisation de la State Machine")
             self._state = ConnectionState.DISCONNECTED
             self._state_history.append(ConnectionState.DISCONNECTED)
 
@@ -213,7 +213,7 @@ class AlexaStateMachine:
             new_state: État initial à définir (typiquement AUTHENTICATED si cookies valides)
         """
         with self._lock:
-            logger.debug(f"🔧 Initialisation état: {self._state.name} → {new_state.name}")
+            logger.debug(f" Initialisation tat: {self._state.name}  {new_state.name}")
             self._state = new_state
             self._state_history.append(new_state)
             self._execute_callbacks(new_state)

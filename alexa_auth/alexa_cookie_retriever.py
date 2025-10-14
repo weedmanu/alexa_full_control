@@ -252,10 +252,14 @@ class CookieRetriever:
             sys.exit(1)
 
 
-def get_alexa_cookies():
+def get_alexa_cookies(amazon_domain: str = "amazon.fr", language: str = "fr-FR"):
     """Fonction principale pour récupérer les cookies Alexa (interface CLI)"""
     script_dir = Path(__file__).parent.absolute()
     os.chdir(script_dir)
+
+    # Définir les variables d'environnement pour la configuration régionale
+    os.environ["AMAZON_DOMAIN"] = amazon_domain
+    os.environ["LANGUAGE"] = language
 
     # Vérifier l'environnement Node.js
     node_env = NodeEnvironment(script_dir)

@@ -48,7 +48,7 @@ class LightController:
         # Voice Command Service pour contrôles
         self._voice_service = VoiceCommandService(auth, config, state_machine)
 
-        logger.info("✅ LightController (Voice Commands)")
+        logger.log("SUCCESS", "LightController (Voice Commands)")
 
     def set_brightness(self, entity_id: str, brightness: int) -> bool:
         """Définit la luminosité (0-100)."""

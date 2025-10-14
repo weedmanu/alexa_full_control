@@ -278,6 +278,6 @@ class AlexaNetworkDiscovery:
 
         # Fallback: scan du sous-réseau (lent!)
         # TODO: Implémenter un scan ARP rapide
-        logger.warning("⚠️ Scan complet du sous-réseau non implémenté (trop lent)")
+        logger.log("WARNING", "Scan complet du sous-réseau non implémenté (trop lent)")
 
         return None

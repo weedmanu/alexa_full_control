@@ -69,12 +69,12 @@ const argv = yargs(process.argv.slice(2))
     .option('amazonPage', {
         describe: 'Page Amazon à utiliser (défaut: amazon.fr)',
         type: 'string',
-        default: 'amazon.fr',
+        default: process.env.AMAZON_DOMAIN || 'amazon.fr',
     })
     .option('language', {
         describe: 'Langue (défaut: fr-FR)',
         type: 'string',
-        default: 'fr-FR',
+        default: process.env.LANGUAGE || 'fr-FR',
     })
     .help()
     .argv;

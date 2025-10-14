@@ -476,7 +476,7 @@ class CommandParser:
         self.commands: Dict[str, Type[BaseCommand]] = {}
         self.subcategory_commands: set[str] = set()  # Commandes avec sous-catégories
 
-        logger.debug(f"CommandParser initialisé (version {version})")
+        logger.debug(f"CommandParser initialis (version {version})")
 
     def _get_main_help_description(self) -> str:
         """
@@ -578,10 +578,10 @@ class CommandParser:
             for action in category_parser._actions:
                 if hasattr(action, 'dest') and action.dest == 'subcategory':
                     self.subcategory_commands.add(name)
-                    logger.debug(f"Commande '{name}' détectée comme utilisant des sous-catégories")
+                    logger.debug(f"Commande '{name}' dtecte comme utilisant des sous-catgories")
                     break
 
-        logger.debug(f"Commande '{name}' enregistrée")
+        logger.debug(f"Commande '{name}' enregistre")
 
     def parse_args(self, args: Optional[List[str]] = None) -> argparse.Namespace:
         """
@@ -636,10 +636,10 @@ class CommandParser:
         # Validation: une catégorie doit être spécifiée
         if not parsed_args.category:
             self.parser.print_help()
-            logger.error("Aucune catégorie spécifiée")
+            logger.error("Aucune catgorie spcifie")
             sys.exit(1)
 
-        logger.debug(f"Arguments parsés: {parsed_args}")
+        logger.debug(f"Arguments parss: {parsed_args}")
         return parsed_args
 
     def get_command_class(self, category: str) -> Optional[Type[BaseCommand]]:
@@ -681,7 +681,7 @@ class CommandParser:
                 except SystemExit:
                     pass  # --help fait un sys.exit(), c'est normal
         else:
-            logger.error(f"Catégorie '{category}' inconnue")
+            logger.error(f"Catgorie '{category}' inconnue")
             self.print_help()
 
 

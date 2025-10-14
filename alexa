@@ -60,7 +60,7 @@ from cli.commands import (
     SmartHomeCommand,
     TimerCommand,
 )
-from utils.logger import setup_loguru_logger
+from utils.logger import setup_logger
 
 
 # Configuration améliorée du logging

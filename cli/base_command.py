@@ -133,12 +133,12 @@ class BaseCommand(ABC):
             True si connecté, False sinon
         """
         if not self.state_machine:
-            self.logger.error("State machine non initialisée")
+            self.logger.error("State machine non initialise")
             self.error("Erreur interne: state machine manquante")
             return False
 
         if not self.state_machine.can_execute_commands:
-            self.logger.warning("Tentative d'exécution sans connexion établie")
+            self.logger.warning("Tentative d'excution sans connexion tablie")
             self.error(
                 "Authentification non initialisée. "
                 "Utilisez 'alexa auth login' pour vous connecter."
