@@ -68,40 +68,129 @@ def setup_loguru_logger(
         except Exception as e:
             logger.warning(f"Impossible de créer le fichier de log {log_file}: {e}")
 
-    # Niveaux personnalisés avec emojis
-    logger.level("INIT", no=25, icon="🔧", color="<cyan>")
-    logger.level("PROCESS", no=26, icon="⚙️ ", color="<blue>")
-    logger.level("CONFIG", no=27, icon="🔧", color="<cyan>")
-    logger.level("CLEANUP", no=28, icon="🧹", color="<yellow>")
-    logger.level("CACHE", no=29, icon="💾", color="<magenta>")
-    logger.level("AUTH", no=30, icon="🔐", color="<green>")
-    logger.level("DEVICE", no=31, icon="📱", color="<blue>")
-    logger.level("MUSIC", no=32, icon="🎵", color="<magenta>")
-    logger.level("TIMER", no=33, icon="⏰", color="<yellow>")
-    logger.level("VOICE", no=34, icon="🎤", color="<cyan>")
-    logger.level("ALARM", no=35, icon="⏰", color="<red>")
-    logger.level("CALENDAR", no=36, icon="📅", color="<green>")
-    logger.level("ROUTINE", no=37, icon="🔄", color="<blue>")
-    logger.level("LIST", no=38, icon="📝", color="<yellow>")
-    logger.level("REMINDER", no=39, icon="📌", color="<magenta>")
-    logger.level("DND", no=40, icon="🔕", color="<red>")
-    logger.level("MULTIROOM", no=41, icon="🔊", color="<cyan>")
-    logger.level("ANNOUNCEMENT", no=42, icon="📢", color="<yellow>")
-    logger.level("ACTIVITY", no=43, icon="📊", color="<blue>")
-    logger.level("NOTIFICATION", no=44, icon="🔔", color="<magenta>")
-    logger.level("SETTINGS", no=45, icon="⚙️ ", color="<cyan>")
-    logger.level("SMART_HOME", no=46, icon="🏠", color="<green>")
-    logger.level("BLUETOOTH", no=47, icon="🎧", color="<blue>")
-    logger.level("EQUALIZER", no=48, icon="🎚️", color="<magenta>")
-    logger.level("TUNEIN", no=49, icon="📻", color="<cyan>")
+    # Niveaux personnalisés avec emojis (seulement s'ils n'existent pas déjà)
+    try:
+        logger.level("INIT", no=25, icon="🔧", color="<cyan>")
+    except ValueError:
+        pass  # Niveau déjà défini
+    try:
+        logger.level("PROCESS", no=26, icon="⚙️ ", color="<blue>")
+    except ValueError:
+        pass
+    try:
+        logger.level("CONFIG", no=27, icon="🔧", color="<cyan>")
+    except ValueError:
+        pass
+    try:
+        logger.level("CLEANUP", no=28, icon="🧹", color="<yellow>")
+    except ValueError:
+        pass
+    try:
+        logger.level("CACHE", no=29, icon="💾", color="<magenta>")
+    except ValueError:
+        pass
+    try:
+        logger.level("AUTH", no=30, icon="🔐", color="<green>")
+    except ValueError:
+        pass
+    try:
+        logger.level("DEVICE", no=31, icon="📱", color="<blue>")
+    except ValueError:
+        pass
+    try:
+        logger.level("MUSIC", no=32, icon="🎵", color="<magenta>")
+    except ValueError:
+        pass
+    try:
+        logger.level("TIMER", no=33, icon="⏰", color="<yellow>")
+    except ValueError:
+        pass
+    try:
+        logger.level("VOICE", no=34, icon="🎤", color="<cyan>")
+    except ValueError:
+        pass
+    try:
+        logger.level("ALARM", no=35, icon="⏰", color="<red>")
+    except ValueError:
+        pass
+    try:
+        logger.level("CALENDAR", no=36, icon="📅", color="<green>")
+    except ValueError:
+        pass
+    try:
+        logger.level("ROUTINE", no=37, icon="🔄", color="<blue>")
+    except ValueError:
+        pass
+    try:
+        logger.level("LIST", no=38, icon="📝", color="<yellow>")
+    except ValueError:
+        pass
+    try:
+        logger.level("REMINDER", no=39, icon="📌", color="<magenta>")
+    except ValueError:
+        pass
+    try:
+        logger.level("DND", no=40, icon="🔕", color="<red>")
+    except ValueError:
+        pass
+    try:
+        logger.level("MULTIROOM", no=41, icon="🔊", color="<cyan>")
+    except ValueError:
+        pass
+    try:
+        logger.level("ANNOUNCEMENT", no=42, icon="📢", color="<yellow>")
+    except ValueError:
+        pass
+    try:
+        logger.level("ACTIVITY", no=43, icon="📊", color="<blue>")
+    except ValueError:
+        pass
+    try:
+        logger.level("NOTIFICATION", no=44, icon="🔔", color="<magenta>")
+    except ValueError:
+        pass
+    try:
+        logger.level("SETTINGS", no=45, icon="⚙️ ", color="<cyan>")
+    except ValueError:
+        pass
+    try:
+        logger.level("SMART_HOME", no=46, icon="🏠", color="<green>")
+    except ValueError:
+        pass
+    try:
+        logger.level("BLUETOOTH", no=47, icon="🎧", color="<blue>")
+    except ValueError:
+        pass
+    try:
+        logger.level("EQUALIZER", no=48, icon="🎚️", color="<magenta>")
+    except ValueError:
+        pass
+    try:
+        logger.level("TUNEIN", no=49, icon="📻", color="<cyan>")
+    except ValueError:
+        pass
 
     # Ajustements pour l'alignement visuel des emojis
     # Certains emojis prennent plus de place visuellement
-    logger.level("INFO", icon="ℹ️ ", color="<blue>")  # Plus large
-    logger.level("WARNING", icon="⚠️ ", color="<yellow>")  # Plus large
-    logger.level("VOICE", icon="🎤", color="<cyan>")  # Plus large
+    try:
+        logger.level("INFO", icon="ℹ️ ", color="<blue>")  # Plus large
+    except ValueError:
+        pass
+    try:
+        logger.level("WARNING", icon="⚠️ ", color="<yellow>")  # Plus large
+    except ValueError:
+        pass
+    try:
+        logger.level("SUCCESS", icon="✅ ", color="<green>")  # Plus large
+    except ValueError:
+        pass
+    try:
+        logger.level("VOICE", icon="🎤", color="<cyan>")  # Plus large
+    except ValueError:
+        pass
 
-    logger.info("Système de logging initialisé avec succès")
+    logger.info("Initialisation du système de logging")
+    logger.success("Système de logging initialisé avec succès")
 
 
 def get_logger(name: str = "alexa"):

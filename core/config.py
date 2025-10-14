@@ -100,7 +100,8 @@ class Config:
         self.gui_version = 0
         self.cli_version = "1.0.0"
 
-        logger.info("✅ Configuration initialisée")
+        logger.info("Initialisation de la configuration")
+        logger.success("Configuration initialisée")
         self._log_config()
 
     def _get_temp_dir(self) -> Path:

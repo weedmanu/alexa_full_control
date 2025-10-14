@@ -66,54 +66,34 @@ from utils.logger import setup_loguru_logger
 # Configuration améliorée du logging
 def setup_logging(verbose: bool = False, debug: bool = False):
     """
-    Configure le logging amélioré avec loguru.
+    Configure le logging amélioré avec le système centralisé.
 
     Args:
         verbose: Mode verbeux (niveau INFO)
         debug: Mode debug (niveau DEBUG)
     """
-    # Supprimer tous les handlers existants (y compris le handler par défaut)
-    try:
-        logger.remove()  # Supprime TOUS les handlers
-    except ValueError:
-        pass  # Pas de handler à supprimer
-    
-    # Déterminer le niveau de log
+    # Déterminer le niveau de console
     if debug:
-        level = "DEBUG"
+        console_level = "DEBUG"
     elif verbose:
-        level = "INFO"
+        console_level = "INFO"
     else:
-        level = "WARNING"  # Masque DEBUG et INFO par défaut
+        console_level = "WARNING"  # Masque DEBUG et INFO par défaut
 
-    # Format amélioré avec couleurs et emojis
-    format_string = "<green>{time:HH:mm:ss}</green> | <level>{level: <7}</level> | <level>{message}</level>"
+    # Déterminer le niveau de fichier
+    file_level = "DEBUG" if debug else "INFO"
 
-    # Handler console avec filtrage intelligent
-    logger.add(
-        sys.stdout,
-        level=level,
-        format=format_string,
-        colorize=True
-    )
-
-    # Handler fichier en mode debug
+    # Configurer le fichier de log si debug
+    log_file = None
     if debug:
         log_file = Path("logs") / "alexa_cli.log"
-        log_file.parent.mkdir(exist_ok=True)
 
-        logger.add(
-            log_file,
-            level="DEBUG",
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-            rotation="10 MB",
-            retention="1 week",
-            encoding="utf-8"
-        )
-        logger.debug(f"📝 Logging fichier activé: {log_file}")
-
-    # Configurer le niveau SUCCESS personnalisé
-    # logger.level("SUCCESS", no=25, color="<green>", icon="✅")  # Non utilisé  # Déjà défini par défaut
+    # Utiliser le système de logging centralisé
+    setup_loguru_logger(
+        log_file=log_file,
+        console_level=console_level,
+        file_level=file_level
+    )
 
 
 def register_all_commands(parser: Any) -> None:
