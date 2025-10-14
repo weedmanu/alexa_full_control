@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation — Alexa Advanced Control</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #ff6600;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --dark-bg: #1e1e1e;
+            --light-bg: #f8f9fa;
+            --border-color: #dee2e6;
+            --code-bg: #f4f4f4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0 }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #333; background: #fff; line-height: 1.6 }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px }
+
+        header { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 36px 20px; text-align: center; border-radius: 6px }
+    header h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.02em; color: #000000; margin-bottom: 6px }
+    header p { opacity: 0.95; color: #000000 }
+
+        nav { margin-top: 18px; background: var(--dark-bg); padding: 12px 0; position: sticky; top: 0; z-index: 1000 }
+        nav ul { list-style: none; display:flex; justify-content:center; gap:16px; flex-wrap:wrap }
+        nav a { color: white; text-decoration:none; padding:8px 12px; border-radius:6px }
+        nav a:hover { background: rgba(255,255,255,0.06) }
+
+        section { margin: 30px 0; padding: 20px; background: white; border-radius:8px; border:1px solid var(--border-color); box-shadow: 0 2px 6px rgba(0,0,0,0.04) }
+        h2 { color: var(--primary-color); margin-bottom:12px }
+        h3 { color: var(--secondary-color); margin:14px 0 }
+
+        pre { background: var(--code-bg); padding:14px; border-radius:6px; overflow:auto; border-left:4px solid var(--primary-color) }
+        code { background: #eee; padding:2px 6px; border-radius:4px; font-family: monospace }
+
+        .info { padding:12px; border-left:4px solid var(--primary-color); background:#fbfdff; border-radius:6px; margin:12px 0 }
+        .note { border-left-color: var(--warning-color); background:#fff8e6 }
+        .success { border-left-color: var(--success-color); background:#eefaf1 }
+
+        footer { text-align:center; margin-top:30px; color:#666 }
+
+        @media(max-width:720px){ header h1 { font-size:1.6rem } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Installation</h1>
+            <p>Guide pas-à-pas pour préparer l'environnement et installer Alexa Advanced Control</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#prerequis">Prérequis</a></li>
+                <li><a href="#venv">Python / venv</a></li>
+                <li><a href="#node">Node.js (cookie retrieval)</a></li>
+                <li><a href="#install">Installation packages</a></li>
+                <li><a href="#tests">Vérifications</a></li>
+                <li><a href="#uninstall">Désinstallation</a></li>
+            </ul>
+        </nav>
+
+        <section id="prerequis">
+            <h2>🔧 Prérequis</h2>
+            <p>Avant d'installer le projet, assurez-vous d'avoir :</p>
+            <ul>
+                <li>Python 3.11+ (3.12/3.13 compatibles selon l'environnement)</li>
+                <li>pip installé et opérationnel</li>
+                <li>un accès réseau pour installer des dépendances et, si nécessaire, récupérer des cookies via Node.js</li>
+                <li>sur Windows : PowerShell (ex. PowerShell 5.1) — les commandes d'exemple ci-dessous ciblent PowerShell</li>
+            </ul>
+
+            <div class="info note">
+                <strong>Remarque :</strong> Node.js n'est requis <em>que</em> pour l'outil optionnel de récupération de cookie (dossier <code>alexa_auth/nodejs/</code>). Le coeur Python fonctionne sans Node.
+            </div>
+        </section>
+
+        <section id="venv">
+            <h2>🐍 Python & Virtualenv</h2>
+            <h3>Créer et activer un venv (Windows PowerShell)</h3>
+            <pre><code># Créer le venv
+python -m venv .venv
+
+# Activer (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Commande alternative (cmd.exe)
+.\.venv\Scripts\activate.bat
+</code></pre>
+
+            <h3>macOS / Linux</h3>
+            <pre><code># Créer
+python3 -m venv .venv
+
+# Activer (bash/zsh)
+source .venv/bin/activate
+</code></pre>
+
+            <div class="info">
+                <p>Après activation, vérifiez que vous utilisez l'interpréteur du venv :</p>
+                <pre><code>python -c "import sys; print(sys.executable); print(sys.prefix == sys.base_prefix)"</code></pre>
+                <p>La sortie doit pointer vers <code>.venv</code> et <code>False</code> pour la comparaison prefix/base_prefix.</p>
+            </div>
+        </section>
+
+        <section id="node">
+            <h2>🟢 Node.js (optionnel)</h2>
+            <p>Le sous-module <code>alexa_auth/nodejs</code> contient des scripts Node pour récupérer des cookies via des automatisations. Si vous prévoyez d'utiliser ces scripts, installez Node.js (>=16 recommandé) et les dépendances :</p>
+
+            <h3>Installer Node.js</h3>
+            <ul>
+                <li>Windows : installez via l'installateur officiel sur <a href="https://nodejs.org/">nodejs.org</a></li>
+                <li>macOS : utilisez Homebrew <code>brew install node</code></li>
+                <li>Linux : utilisez votre gestionnaire de paquets (apt/yum) ou nvm pour gérer les versions</li>
+            </ul>
+
+            <h3>Installer les dépendances Node (dans le dossier nodejs)</h3>
+            <pre><code>cd alexa_auth/nodejs
+npm install
+</code></pre>
+
+            <div class="info">
+                <p>Les scripts Node sont optionnels : si vous n'utilisez pas la récupération automatisée de cookie, ignorez cette étape.</p>
+            </div>
+        </section>
+
+        <section id="install">
+            <h2>📦 Installer les dépendances Python</h2>
+            <p>Avec le venv activé, installez les dépendances du projet :</p>
+            <pre><code>pip install -r requirements.txt
+# ou en mode développement
+pip install -r requirements-dev.txt
+</code></pre>
+
+            <h3>Installation editable (développement)</h3>
+            <pre><code>pip install -e .
+</code></pre>
+
+            <div class="info success">
+                <p>Si l'installation échoue : vérifiez la version de Python, que le venv est activé, et les logs d'erreur (par exemple des wheel manquants pour des dépendances compilées).</p>
+            </div>
+
+            <h3>Raccourcis utiles</h3>
+            <pre><code># Vérifier la version de la CLI
+python alexa --version
+
+# Afficher l'aide principale
+python alexa -h
+</code></pre>
+        </section>
+
+        <section id="tests">
+            <h2>✅ Vérifications post-install</h2>
+            <p>Exécutez ces commandes pour confirmer que l'installation est fonctionnelle :</p>
+            <pre><code># Afficher l'aide
+python alexa -h
+
+# Vérifier le module auth (sans cookie)
+python alexa auth status
+
+# Lister les appareils (peut nécessiter auth)
+python alexa device list
+</code></pre>
+
+            <div class="info note">
+                <strong>Si vous voyez une erreur d'import :</strong> vérifiez que le venv est activé et que vous avez bien installé les dépendances dans ce venv.
+            </div>
+        </section>
+
+        <section id="uninstall">
+            <h2>🧹 Désinstallation / Nettoyage</h2>
+            <p>Pour désinstaller et nettoyer l'environnement :</p>
+            <ul>
+                <li>Supprimez le venv : <code>rm -rf .venv</code> (ou supprimez le dossier sous Windows)</li>
+                <li>Supprimez les fichiers de cache : <code>data/cache/</code></li>
+                <li>Supprimez les cookies si nécessaires : <code>alexa_auth/data/cookie.txt</code>, <code>alexa_auth/data/cookie-resultat.json</code></li>
+            </ul>
+
+            <h3>Script d'installation</h3>
+            <p>Un script helper existe dans <code>scripts/install.py</code> qui propose des actions d'installation et de nettoyage. Vous pouvez l'exécuter pour automatiser certaines étapes.</p>
+        </section>
+
+        <section id="troubleshoot">
+            <h2>🔎 Dépannage courant</h2>
+            <h3>Problèmes d'environnement</h3>
+            <ul>
+                <li><strong>python commande vers installation système</strong> : utilisez le chemin complet du venv <code>.venv\Scripts\python.exe</code> pour assurer l'utilisation du bon interpréteur.</li>
+                <li><strong>Permissions</strong> : assurez-vous que le dossier <code>data/</code> est accessible en écriture.</li>
+                <li><strong>Dépendances binaires</strong> : si un package échoue à s'installer, installez les outils de compilation (build-essential, Visual Studio Build Tools) selon votre OS.</li>
+            </ul>
+
+            <h3>Logs & Verbose</h3>
+            <p>Pour diagnostiquer, relancez la commande avec <code>--verbose</code> ou <code>--debug</code> selon la commande. Consultez aussi les logs générés si vous avez activé un logger.</p>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 Alexa Advanced Control — Installation</p>
+            <p>Voir aussi : <a href="CACHE_SYSTEM.html">Cache System</a> | <a href="documentation.html">Page d'accueil</a></p>
+        </footer>
+    </div>
+</body>
+</html>
