@@ -1,0 +1,62 @@
+@startuml cache_architecture
+!theme plain
+skinparam backgroundColor white
+skinparam componentStyle rectangle
+
+title Architecture du Système de Cache
+
+package "Client Layer" {
+    [CLI Commands] as cli
+}
+
+package "Business Logic" {
+    [DeviceManager\ncache_ttl=300s] as dm
+}
+
+package "Cache Layer" {
+    package "Niveau 1 - Volatile" {
+        database "In-Memory Cache\nDict[str, List]\nTTL: 5 min" as mem #Yellow
+    }
+    
+    package "Niveau 2 - Persistent" {
+        [CacheService\nignore_ttl=True] as cs
+        database "Disk Cache\nJSON.GZ files\nTTL: ∞ (pas de TTL)" as disk #LightCoral
+    }
+}
+
+package "External API" {
+    cloud "Amazon Alexa API" as api
+}
+
+cli --> dm : get_devices()
+dm --> mem : Vérifier cache mémoire
+dm --> cs : get(ignore_ttl=True)
+cs --> disk : Lire fichier cache
+dm --> api : Requête HTTP si aucun cache
+api --> dm : Réponse JSON
+dm --> mem : Mise à jour RAM
+dm --> disk : Sauvegarde disque (via cs)
+
+note right of mem
+  **Cache chaud (hot cache)**
+  - Latence: 1-2 ms
+  - Durée: 5 minutes
+  - Thread-safe: threading.Lock
+end note
+
+note right of disk
+  **Cache de secours (fallback)**
+  - Latence: 10-50 ms
+  - Durée: ∞ (toujours valide)
+  - Format: JSON compressé (gzip)
+  - Taille: ~80% réduction
+end note
+
+note right of api
+  **Dernier recours**
+  - Latence: 200-1000 ms
+  - Nécessite authentification
+  - Rate limiting possible
+end note
+
+@enduml

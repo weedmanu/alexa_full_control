@@ -1,0 +1,60 @@
+@startuml cache_flow_diagram
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontSize 12
+skinparam rectangleFontSize 14
+skinparam noteFontSize 11
+
+title Système de Cache Multi-Niveaux - Device List
+
+actor "Utilisateur" as user
+participant "CLI\nalexa device list" as cli #LightBlue
+participant "DeviceManager\nget_devices()" as dm #LightGreen
+participant "Cache Mémoire\n(RAM)\nTTL: 5 min" as mem #Yellow
+participant "CacheService\nget(ignore_ttl=True)" as cs #Orange
+participant "Cache Disque\n(devices.json.gz)\nTTL: ∞ AUCUN" as disk #LightCoral
+participant "Amazon API\nalexa.amazon.com" as api #Red
+
+== Scénario 1: Cache Mémoire Valide ==
+user -> cli: alexa device list
+cli -> dm: get_devices()
+dm -> mem: Vérifier TTL
+mem -> mem: ✅ TTL < 5 min
+note right: **⚡ 1-2 ms**
+mem --> dm: Liste de 8 appareils
+dm --> cli: Retour
+cli --> user: Affichage
+
+== Scénario 2: Cache Mémoire Expiré → Disque ==
+user -> cli: alexa device list
+cli -> dm: get_devices()
+dm -> mem: Vérifier TTL
+mem -> mem: ❌ TTL > 5 min
+dm -> cs: get("devices", ignore_ttl=True)
+cs -> disk: Lire fichier
+disk -> disk: ✅ Fichier existe\n(toujours valide)
+note right: **💾 10-50 ms**\nPas de vérification TTL
+disk --> cs: Données décompressées
+cs --> dm: Liste de 8 appareils
+dm -> mem: Mise à jour cache RAM
+dm --> cli: Retour
+cli --> user: Affichage
+
+== Scénario 3: Pas de Cache → API ==
+user -> cli: alexa device list
+cli -> dm: get_devices()
+dm -> mem: Vérifier TTL
+mem -> mem: ❌ Vide (premier démarrage)
+dm -> cs: get("devices", ignore_ttl=True)
+cs -> disk: Lire fichier
+disk -> disk: ❌ Fichier absent
+cs --> dm: None
+dm -> api: GET /api/devices-v2/device
+note right: **🌐 200-1000 ms**\nRéquête HTTP
+api --> dm: Réponse JSON
+dm -> disk: Sauvegarder (gzip)
+dm -> mem: Sauvegarder (RAM)
+dm --> cli: Retour
+cli --> user: Affichage
+
+@enduml

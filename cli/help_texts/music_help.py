@@ -1,0 +1,466 @@
+﻿"""
+Help text constants for the `music` command.
+
+This file contains the long description used by the music command parser.
+"""
+
+MUSIC_DESCRIPTION = """
+????????????????????????????????????????????????????????????
+?? CONTR�LE MUSICAL ALEXA
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Lecture et contr�le de musique
+  � Gestion des playlists et stations
+  � Contr�le du volume et �galiseur
+  � Recherche et d�couverte musicale
+  � Synchronisation multi-room
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m [\033[1;35mOPTIONS_GLOBALES\033[0m] \033[1;32mmusic\033[0m [\033[1;33m<SUBCATEGORY>\033[0m] [\033[1;34m<ACTION>\033[0m] [\033[1;35mOPTIONS_ACTION\033[0m]
+
+\033[1;32m?? Cat�gorie actuelle:\033[0m
+  music                  Contr�le musical et m�dias
+
+\033[1;34m?? Actions disponibles:\033[0m
+  playback               Contr�le de lecture
+  volume                 Gestion du volume
+  equalizer              �galiseur audio
+  library                Biblioth�que musicale
+
+\033[1;35m??  Options d'action:\033[0m
+  playback play:
+    --song SONG          Titre de la chanson
+    --artist ARTIST      Nom de l'artiste
+    --album ALBUM        Nom de l'album
+    --playlist PLAYLIST  Nom de la playlist
+  playback pause:
+    (aucune option sp�cifique)
+  playback resume:
+    (aucune option sp�cifique)
+  playback stop:
+    (aucune option sp�cifique)
+  playback next:
+    (aucune option sp�cifique)
+  playback previous:
+    (aucune option sp�cifique)
+
+  volume set:
+    --level LEVEL        Niveau du volume (0-100)
+  volume up:
+    --step STEP          Incr�ment (d�faut: 10)
+  volume down:
+    --step STEP          D�cr�ment (d�faut: 10)
+  volume mute:
+    (aucune option sp�cifique)
+
+\033[1;36m?? Exemples d'utilisation:\033[0m
+  alexa music playback play --song "Bohemian Rhapsody"
+  alexa music volume set --level 75
+  alexa music playback pause
+  alexa music equalizer bass --level 5
+
+\033[1;37m?? Pour plus d'aide:\033[0m
+  alexa music playback --help                  # Aide lecture
+  alexa music volume --help                    # Aide volume
+  alexa music equalizer --help                 # Aide �galiseur
+
+\033[1;31m??  Important:\033[0m
+  � Service musical configur� (Amazon Music, Spotify)
+  � Appareil cible avec capacit�s audio
+  � Connexion internet pour le streaming
+  � Authentification du service musical
+"""
+
+PAUSE_HELP = """
+????????????????????????????????????????????????????????????
+??  MISE EN PAUSE
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Mettre en pause la lecture en cours
+  � Pr�server la position actuelle
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Contr�le via l'API playback
+  � �tat conserv� pour reprise
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mpause\033[0m
+
+\033[1;35m??  Options d\'action:\033[0m
+  (aucune option sp�cifique)
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. V�rification de l'�tat de lecture actif
+  2. Envoi de la commande de pause � l'appareil cible
+  3. Conservation de la position pour reprise future
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music pause -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music status --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Lecture doit �tre active sur l'appareil cible
+  � Appareil doit �tre connect� et accessible
+"""
+
+STOP_HELP = """
+????????????????????????????????????????????????????????????
+??  ARR�T DE LECTURE
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Arr�ter compl�tement la lecture
+  � R�initialiser la file d'attente
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Contr�le via l'API playback
+  � Nettoyage de l'�tat de lecture
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mstop\033[0m
+
+\033[1;35m??  Options d\'action:\033[0m
+  (aucune option sp�cifique)
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Arr�t imm�diat de la lecture en cours
+  2. Vidage de la file d'attente musicale
+  3. R�initialisation de l'�tat de lecture
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music stop -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music status --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Lecture doit �tre active sur l'appareil cible
+  � Appareil doit �tre connect� et accessible
+"""
+
+CONTROL_HELP = """
+????????????????????????????????????????????????????????????
+?? CONTR�LE DE LECTURE
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Navigation dans la lecture
+  � Contr�les de base (play, pause, next, previous)
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Interface unifi�e pour tous contr�les
+  � Gestion des �tats de lecture
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mcontrol\033[0m [\033[1;35mOPTIONS\033[0m]
+
+\033[1;35m??  Options d\'action:\033[0m
+  next|previous|play|pause    Action de contr�le
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Validation de l'action demand�e
+  2. V�rification de l'�tat de lecture actuel
+  3. Ex�cution de la commande de contr�le appropri�e
+  4. Mise � jour de l'�tat de lecture
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music control next -d "Salon Echo"
+  alexa music control previous -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music status --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � File d'attente doit exister et contenir des morceaux
+  � Appareil doit �tre connect� et accessible
+"""
+
+SHUFFLE_HELP = """
+????????????????????????????????????????????????????????????
+?? MODE AL�ATOIRE
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Activer/d�sactiver la lecture al�atoire
+  � M�langer la file d'attente
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Contr�le via l'API playback
+  � �tat persistant
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mshuffle\033[0m [\033[1;35mOPTIONS\033[0m]
+
+\033[1;35m??  Options d\'action:\033[0m
+  on|off                      Activer/d�sactiver
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Validation du mode demand� (on/off)
+  2. Application du mode al�atoire � la file d'attente
+  3. R�organisation des morceaux selon le mode choisi
+  4. Mise � jour de l'�tat de lecture
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music shuffle on -d "Salon Echo"
+  alexa music shuffle off -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music status --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � File d'attente doit contenir plusieurs morceaux
+  � Appareil doit �tre connect� et accessible
+"""
+
+REPEAT_HELP = """
+????????????????????????????????????????????????????????????
+?? MODE R�P�TITION
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Contr�ler la r�p�tition de lecture
+  � Modes : off, all, one
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Gestion des modes de r�p�tition
+  � �tat synchronis�
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mrepeat\033[0m [\033[1;35mOPTIONS\033[0m]
+
+\033[1;35m??  Options d\'action:\033[0m
+  on|off|one                  Mode r�p�tition
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Validation du mode de r�p�tition demand�
+  2. Configuration du mode sur l'appareil cible
+  3. Synchronisation de l'�tat de r�p�tition
+  4. Application imm�diate du nouveau mode
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music repeat on -d "Salon Echo"
+  alexa music repeat one -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music status --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Lecture doit �tre active ou file d'attente pr�sente
+  � Appareil doit �tre connect� et accessible
+"""
+
+TRACK_HELP = """
+????????????????????????????????????????????????????????????
+?? JOUER UN MORCEAU
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Jouer un morceau sp�cifique
+  � Recherche par titre et artiste
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Recherche dans la biblioth�que
+  � Interface avec services musicaux
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mtrack\033[0m [\033[1;35mOPTIONS\033[0m]
+
+\033[1;35m??  Options d\'action:\033[0m
+  --title TITLE               Titre du morceau
+  --artist ARTIST             Artiste
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Recherche du morceau dans la biblioth�que musicale
+  2. Validation de la disponibilit� du contenu
+  3. Ajout � la file d'attente et d�marrage de la lecture
+  4. Mise � jour de l'�tat de lecture
+
+\033[1;36m💡 Exemples d\'utilisation:\033[0m
+  alexa music track --title "Bohemian Rhapsody" -d "Salon Echo"
+  alexa music track --title "Imagine" --artist "John Lennon" -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music library --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Morceau doit �tre disponible dans la biblioth�que
+  � Services musicaux doivent �tre actifs et authentifi�s
+  � Appareil cible doit �tre sp�cifi�
+"""
+
+PLAYLIST_HELP = """
+????????????????????????????????????????????????????????????
+?? JOUER UNE PLAYLIST
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Jouer une playlist compl�te
+  � Gestion des playlists utilisateur
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Acc�s aux playlists stock�es
+  � Chargement de la file d'attente
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mplaylist\033[0m [\033[1;35mOPTIONS\033[0m]
+
+\033[1;35m??  Options d\'action:\033[0m
+  --name NAME                 Nom de la playlist
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Recherche de la playlist par nom dans la biblioth�que
+  2. Chargement de tous les morceaux de la playlist
+  3. Cr�ation d'une nouvelle file d'attente
+  4. D�marrage de la lecture du premier morceau
+
+\033[1;36m💡 Exemples d\'utilisation:\033[0m
+  alexa music playlist --name "Ma Playlist" -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music library --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Playlist doit exister dans la biblioth�que utilisateur
+  � Services musicaux doivent �tre actifs et authentifi�s
+  � Appareil cible doit �tre sp�cifi�
+"""
+
+LIBRARY_HELP = """
+????????????????????????????????????????????????????????????
+?? BIBLIOTH�QUE MUSICALE
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Parcourir la biblioth�que musicale
+  � Explorer artistes, albums, genres
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Cache des m�tadonn�es
+  � Navigation hi�rarchique
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mlibrary\033[0m
+
+\033[1;35m??  Options d\'action:\033[0m
+  (aucune option sp�cifique)
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. R�cup�ration des m�tadonn�es de la biblioth�que
+  2. Organisation hi�rarchique (artistes > albums > morceaux)
+  3. Affichage de la structure navigable
+  4. Mise en cache pour optimiser les acc�s futurs
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music library -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music track --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Biblioth�que doit �tre synchronis�e avec les services musicaux
+  � Services musicaux doivent �tre actifs et authentifi�s
+  � Appareil cible doit �tre sp�cifi�
+"""
+
+RADIO_HELP = """
+????????????????????????????????????????????????????????????
+?? RADIO TUNEIN
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Acc�s aux stations radio TuneIn
+  � Recherche et lecture de radios
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Int�gration TuneIn API
+  � Cache des stations populaires
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mradio\033[0m [\033[1;35mOPTIONS\033[0m]
+
+\033[1;35m??  Options d\'action:\033[0m
+  --station STATION           Nom de la station
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Recherche de la station dans le r�pertoire TuneIn
+  2. Validation de la disponibilit� du flux radio
+  3. Connexion au stream audio de la station
+  4. D�marrage de la lecture en continu
+
+\033[1;36m💡 Exemples d\'utilisation:\033[0m
+  alexa music radio --station "Jazz24" -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music status --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Station doit �tre disponible dans TuneIn
+  � Connexion internet stable requise
+  � Appareil cible doit �tre sp�cifi�
+"""
+
+STATUS_HELP = """
+????????????????????????????????????????????????????????????
+?? �TAT DE LECTURE
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Afficher l'�tat actuel de lecture
+  � Informations compl�tes ou r�sum�es
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � R�cup�ration temps r�el
+  � Formatage des m�tadonn�es
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mstatus\033[0m [\033[1;35mOPTIONS\033[0m]
+
+\033[1;35m??  Options d\'action:\033[0m
+  --complete                  Informations compl�tes
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. Interrogation de l'�tat de lecture de l'appareil cible
+  2. R�cup�ration des m�tadonn�es du morceau en cours
+  3. Formatage des informations selon le niveau de d�tail demand�
+  4. Affichage du statut avec progression et contr�les actifs
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music status -d "Salon Echo"
+  alexa music status -d "Salon Echo" --complete
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music control --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � Appareil cible doit �tre connect� et accessible
+  � Informations peuvent �tre vides si aucune lecture active
+"""
+
+QUEUE_HELP = """
+????????????????????????????????????????????????????????????
+?? FILE D'ATTENTE MUSICALE
+????????????????????????????????????????????????????????????
+
+\033[1;32m?? Fonctionnalit�s principales:\033[0m
+  � Afficher la file d'attente actuelle
+  � Gestion des morceaux en attente
+
+\033[1;34m???  Architecture modulaire:\033[0m
+  � Acc�s � la queue de lecture
+  � Informations d�taill�es
+
+\033[1;36mUsage:\033[0m \033[1;37malexa\033[0m \033[1;32mmusic\033[0m \033[1;33mqueue\033[0m
+
+\033[1;35m??  Options d\'action:\033[0m
+  (aucune option sp�cifique)
+
+\033[1;36m?? Processus d�taill�:\033[0m
+  1. R�cup�ration de la file d'attente depuis l'appareil cible
+  2. Extraction des m�tadonn�es de chaque morceau
+  3. Organisation par ordre de lecture
+  4. Affichage avec indicateur du morceau actuel
+
+\033[1;36m?? Exemples d\'utilisation:\033[0m
+  alexa music queue -d "Salon Echo"
+
+\033[1;37m?? Pour plus d\'aide:\033[0m
+  alexa music status --help
+
+\033[1;31m?? Pr�requis essentiels:\033[0m
+  � File d'attente doit contenir au moins un morceau
+  � Appareil cible doit �tre connect� et accessible
+"""
+

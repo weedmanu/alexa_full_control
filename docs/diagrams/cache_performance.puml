@@ -1,0 +1,56 @@
+@startuml cache_performance
+!theme plain
+skinparam backgroundColor white
+
+title Comparaison des Performances - Cache vs API
+
+|Utilisateur|
+start
+:Exécuter\n**alexa device list**;
+
+|Système|
+if (Cache mémoire valide?) then (Oui)
+  #LightGreen:Lire cache RAM;
+  note right
+    **⚡ ULTRA RAPIDE**
+    Latence: 1-2 ms
+    Probabilité: 80%
+    (si < 5 min)
+  end note
+  |Utilisateur|
+  #LightGreen:Afficher 8 appareils;
+  stop
+else (Non)
+  if (Cache disque existe?) then (Oui)
+    #Yellow:Lire fichier\ndevices.json.gz;
+    #Yellow:Décompresser;
+    #Yellow:Charger en mémoire;
+    note right
+      **💾 RAPIDE**
+      Latence: 10-50 ms
+      Probabilité: 19%
+      (après expiration)
+      **PAS DE TTL**
+    end note
+    |Utilisateur|
+    #Yellow:Afficher 8 appareils;
+    stop
+  else (Non)
+    #Red:Appel API Amazon;
+    #Red:GET /api/devices-v2/device;
+    #Red:Parser JSON;
+    #Red:Sauvegarder disque;
+    #Red:Sauvegarder mémoire;
+    note right
+      **🌐 LENT**
+      Latence: 200-1000 ms
+      Probabilité: 1%
+      (premier lancement)
+    end note
+    |Utilisateur|
+    #Red:Afficher 8 appareils;
+    stop
+  endif
+endif
+
+@enduml

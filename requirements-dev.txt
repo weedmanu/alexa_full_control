@@ -1,0 +1,41 @@
+# Development and diagramming tools for Alexa Advanced Control dev
+# Testing
+pytest==8.3.2
+pytest-cov==4.1.0
+
+# Linters / formatters / static analysis
+ruff==0.12.1
+black==24.1.0
+isort==5.12.0
+mypy==1.7.0
+
+# Pre-commit
+pre-commit==3.4.0
+
+# Dependency & security
+pip-tools==7.0.0
+safety==2.2.0
+bandit==1.7.0
+
+# Docs and diagrams
+sphinx==6.2.0
+mkdocs==1.5.2
+plantuml==0.2.0
+graphviz==0.20.1
+pydot==1.4.2
+
+# Optional helpers
+pipdeptree==2.3.0
+coverage-badge==0.1.5
+
+# Pinned versions to make CI reproducible
+
+# Static analysis / dead code detection
+vulture==2.5
+
+# Performance / profiling / caching helpers
+pytest-benchmark==3.4.1
+pyinstrument==0.11.0
+memory-profiler==0.63.0
+diskcache==5.6.1
+cachetools==5.3.1

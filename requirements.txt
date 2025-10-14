@@ -1,0 +1,16 @@
+# Core dependencies for production
+requests>=2.31.0
+loguru>=0.7.0
+requests-cache>=1.2.0
+
+# Node.js environment for authentication
+nodeenv>=1.8.0
+
+# Python 3.8+ compatibility
+typing-extensions>=4.5.0
+
+# Circuit breaker for resilience
+pybreaker>=1.4.0
+
+# HTML parsing for Privacy API
+beautifulsoup4>=4.12.0

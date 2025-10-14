@@ -1,0 +1,46 @@
+digraph "Système de Cache Multi-Niveaux - Device List" {
+	graph [bgcolor=white fontcolor="#2D3436" fontname="Sans-Serif" fontsize=14 label="Système de Cache Multi-Niveaux - Device List" nodesep=0.60 pad=0.5 rankdir=TB ranksep=0.75 splines=ortho]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=12 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	subgraph "cluster_Commande CLI" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Commande CLI" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"8dd2013b12f241579b94617a1fde65c0" [label="alexa device list" height=1.9 image="C:\Users\weedm\Documents\GitHub\alexa_advanced_control\venv\Lib\site-packages\resources/programming/framework\fastapi.png" shape=none]
+	}
+	subgraph "cluster_Niveau 1: Cache Mémoire (RAM)
+TTL: 5 minutes" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Niveau 1: Cache Mémoire (RAM)
+TTL: 5 minutes" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"1ec26ad41221440987050703a45f03a6" [label="_devices_cache
+(Python variable)" height=2.3 image="C:\Users\weedm\Documents\GitHub\alexa_advanced_control\venv\Lib\site-packages\resources/onprem/inmemory\redis.png" shape=none]
+		"2bb4abba290843ada7dd79f823cb0457" [label="TTL valide?" height=1.9 image="C:\Users\weedm\Documents\GitHub\alexa_advanced_control\venv\Lib\site-packages\resources/programming/framework\fastapi.png" shape=none]
+	}
+	subgraph "cluster_Niveau 2: Cache Disque (Fallback)
+TTL: ∞ AUCUN" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Niveau 2: Cache Disque (Fallback)
+TTL: ∞ AUCUN" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		becda2dcbb554fabb9e0194fe6712b31 [label="devices.json.gz
+(compressed)" height=2.3 image="C:\Users\weedm\Documents\GitHub\alexa_advanced_control\venv\Lib\site-packages\resources/onprem/database\postgresql.png" shape=none]
+		dfd1536e3f8d4e03b1524e7d0f92ae88 [label="Fichier existe?" height=1.9 image="C:\Users\weedm\Documents\GitHub\alexa_advanced_control\venv\Lib\site-packages\resources/programming/framework\fastapi.png" shape=none]
+	}
+	subgraph "cluster_Niveau 3: API Amazon" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Niveau 3: API Amazon" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"193de6cbd208498fac29c13fc1385de5" [label="alexa.amazon.com
+/api/devices-v2/device" height=2.3 image="C:\Users\weedm\Documents\GitHub\alexa_advanced_control\venv\Lib\site-packages\resources/onprem/network\internet.png" shape=none]
+	}
+	subgraph "cluster_Résultat" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Résultat" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		b6fe01f31bd241b885211731e09d091c [label="Liste de 8 appareils" height=1.9 image="C:\Users\weedm\Documents\GitHub\alexa_advanced_control\venv\Lib\site-packages\resources/programming/framework\fastapi.png" shape=none]
+	}
+	"8dd2013b12f241579b94617a1fde65c0" -> "2bb4abba290843ada7dd79f823cb0457" [label="1. Appel" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"2bb4abba290843ada7dd79f823cb0457" -> "1ec26ad41221440987050703a45f03a6" [label="Oui (< 5min)
+⚡ 1-2ms" color=green dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 style=bold]
+	"1ec26ad41221440987050703a45f03a6" -> b6fe01f31bd241b885211731e09d091c [label=RETOUR color=green dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"2bb4abba290843ada7dd79f823cb0457" -> dfd1536e3f8d4e03b1524e7d0f92ae88 [label="Non (> 5min)" color=orange dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	dfd1536e3f8d4e03b1524e7d0f92ae88 -> becda2dcbb554fabb9e0194fe6712b31 [label="Oui (toujours valide)
+💾 10-50ms" color=blue dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 style=bold]
+	becda2dcbb554fabb9e0194fe6712b31 -> "1ec26ad41221440987050703a45f03a6" [label="Charge en mémoire" color=blue dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	dfd1536e3f8d4e03b1524e7d0f92ae88 -> "193de6cbd208498fac29c13fc1385de5" [label="Non (absent)" color=red dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"193de6cbd208498fac29c13fc1385de5" -> becda2dcbb554fabb9e0194fe6712b31 [label="🌐 200-1000ms
+Réponse JSON" color=red dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 style=bold]
+	"193de6cbd208498fac29c13fc1385de5" -> "1ec26ad41221440987050703a45f03a6" [label=Sauvegarde color=red dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 style=dashed]
+}
