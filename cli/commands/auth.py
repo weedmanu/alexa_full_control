@@ -142,14 +142,22 @@ class AuthCommand(BaseCommand):
         Returns:
             True si succès
         """
-        self.info("🔐 Création d'une session d'authentification...")
+        self.logger.log("AUTH", "Création d'une session d'authentification...")
 
         try:
             # Vérifier si déjà connecté
             if not args.force and self._check_existing_auth():
-                self.success("✅ Cookie valide déjà présent, authentification non nécessaire")
-                self.info("Utilisez 'alexa auth create --force' pour forcer une nouvelle authentification.")
-                return True
+                self.logger.log("AUTH", "Cookie valide déjà présent")
+                self.logger.log("AUTH", "Affichage de l'état détaillé de la session existante...")
+                print()
+                print("\033[1;4;33m⚠️  INFORMATION\033[0m")  # Jaune gras souligné avec emoji
+                print()
+                print("\033[1;30m  Session existante\033[0m             \033[32mValide\033[0m")
+                print("\033[1;30m  Cookies présents\033[0m              \033[32mOui\033[0m")
+                print("\033[1;30m  Pour forcer la recréation\033[0m     Utilisez \033[1m--force\033[0m")
+                print()
+                # Afficher les informations d'état comme dans la commande status
+                return self._status(args)
 
             # Vérifications préalables complètes
             if not self._check_prerequisites():
@@ -163,16 +171,16 @@ class AuthCommand(BaseCommand):
                 self.state_machine.connect()
 
             # Lancer le processus d'authentification Node.js
-            self.info("Lancement du processus d'authentification Node.js...")
-            self.info("Une fenêtre de navigateur va s'ouvrir pour vous connecter à Amazon.")
+            self.logger.log("PROCESS", "Lancement du processus d'authentification Node.js...")
+            self.logger.log("AUTH", "Une fenêtre de navigateur va s'ouvrir pour vous connecter à Amazon.")
 
             success = get_alexa_cookies()
 
             if success:
                 if self.state_machine.state != ConnectionState.AUTHENTICATED:
                     self.state_machine.on_connected()
-                self.success("✅ Session créée avec succès !")
-                self.info("Les cookies ont été sauvegardés dans alexa_auth/data/")
+                self.logger.log("AUTH", "Session créée avec succès !")
+                self.logger.log("CACHE", "Les cookies ont été sauvegardés dans alexa_auth/data/")
                 
                 # Invalider le cache d'auth pour forcer rechargement
                 if self.context.cache_service:
@@ -201,7 +209,7 @@ class AuthCommand(BaseCommand):
         Returns:
             True si succès
         """
-        self.info("🗑️ Suppression des cookies...")
+        self.logger.log("CLEANUP", "Suppression des cookies...")
 
         try:
             # Se déconnecter d'abord
@@ -250,7 +258,7 @@ class AuthCommand(BaseCommand):
         Returns:
             True toujours (ne peut pas échouer)
         """
-        self.info("📊 État de connexion:")
+        self.logger.log("AUTH", "État de connexion:")
 
         # État de la state machine
         state_name = self.state_machine.state.name if self.state_machine else "UNKNOWN"
@@ -298,7 +306,7 @@ class AuthCommand(BaseCommand):
         Returns:
             True si succès
         """
-        self.info("🔄 Rafraîchissement du token...")
+        self.logger.log("PROCESS", "Rafraîchissement du token...")
 
         try:
             # Vérifier si connecté
