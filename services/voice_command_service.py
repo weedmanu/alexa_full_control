@@ -12,6 +12,7 @@ import threading
 from typing import TYPE_CHECKING, Optional
 
 from loguru import logger
+from utils.logger import SharedIcons
 
 if TYPE_CHECKING:
     from core.circuit_breaker import CircuitBreaker
@@ -55,7 +56,7 @@ class VoiceCommandService:
         self._lock = threading.RLock()
         self._customer_id = None
 
-        logger.info("✅ VoiceCommandService initialisé")
+        logger.info(f"{SharedIcons.SUCCESS} VoiceCommandService initialisé")
 
     def speak(
         self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
@@ -77,7 +78,7 @@ class VoiceCommandService:
         """
         with self._lock:
             if not self.state_machine.can_execute_commands:
-                logger.warning("❌ État système ne permet pas l'exécution")
+                logger.warning(f"{SharedIcons.ERROR} État système ne permet pas l'exécution")
                 return False
 
             try:
@@ -88,7 +89,7 @@ class VoiceCommandService:
                     # Retirer "Alexa," si présent
                     text_clean = text_clean[6:].strip(",").strip()
 
-                logger.debug(f"📝 Commande nettoyée: '{text_clean}'")
+                logger.debug(f"{SharedIcons.DOCUMENT} Commande nettoyée: '{text_clean}'")
 
                 # Récupérer customer_id si nécessaire
                 if not self._customer_id:
@@ -613,9 +614,6 @@ class VoiceCommandService:
                     best_recent = recent_responses[0]
                     logger.success(f"✅ Réponse Alexa récente trouvée (possible réponse à notre commande)")
                     return best_recent.get("alexaResponse")
-                
-                logger.warning(f"⚠️ Aucune réponse récente trouvée dans les {len(activities)} activités")
-                return None
                 
                 logger.warning(f"⚠️ Aucune réponse correspondante trouvée dans les {len(activities)} activités récentes")
                 logger.info("💡 Assurez-vous que:")

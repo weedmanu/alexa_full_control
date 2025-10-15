@@ -87,7 +87,7 @@ class SyncService:
             Dict avec statistiques de synchronisation
         """
         if not self.state_machine.can_execute_commands:
-            logger.warning("⚠️  State machine non connectée, sync impossible")
+            logger.warning(f"{SharedIcons.WARNING} State machine non connectée, sync impossible")
             return {"success": False, "error": "not_connected"}
 
         start_time = time.time()
@@ -105,9 +105,9 @@ class SyncService:
             devices = self._sync_alexa_devices()
             stats["synced"]["devices"] = len(devices)
             self._lazy_loaded["devices"] = True
-            logger.success(f"✅ {len(devices)} appareils Alexa synchronisés")
+            logger.success(f"{SharedIcons.SUCCESS} {len(devices)} appareils Alexa synchronisés")
         except Exception as e:
-            logger.error(f"❌ Erreur sync devices: {e}")
+            logger.error(f"{SharedIcons.ERROR} Erreur sync devices: {e}")
             stats["failed"].append({"category": "devices", "error": str(e)})
 
         # Sauvegarder les stats
@@ -176,7 +176,7 @@ class SyncService:
         try:
             devices = self._sync_smart_home_devices()
             self._lazy_loaded["smart_home"] = True
-            logger.debug(f"Lazy loaded: {len(devices)} smart home devices")
+            logger.debug(f"{SharedIcons.SUCCESS} Lazy loaded: {len(devices)} smart home devices")
             return devices
         except Exception as e:
             logger.error(f"Erreur lazy loading smart home: {e}")
@@ -200,7 +200,7 @@ class SyncService:
         try:
             notifications = self._sync_notifications()
             self._lazy_loaded["alarms_and_reminders"] = True
-            logger.debug(f"Lazy loaded: {len(notifications)} alarmes et rappels")
+            logger.debug(f"{SharedIcons.SUCCESS} Lazy loaded: {len(notifications)} alarmes et rappels")
             return notifications
         except Exception as e:
             logger.error(f"Erreur lazy loading alarmes et rappels: {e}")
@@ -224,7 +224,7 @@ class SyncService:
         try:
             lists = self._sync_lists()
             self._lazy_loaded["lists"] = True
-            logger.debug(f"Lazy loaded: {len(lists)} listes")
+            logger.debug(f"{SharedIcons.SUCCESS} Lazy loaded: {len(lists)} listes")
             return lists
         except Exception as e:
             logger.error(f"Erreur lazy loading listes: {e}")
@@ -248,7 +248,7 @@ class SyncService:
         try:
             routines = self._sync_routines()
             self._lazy_loaded["routines"] = True
-            logger.debug(f"Lazy loaded: {len(routines)} routines")
+            logger.debug(f"{SharedIcons.SUCCESS} Lazy loaded: {len(routines)} routines")
             return routines
         except Exception as e:
             logger.error(f"Erreur lazy loading routines: {e}")
@@ -273,7 +273,7 @@ class SyncService:
         try:
             activities = self._sync_activities(limit)
             self._lazy_loaded["activities"] = True
-            logger.debug(f"Lazy loaded: {len(activities)} activités")
+            logger.debug(f"{SharedIcons.SUCCESS} Lazy loaded: {len(activities)} activités")
             return activities
         except Exception as e:
             logger.error(f"Erreur lazy loading activités: {e}")
@@ -323,9 +323,9 @@ class SyncService:
             try:
                 data = getter(force=force)
                 stats["preloaded"][category] = len(data)
-                logger.debug(f"✅ {len(data)} {category} préchargés")
+                logger.debug(f"{SharedIcons.SUCCESS} {len(data)} {category} préchargés")
             except Exception as e:
-                logger.error(f"❌ Erreur préchargement {category}: {e}")
+                logger.error(f"{SharedIcons.ERROR} Erreur préchargement {category}: {e}")
                 stats["failed"].append({"category": category, "error": str(e)})
 
         duration = time.time() - start_time
