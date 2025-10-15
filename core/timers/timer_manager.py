@@ -15,9 +15,10 @@ from loguru import logger
 from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine, ConnectionState
 from services.cache_service import CacheService
+from core.base_manager import BaseManager
 
 
-class TimerManager:
+class TimerManager(BaseManager[Dict[str, Any]]):
     """
     Gestionnaire thread-safe de timers Alexa.
 
@@ -52,16 +53,38 @@ class TimerManager:
             state_machine: Machine à états optionnelle (créée si None)
             cache_service: Service de cache optionnel (créé si None)
         """
-        self.auth = auth
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
-        self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
-        self.cache_service = cache_service or CacheService()
+        # compatibility: wrap legacy auth.session into http_client if needed
+        if hasattr(auth, "session"):
+            class _ClientWrapper:
+                def __init__(self, session, csrf_val):
+                    self.session = session
+                    self.csrf = csrf_val
 
-        # Cache multi-niveaux pour les timers
+                def get(self, url: str, **kwargs):
+                    return self.session.get(url, **kwargs)
+
+                def post(self, url: str, **kwargs):
+                    return self.session.post(url, **kwargs)
+
+                def put(self, url: str, **kwargs):
+                    return self.session.put(url, **kwargs)
+
+                def delete(self, url: str, **kwargs):
+                    return self.session.delete(url, **kwargs)
+
+            http_client = _ClientWrapper(auth.session, getattr(auth, "csrf", None))
+        else:
+            http_client = auth
+
+        super().__init__(http_client=http_client, config=config, state_machine=state_machine or AlexaStateMachine(), cache_service=cache_service, cache_ttl=60)
+
+        self.auth = auth
+        self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
+
+        # compatibility memory cache attrs
         self._timers_cache: Optional[List[Dict[str, Any]]] = None
         self._cache_timestamp: float = 0.0
-        self._cache_ttl: int = 60  # 1 minute pour le cache mémoire
+        self._cache_ttl: int = 60
         self._lock = threading.RLock()
 
         logger.info("TimerManager initialisé")
@@ -134,17 +157,18 @@ class TimerManager:
                 }
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/timers",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
                         "Origin": f"https://alexa.{self.config.amazon_domain}",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", None),
                     },
                     json=payload,
                     timeout=10,
                 )
+                assert response is not None
                 response.raise_for_status()
 
                 timer_data = response.json()
@@ -222,15 +246,16 @@ class TimerManager:
             logger.debug("🌐 Récupération de tous les timers depuis l'API notifications")
 
             response = self.breaker.call(
-                self.auth.session.get,
+                self.http_client.get,
                 f"https://{self.config.alexa_domain}/api/notifications",
                 headers={
                     "Content-Type": "application/json; charset=UTF-8",
                     "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "csrf": self.auth.csrf,
+                    "csrf": getattr(self.http_client, "csrf", None),
                 },
                 timeout=10,
             )
+            assert response is not None
             response.raise_for_status()
 
             # Gérer le cas où la réponse est vide
@@ -328,15 +353,16 @@ class TimerManager:
 
             try:
                 response = self.breaker.call(
-                    self.auth.session.delete,
+                    self.http_client.delete,
                     f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", None),
                     },
                     timeout=10,
                 )
+                assert response is not None
                 response.raise_for_status()
 
                 logger.success(f"Timer {timer_id} annulé")
@@ -369,16 +395,17 @@ class TimerManager:
                 payload = {"status": "PAUSED"}
 
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", None),
                     },
                     json=payload,
                     timeout=10,
                 )
+                assert response is not None
                 response.raise_for_status()
 
                 logger.success(f"Timer {timer_id} mis en pause")
@@ -411,16 +438,17 @@ class TimerManager:
                 payload = {"status": "ON"}
 
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", None),
                     },
                     json=payload,
                     timeout=10,
                 )
+                assert response is not None
                 response.raise_for_status()
 
                 logger.success(f"Timer {timer_id} repris")
