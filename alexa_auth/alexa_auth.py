@@ -119,19 +119,17 @@ class AlexaAuth:
         """
         # Essai 1: cookie-resultat.json (format complet)
         cookie_json = self.data_dir / "cookie-resultat.json"
-        if cookie_json.exists():
-            if self._load_from_json(cookie_json):
-                logger.info("Cookies chargés depuis cookie-resultat.json")
-                self.cookies_loaded = True
-                return True
+        if cookie_json.exists() and self._load_from_json(cookie_json):
+            logger.info("Cookies chargés depuis cookie-resultat.json")
+            self.cookies_loaded = True
+            return True
 
         # Essai 2: cookie.txt (format Netscape)
         cookie_txt = self.data_dir / "cookie.txt"
-        if cookie_txt.exists():
-            if self._load_from_txt(cookie_txt):
-                logger.info("Cookies chargés depuis cookie.txt")
-                self.cookies_loaded = True
-                return True
+        if cookie_txt.exists() and self._load_from_txt(cookie_txt):
+            logger.info("Cookies chargés depuis cookie.txt")
+            self.cookies_loaded = True
+            return True
 
         logger.warning("Aucun fichier de cookies valide trouvé")
         return False

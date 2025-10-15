@@ -584,10 +584,7 @@ class AlarmCommand(BaseCommand):
                 time_display = "N/A"
 
             # Récurrence
-            if recurrence_eligible:
-                repeat_text = "Récurrente"
-            else:
-                repeat_text = "Une seule fois"
+            repeat_text = "Récurrente" if recurrence_eligible else "Une seule fois"
 
             # Tronquer l'ID pour l'affichage
             short_id = alarm_id.split("-")[-1][:8] if "-" in alarm_id else alarm_id[:8]

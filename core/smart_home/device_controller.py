@@ -3,7 +3,7 @@ Contrôleur générique pour appareils Smart Home - Thread-safe.
 """
 
 import threading
-from typing import Dict, Optional, List, Any
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 

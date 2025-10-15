@@ -1,13 +1,13 @@
-from typing import Protocol, Optional, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 if TYPE_CHECKING:
     from alexa_auth.alexa_auth import AlexaAuth
+    from core.config import Config
     from core.device_manager import DeviceManager
+    from core.state_machine import AlexaStateMachine
+    from services.cache_service import CacheService
     from services.sync_service import SyncService
     from services.voice_command_service import VoiceCommandService
-    from core.state_machine import AlexaStateMachine
-    from core.config import Config
-    from services.cache_service import CacheService
 
 
 class ContextProtocol(Protocol):

@@ -12,27 +12,28 @@ Date: 7 octobre 2025
 """
 
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     # Importer uniquement pour annotations afin d'éviter cycles d'import
     from alexa_auth.alexa_auth import AlexaAuth
-    from core.device_manager import DeviceManager
-    from core.timers import TimerManager
-    from core.alarms import AlarmManager
-    from core.reminders import ReminderManager
-    from core.smart_home import LightController, ThermostatController, SmartDeviceController
-    from core.music import PlaybackManager, TuneInManager, LibraryManager
-    from services.music_library import MusicLibraryService
-    from core.notification_manager import NotificationManager
-    from core.dnd_manager import DNDManager
     from core.activity_manager import ActivityManager
+    from core.alarms import AlarmManager
+    from core.audio import BluetoothManager, EqualizerManager
+
     # from core.communication import AnnouncementManager  # DEPRECATED - module vide
     from core.calendar import CalendarManager
-    from core.routines import RoutineManager
+    from core.device_manager import DeviceManager
+    from core.dnd_manager import DNDManager
     from core.lists.lists_manager import ListsManager
-    from core.audio import EqualizerManager, BluetoothManager
+    from core.music import LibraryManager, PlaybackManager, TuneInManager
+    from core.notification_manager import NotificationManager
+    from core.reminders import ReminderManager
+    from core.routines import RoutineManager
     from core.settings import DeviceSettingsManager
+    from core.smart_home import LightController, SmartDeviceController, ThermostatController
+    from core.timers import TimerManager
+    from services.music_library import MusicLibraryService
     from services.sync_service import SyncService
     from services.voice_command_service import VoiceCommandService
 
@@ -109,33 +110,33 @@ class Context:
         self.cache_service = CacheService()
 
         # Auth et device manager (initialisés à None, créés au login)
-        self.auth: Optional["AlexaAuth"] = None
-        self._device_mgr_instance: Optional["DeviceManager"] = None
-        self._sync_service: Optional["SyncService"] = None
+        self.auth: Optional[AlexaAuth] = None
+        self._device_mgr_instance: Optional[DeviceManager] = None
+        self._sync_service: Optional[SyncService] = None
 
         # Managers de fonctionnalités (lazy-loaded)
-        self._timer_mgr: Optional["TimerManager"] = None
-        self._alarm_mgr: Optional["AlarmManager"] = None
-        self._reminder_mgr: Optional["ReminderManager"] = None
-        self._light_ctrl: Optional["LightController"] = None
-        self._thermostat_ctrl: Optional["ThermostatController"] = None
-        self._smarthome_ctrl: Optional["SmartDeviceController"] = None
-        self._playback_mgr: Optional["PlaybackManager"] = None
-        self._tunein_mgr: Optional["TuneInManager"] = None
-        self._library_mgr: Optional["LibraryManager"] = None
-        self._music_library: Optional["MusicLibraryService"] = None  # Service MusicLibrary (nouveau - shell script parity)
-        self._notification_mgr: Optional["NotificationManager"] = None
-        self._dnd_mgr: Optional["DNDManager"] = None
-        self._activity_mgr: Optional["ActivityManager"] = None
+        self._timer_mgr: Optional[TimerManager] = None
+        self._alarm_mgr: Optional[AlarmManager] = None
+        self._reminder_mgr: Optional[ReminderManager] = None
+        self._light_ctrl: Optional[LightController] = None
+        self._thermostat_ctrl: Optional[ThermostatController] = None
+        self._smarthome_ctrl: Optional[SmartDeviceController] = None
+        self._playback_mgr: Optional[PlaybackManager] = None
+        self._tunein_mgr: Optional[TuneInManager] = None
+        self._library_mgr: Optional[LibraryManager] = None
+        self._music_library: Optional[MusicLibraryService] = None  # Service MusicLibrary (nouveau - shell script parity)
+        self._notification_mgr: Optional[NotificationManager] = None
+        self._dnd_mgr: Optional[DNDManager] = None
+        self._activity_mgr: Optional[ActivityManager] = None
         # AnnouncementManager is DEPRECATED - core.communication is empty
         # self._announcement_mgr: Optional["AnnouncementManager"] = None
-        self._calendar_mgr: Optional["CalendarManager"] = None
-        self._routine_mgr: Optional["RoutineManager"] = None
-        self._list_mgr: Optional["ListsManager"] = None
-        self._equalizer_mgr: Optional["EqualizerManager"] = None
-        self._bluetooth_mgr: Optional["BluetoothManager"] = None
-        self._device_settings_mgr: Optional["DeviceSettingsManager"] = None
-        self._voice_service: Optional["VoiceCommandService"] = None  # Service de commandes vocales
+        self._calendar_mgr: Optional[CalendarManager] = None
+        self._routine_mgr: Optional[RoutineManager] = None
+        self._list_mgr: Optional[ListsManager] = None
+        self._equalizer_mgr: Optional[EqualizerManager] = None
+        self._bluetooth_mgr: Optional[BluetoothManager] = None
+        self._device_settings_mgr: Optional[DeviceSettingsManager] = None
+        self._voice_service: Optional[VoiceCommandService] = None  # Service de commandes vocales
 
         logger.debug("Context initialisé")
 
@@ -389,7 +390,6 @@ class Context:
     @property
     def sync_service(self):
         """Service de synchronisation (lazy-loaded)."""
-        from typing import Optional
 
         from services.sync_service import SyncService
 

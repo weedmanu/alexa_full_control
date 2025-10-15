@@ -12,15 +12,29 @@ import json
 from threading import RLock
 from typing import Any, Dict, List, Optional
 
+from loguru import logger
 from pybreaker import CircuitBreaker
 
 from config import Config
 from services.auth import AuthClient
 from utils.logger import SharedIcons, setup_loguru_logger
 
-# Initialiser le logger avec Loguru
+# Initialiser le logger avec Loguru (appel après imports)
 setup_loguru_logger()
-from loguru import logger
+
+# Common header values to avoid long repeated literals (helps ruff E501)
+_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0"
+
+def _make_headers(auth, config, referer_path="spa/index.html"):
+    return {
+        "User-Agent": _USER_AGENT,
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Content-Type": "application/json; charset=UTF-8",
+        "Referer": f"https://alexa.{config.amazon_domain}/{referer_path}",
+        "Origin": f"https://alexa.{config.amazon_domain}",
+        "csrf": auth.csrf,
+    }
 
 
 class MusicLibraryService:
@@ -62,22 +76,16 @@ class MusicLibraryService:
         with self._lock:
             try:
                 # Encoder le content token comme le shell script
-                content_data = f'["music/tuneIn/stationId","{station_id}"]|{{"previousPageId":"TuneIn_SEARCH"}}'
+                prefix = '["music/tuneIn/stationId","'
+                suffix = '"]|{"previousPageId":"TuneIn_SEARCH"}'
+                content_data = prefix + station_id + suffix
                 content_token = base64.b64encode(
                     base64.b64encode(content_data.encode()).decode().encode()
                 ).decode()
 
                 payload = {"contentToken": f"music:{content_token}"}
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
                     self.auth.session.put,
@@ -137,15 +145,7 @@ class MusicLibraryService:
                     logger.error("track_id ou (artist+album) requis")
                     return False
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
                     self.auth.session.post,
@@ -195,15 +195,7 @@ class MusicLibraryService:
             try:
                 payload = {"playlistId": playlist_id, "playQueuePrime": True}
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
                     self.auth.session.post,
@@ -248,15 +240,7 @@ class MusicLibraryService:
             try:
                 payload = {"asin": asin}
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
                     self.auth.session.post,
@@ -304,15 +288,7 @@ class MusicLibraryService:
                     "seedType": "KEY",
                 }
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
                     self.auth.session.post,
@@ -365,15 +341,7 @@ class MusicLibraryService:
                     "trackSource": "TRACK",
                 }
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
                     self.auth.session.post,
@@ -416,15 +384,7 @@ class MusicLibraryService:
                 offset = 0
                 size = 50
 
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 while True:
                     response = self.breaker.call(
@@ -459,15 +419,20 @@ class MusicLibraryService:
 
                     offset = next_token
 
-                logger.success(
-                    f"{SharedIcons.MUSIC} {len(all_tracks)} entrées bibliothèque récupérées pour {device_serial}"
+                count = len(all_tracks)
+                msg = (
+                    f"{SharedIcons.MUSIC} {count} entrées bibliothèque récupérées "
+                    f"pour {device_serial}"
                 )
+                logger.success(msg)
                 return all_tracks
 
             except Exception as e:
-                logger.error(
-                    f"{SharedIcons.ERROR} Erreur récupération bibliothèque pour {device_serial}: {e}"
+                msg = (
+                    f"{SharedIcons.ERROR} Erreur récupération bibliothèque pour "
+                    f"{device_serial}: {e}"
                 )
+                logger.error(msg)
                 return []
 
     def get_prime_playlists(
@@ -486,15 +451,7 @@ class MusicLibraryService:
         """
         with self._lock:
             try:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 # Récupérer les browse nodes
                 response = self.breaker.call(
@@ -538,15 +495,20 @@ class MusicLibraryService:
                         pl_data = pl_response.json()
                         all_playlists.extend(pl_data.get("playlists", []))
 
-                logger.success(
-                    f"{SharedIcons.MUSIC} {len(all_playlists)} playlists Prime récupérées pour {device_serial}"
+                count = len(all_playlists)
+                msg = (
+                    f"{SharedIcons.MUSIC} {count} playlists Prime récupérées "
+                    f"pour {device_serial}"
                 )
+                logger.success(msg)
                 return all_playlists
 
             except Exception as e:
-                logger.error(
-                    f"{SharedIcons.ERROR} Erreur récupération Prime playlists pour {device_serial}: {e}"
+                msg = (
+                    f"{SharedIcons.ERROR} Erreur récupération Prime playlists "
+                    f"pour {device_serial}: {e}"
                 )
+                logger.error(msg)
                 return []
 
     def get_prime_stations(
@@ -565,15 +527,7 @@ class MusicLibraryService:
         """
         with self._lock:
             try:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
-                }
+                headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
                     self.auth.session.get,
@@ -596,7 +550,9 @@ class MusicLibraryService:
                 return data.get("primeMusicSections", [])
 
             except Exception as e:
-                logger.error(
-                    f"{SharedIcons.ERROR} Erreur récupération Prime stations pour {device_serial}: {e}"
+                msg = (
+                    f"{SharedIcons.ERROR} Erreur récupération Prime stations "
+                    f"pour {device_serial}: {e}"
                 )
+                logger.error(msg)
                 return []

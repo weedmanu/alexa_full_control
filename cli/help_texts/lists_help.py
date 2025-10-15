@@ -1,6 +1,4 @@
-"""
-Aide simplifiée pour la catégorie LISTS.
-"""
+# ruff: noqa: E501
 
 LISTS_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m

@@ -1,8 +1,7 @@
-"""
-Aide simplifiée pour la catégorie AUTH.
-"""
+# noqa: E501
+# ruff: noqa: E501
+"""Aide simplifiée pour la catégorie AUTH.
 
-AUTH_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 \033[1;90mUsage:\033[0m
 
@@ -28,6 +27,9 @@ AUTH_DESCRIPTION = """\
 \033[0;90mPour plus de détails:\033[0m \033[1;36malexa auth --help-web\033[0m
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 """
+
+# Description courte utilisée par le parser
+AUTH_DESCRIPTION = "Aide pour la catégorie 'auth' — gestion de l'authentification et des tokens."
 
 # Placeholders pour compatibilité avec le code existant
 CREATE_HELP = "Voir aide principale: alexa auth -h"

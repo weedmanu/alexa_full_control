@@ -8,7 +8,6 @@ Ce module fournit une interface CLI pour consulter l'historique :
 """
 
 import argparse
-from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
@@ -97,7 +96,7 @@ class ActivityCommand(BaseCommand):
         )
 
         # Action: lastdevice
-        lastdevice_parser = subparsers.add_parser(
+        subparsers.add_parser(
             "lastdevice",
             help="Dernier appareil utilisé",
             description="Affiche le nom du dernier appareil qui a eu une interaction avec Alexa",

@@ -4,6 +4,8 @@ Contains the long description and short per-action descriptions used by the
 smarthome command parser.
 """
 
+# ruff: noqa: E501
+
 SMARTHOME_DESCRIPTION = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏠  CONTRÔLE DOMOTIQUE ALEXA

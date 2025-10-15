@@ -300,7 +300,7 @@ class CacheService:
         """
         with self._lock:
             count = 0
-            keys_to_delete = [key for key in self.metadata.keys() if key not in preserve_keys]
+            keys_to_delete = [key for key in self.metadata if key not in preserve_keys]
 
             for key in keys_to_delete:
                 if self.invalidate(key):
@@ -322,7 +322,7 @@ class CacheService:
         """
         with self._lock:
             count = 0
-            expired_keys = [key for key in self.metadata.keys() if self._is_expired(key)]
+            expired_keys = [key for key in self.metadata if self._is_expired(key)]
 
             for key in expired_keys:
                 if self.invalidate(key):

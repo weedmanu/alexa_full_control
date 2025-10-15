@@ -2,6 +2,8 @@
 Aide simplifiée pour la catégorie ROUTINE.
 """
 
+# ruff: noqa: E501
+
 ROUTINE_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 \033[1;90mUsage:\033[0m

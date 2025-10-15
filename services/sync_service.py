@@ -17,7 +17,7 @@ Date: 7 octobre 2025
 """
 
 import time
-from typing import Any, Dict, List, Optional, Callable, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 from loguru import logger
 

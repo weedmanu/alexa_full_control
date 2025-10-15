@@ -8,7 +8,7 @@ Ce module fournit une interface CLI pour gérer les routines Alexa :
 """
 
 import argparse
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter

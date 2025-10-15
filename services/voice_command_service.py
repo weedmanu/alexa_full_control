@@ -9,7 +9,7 @@ import json
 import threading
 
 # Import retardé pour éviter cycle avec core.smart_home
-from typing import TYPE_CHECKING, Optional, Any, Dict, List, Tuple, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 from loguru import logger
 
@@ -195,8 +195,8 @@ class VoiceCommandService:
                     response_data = response.json()
                     logger.debug(f"📥 Réponse API complète: status={getattr(response, 'status_code', 'unknown')}")
                     logger.debug(f"📥 Body: {json.dumps(response_data, indent=2)}")
-                except Exception:
-                    logger.debug(f"📥 Réponse API: status={getattr(response, 'status_code', 'unknown')}, no JSON body")
+                except Exception as e:
+                    logger.debug(f"📥 Réponse API: status={getattr(response, 'status_code', 'unknown')}, no JSON body: {e}")
 
                 logger.success(f"✅ Commande vocale envoyée: '{text_clean}'")
                 return True
@@ -316,8 +316,8 @@ class VoiceCommandService:
                     response_data = response.json() if hasattr(response, "json") else {}
                     logger.debug(f"📥 Réponse API: status={response.status_code}")
                     logger.debug(f"📥 Body: {json.dumps(response_data, indent=2)}")
-                except:
-                    logger.debug(f"📥 Réponse API: status={response.status_code}, no JSON body")
+                except Exception as e:
+                    logger.debug(f"📥 Réponse API: status={response.status_code}, no JSON body: {e}")
 
                 logger.success(f"✅ Commande vocale simulée envoyée: 'Alexa, {text_clean}'")
                 return True

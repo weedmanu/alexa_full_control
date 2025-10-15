@@ -38,7 +38,7 @@ class CacheCommand(BaseCommand):
         )
 
         # cache status
-        status_parser = subparsers.add_parser(
+        subparsers.add_parser(
             "status",
             help="Afficher statistiques cache",
             description=STATUS_HELP,
@@ -63,7 +63,7 @@ class CacheCommand(BaseCommand):
         )
 
         # cache clear
-        clear_parser = subparsers.add_parser(
+        subparsers.add_parser(
             "clear",
             help="Supprimer tout le cache",
             description=CLEAR_HELP,

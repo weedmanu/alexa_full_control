@@ -9,7 +9,7 @@ import argparse
 import json
 import re
 from datetime import time
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand

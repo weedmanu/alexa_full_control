@@ -144,7 +144,7 @@ class CalendarManager:
                     # Sauvegarder la réponse pour analyse
                     try:
                         results[f"{method} {endpoint}"]["data"] = response.json()
-                    except:
+                    except Exception:
                         results[f"{method} {endpoint}"]["text"] = response.text[:500]
                 else:
                     logger.warning(f"⚠️ {method} {endpoint} → {response.status_code}")

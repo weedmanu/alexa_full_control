@@ -109,9 +109,8 @@ class AlexaNetworkDiscovery:
                             seen_ips.add(ip)
                             device_info = self._parse_ssdp_response(response, ip)
                             devices.append(device_info)
-                            logger.info(
-                                f"  {SharedIcons.DEVICE} Trouvé: {ip} - {device_info.get('server', 'Unknown')}"
-                            )
+                            server_name = device_info.get("server", "Unknown")
+                            logger.info(f"  {SharedIcons.DEVICE} Trouvé: {ip} - {server_name}")
 
                 except socket.timeout:
                     break
@@ -239,7 +238,7 @@ class AlexaNetworkDiscovery:
                     logger.info(f"  {SharedIcons.SUCCESS} {endpoint} → {response.status_code}")
                     try:
                         results[endpoint]["data"] = response.json()
-                    except:
+                    except Exception:
                         results[endpoint]["text"] = response.text[:500]
                 else:
                     logger.debug(f"  {SharedIcons.WARNING} {endpoint} → {response.status_code}")

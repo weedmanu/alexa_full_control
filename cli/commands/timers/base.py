@@ -7,7 +7,7 @@ Date: 8 octobre 2025
 
 import re
 from datetime import timedelta
-from typing import Optional, Callable, Any
+from typing import Any, Callable, Optional
 
 from loguru import logger
 

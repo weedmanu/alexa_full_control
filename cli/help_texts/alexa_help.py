@@ -30,6 +30,7 @@ from utils.help_formatter import (
     format_prerequisites,
     format_subcategories,
     format_usage,
+    create_category_help,
 )
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -153,8 +154,6 @@ MAIN_HELP_TEMPLATE = get_main_help()
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 📋 DÉFINITIONS DES CATÉGORIES
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-from utils.help_formatter import create_category_help
 
 
 def _get_timers_help() -> str:

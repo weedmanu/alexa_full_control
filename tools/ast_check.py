@@ -1,7 +1,9 @@
-import ast, sys
+import ast
+
 p = r'c:\Users\weedm\Downloads\alexa_full_control\cli\context.py'
 try:
-    s = open(p, 'r', encoding='utf-8').read()
+    with open(p, encoding='utf-8') as fh:
+        s = fh.read()
     ast.parse(s)
     print('OK')
 except SyntaxError as e:

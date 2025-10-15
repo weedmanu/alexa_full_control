@@ -115,7 +115,7 @@ class StatusCommands(MusicSubCommand):
 
         # Informations du morceau
         info_data = state.get("playerInfo", {}).get("infoText", {})
-        media_data = state.get("playerInfo", {}).get("mainArt", {})
+        state.get("playerInfo", {}).get("mainArt", {})
 
         title = info_data.get("title", "Inconnu")
         artist = info_data.get("subText1", "Inconnu")

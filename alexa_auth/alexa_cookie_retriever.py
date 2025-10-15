@@ -217,10 +217,18 @@ class CookieRetriever:
 
         refresh_script = self.nodejs_dir / "refresh-cookie.js"
 
+        # Vérifier que l'exécutable node est trouvable
+        import shutil
+
+        node_cmd = shutil.which("node") or (str(self.nodejs_dir / "node") if (self.nodejs_dir / "node").exists() else None)
+        if not node_cmd:
+            print_error("Node.js introuvable pour rafraîchir le cookie")
+            sys.exit(1)
+
         try:
-            subprocess.run(["node", str(refresh_script)], cwd=self.nodejs_dir, check=True)
-        except subprocess.CalledProcessError:
-            print_error("Échec du rafraîchissement du cookie")
+            subprocess.run([node_cmd, str(refresh_script)], cwd=self.nodejs_dir, check=True)
+        except subprocess.CalledProcessError as e:
+            print_error(f"Échec du rafraîchissement du cookie: {e}")
             sys.exit(1)
 
     def launch_initial_setup(self, email: str, password: str, mfa_secret: Optional[str] = None):
@@ -245,10 +253,18 @@ class CookieRetriever:
         if mfa_secret:
             cmd.extend(["--mfaSecret", mfa_secret])
 
+        # Vérifier que node existe avant d'appeler
+        import shutil
+
+        node_cmd = shutil.which(str(node_executable)) or shutil.which("node") or (str(node_executable) if node_executable.exists() else None)
+        if not node_cmd:
+            print_error("Node.js introuvable pour l'authentification initiale")
+            sys.exit(1)
+
         try:
-            subprocess.run(cmd, cwd=self.nodejs_dir, check=True)
-        except subprocess.CalledProcessError:
-            print_error("Échec de l'authentification initiale")
+            subprocess.run([node_cmd, str(setup_script), "--email", email, "--password", password], cwd=self.nodejs_dir, check=True)
+        except subprocess.CalledProcessError as e:
+            print_error(f"Échec de l'authentification initiale: {e}")
             sys.exit(1)
 
 

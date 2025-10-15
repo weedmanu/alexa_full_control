@@ -88,7 +88,7 @@ class AuthCommand(BaseCommand):
         )
 
         # Action: status
-        status_parser = subparsers.add_parser(
+        subparsers.add_parser(
             "status",
             help="Vérifier l'état de connexion",
             description=STATUS_HELP,
@@ -447,7 +447,7 @@ class AuthCommand(BaseCommand):
         try:
             version = node_env.get_node_version()
             return version is not None and version.startswith("v")
-        except:
+        except Exception:
             return False
 
     def _check_npm_dependencies(self) -> bool:
@@ -462,11 +462,7 @@ class AuthCommand(BaseCommand):
 
         # Vérifier quelques packages clés
         required_packages = ["alexa-cookie2", "yargs"]
-        for package in required_packages:
-            if not (node_modules / package).exists():
-                return False
-
-        return True
+        return all((node_modules / package).exists() for package in required_packages)
 
     def _check_required_files(self) -> bool:
         """Vérifie si les fichiers requis existent"""
@@ -478,11 +474,7 @@ class AuthCommand(BaseCommand):
             "alexa_auth/nodejs/auth-initial.js",
         ]
 
-        for file_path in required_files:
-            if not Path(file_path).exists():
-                return False
-
-        return True
+        return all(Path(file_path).exists() for file_path in required_files)
 
     def _show_installation_instructions(self, issues):
         """Affiche les instructions d'installation selon les problèmes détectés"""

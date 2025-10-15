@@ -12,7 +12,7 @@ import argparse
 import json
 import sys
 from abc import ABC, abstractmethod
-from typing import Any, Optional, TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 if TYPE_CHECKING:
     from .types import ContextProtocol

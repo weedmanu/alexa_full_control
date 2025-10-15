@@ -398,10 +398,7 @@ class ReminderCommand(BaseCommand):
                 datetime_display = "N/A"
 
             # Récurrence
-            if recurrence:
-                repeat_text = f"Récurrent ({recurrence})"
-            else:
-                repeat_text = "Une seule fois"
+            repeat_text = f"Récurrent ({recurrence})" if recurrence else "Une seule fois"
 
             # Tronquer l'ID pour l'affichage
             short_id = reminder_id.split("-")[-1][:8] if "-" in reminder_id else reminder_id[:8]

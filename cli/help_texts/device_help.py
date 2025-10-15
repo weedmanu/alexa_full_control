@@ -1,8 +1,7 @@
+# ruff: noqa: E501
 """
 Aide simplifiée pour la catégorie DEVICE.
-"""
 
-DEVICE_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 \033[1;90mUsage:\033[0m
 
@@ -45,3 +44,10 @@ DEVICE_DESCRIPTION = """\
 INFO_HELP = "Voir aide principale: alexa device -h"
 LIST_HELP = "Voir aide principale: alexa device -h"
 VOLUME_HELP = "Voir aide principale: alexa device -h"
+
+# Description constant exported for CLI help imports
+DEVICE_DESCRIPTION = (
+  'Gestion des appareils (liste, informations, contrôle du volume). '
+  'Exemples: "alexa device list", "alexa device info --device \"Salon Echo\"", '
+  '"alexa device volume set --device \"Salon Echo\" --level 50".'
+)

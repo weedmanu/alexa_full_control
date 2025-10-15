@@ -41,6 +41,8 @@ except ImportError:
     logger = None  # type: ignore
 
 # Import de la fonction setup_loguru_logger depuis utils/logger.py
+import contextlib
+
 from utils.logger import SharedIcons, setup_loguru_logger
 
 
@@ -1083,39 +1085,38 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
             )
 
         # If running within the project venv, block dangerous operations
-        if running_in_project_venv_fn():
-            if args.uninstall or not args.dry_run:
-                print()
-                Logger.error("Le script est exécuté depuis le .venv du projet.")
+        if running_in_project_venv_fn() and (args.uninstall or not args.dry_run):
+            print()
+            Logger.error("Le script est exécuté depuis le .venv du projet.")
 
-                if platform.system() == "Windows":
-                    Logger.info(
-                        "Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:"
-                    )
-                    Logger.info("  PowerShell: deactivate")
-                    Logger.info("  CMD: deactivate")
-                    Logger.info(
-                        "Ensuite relancez la commande depuis votre shell utilisateur, par exemple:"
-                    )
-                    if args.uninstall:
-                        Logger.info("  python scripts/install.py --uninstall")
-                    else:
-                        Logger.info("  python scripts/install.py")
+            if platform.system() == "Windows":
+                Logger.info(
+                    "Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:"
+                )
+                Logger.info("  PowerShell: deactivate")
+                Logger.info("  CMD: deactivate")
+                Logger.info(
+                    "Ensuite relancez la commande depuis votre shell utilisateur, par exemple:"
+                )
+                if args.uninstall:
+                    Logger.info("  python scripts/install.py --uninstall")
                 else:
-                    Logger.info(
-                        "Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:"
-                    )
-                    Logger.info("  Bash / Zsh: deactivate")
-                    Logger.info(
-                        "Ensuite relancez la commande depuis votre shell utilisateur, par exemple:"
-                    )
-                    if args.uninstall:
-                        Logger.info("  python3 scripts/install.py --uninstall")
-                    else:
-                        Logger.info("  python3 scripts/install.py")
+                    Logger.info("  python scripts/install.py")
+            else:
+                Logger.info(
+                    "Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:"
+                )
+                Logger.info("  Bash / Zsh: deactivate")
+                Logger.info(
+                    "Ensuite relancez la commande depuis votre shell utilisateur, par exemple:"
+                )
+                if args.uninstall:
+                    Logger.info("  python3 scripts/install.py --uninstall")
+                else:
+                    Logger.info("  python3 scripts/install.py")
 
-                # Block the operation
-                raise CLIError(2)
+            # Block the operation
+            raise CLIError(2)
 
         if args.uninstall:
             Logger.header("DÉSINSTALLATION", SharedIcons.TRASH)
@@ -1141,12 +1142,12 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
     except KeyboardInterrupt:
         print()
         Logger.error("Installation interrompue par l'utilisateur")
-        raise CLIError(1)
+        raise CLIError(1) from KeyboardInterrupt()
     except Exception as e:
         print()
         Logger.error(f"Erreur lors de l'installation: {e}")
         Logger.info("Consultez les logs ci-dessus pour plus de détails")
-        raise CLIError(1)
+        raise CLIError(1) from e
 
 
 def _setup_install_logging(args: argparse.Namespace, install_dir: Path) -> None:
@@ -1268,10 +1269,8 @@ Exemples:
     install_dir = script_dir.parent
 
     # Tentative d'assurer que la console est en UTF-8 (best-effort)
-    try:
+    with contextlib.suppress(Exception):
         ensure_utf8_console()
-    except Exception:
-        pass
 
     # Configuration du logging (Loguru si disponible)
     _setup_install_logging(args, install_dir)

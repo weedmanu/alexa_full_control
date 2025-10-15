@@ -5,7 +5,7 @@ Auteur: M@nu
 Date: 8 octobre 2025
 """
 
-from typing import Optional, Tuple, Callable, Any
+from typing import Any, Callable, Optional, Tuple
 
 from loguru import logger
 

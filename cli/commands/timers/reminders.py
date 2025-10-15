@@ -6,7 +6,7 @@ Date: 8 octobre 2025
 """
 
 import argparse
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand

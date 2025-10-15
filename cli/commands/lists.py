@@ -273,7 +273,7 @@ class ListsCommand(BaseCommand):
                 return False
 
             # Utiliser get_list_content pour récupérer le contenu via commande vocale
-            content = voice.get_list_content(list_type, device_serial, wait_seconds=5.0)
+            voice.get_list_content(list_type, device_serial, wait_seconds=5.0)
 
             # La commande vocale a été envoyée, considérer cela comme un succès
             # même si on ne peut pas récupérer la réponse textuelle

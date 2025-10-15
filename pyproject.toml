@@ -114,8 +114,6 @@ max-statements = 60
 [tool.ruff]
 line-length = 100
 target-version = "py38"
-select = ["E", "W", "F", "I", "N", "UP", "B", "C4", "SIM"]
-ignore = ["E501"]
 exclude = [
     "scripts",
     ".git",
@@ -132,6 +130,10 @@ exclude = [
     "*.egg",
     "alexa_auth/nodejs"
 ]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
 
 # ============================================================================
 # COVERAGE - Couverture de code

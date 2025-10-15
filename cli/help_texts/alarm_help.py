@@ -1,8 +1,7 @@
-"""
-Aide simplifiée pour la catégorie ALARM.
-"""
+# noqa: E501
+# ruff: noqa: E501
+"""Aide simplifiée pour la catégorie ALARM.
 
-ALARM_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 \033[1;90mUsage:\033[0m
 
@@ -27,6 +26,9 @@ ALARM_DESCRIPTION = """\
 \033[0;90mPour plus de détails:\033[0m \033[1;36malexa alarm --help-web\033[0m
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 """
+
+# Description courte utilisée par le parser
+ALARM_DESCRIPTION = "Aide pour la catégorie 'alarm' — création, liste, suppression et gestion des alarmes."
 
 # Placeholders pour compatibilité avec le code existant
 CREATE_HELP = "Voir aide principale: alexa alarm -h"

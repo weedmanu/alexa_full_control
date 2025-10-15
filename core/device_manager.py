@@ -113,10 +113,9 @@ class DeviceManager:
         """
         with self._lock:
             # Niveau 1 : Cache mémoire (avec TTL)
-            if not force_refresh and self._is_cache_valid():
-                if self._devices_cache is not None:
-                    logger.debug(f"✅ Cache mémoire: {len(self._devices_cache)} appareils")
-                    return self._devices_cache
+            if not force_refresh and self._is_cache_valid() and self._devices_cache is not None:
+                logger.debug(f"✅ Cache mémoire: {len(self._devices_cache)} appareils")
+                return self._devices_cache
 
             # Niveau 2 : Cache disque (SANS TTL - toujours valide si présent)
             # Utilisé uniquement si cache mémoire expiré/absent

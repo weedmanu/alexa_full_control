@@ -108,7 +108,14 @@ class Config:
         if sys.platform == "win32":
             tmp_path = Path(os.getenv("TEMP", "C:\\Temp"))
         else:
-            tmp_path = Path("/tmp")
+            # Use tempfile.gettempdir() instead of hardcoded '/tmp'
+            try:
+                import tempfile
+
+                tmp_path = Path(tempfile.gettempdir())
+            except Exception:
+                # Fallback to current working directory if tempdir unavailable
+                tmp_path = Path('.')
 
         # Vérifier que le répertoire existe et est accessible
         if not tmp_path.exists():

@@ -231,10 +231,11 @@ class LightController:
         with self._lock:
             # Vérifier cache mémoire
             current_time = time.time()
-            if not force_refresh and self._lights_cache is not None:
-                if current_time - self._cache_timestamp < self._cache_ttl:
-                    logger.debug("📦 Lumières depuis cache mémoire")
-                    return self._lights_cache
+            if not force_refresh and self._lights_cache is not None and (
+                current_time - self._cache_timestamp < self._cache_ttl
+            ):
+                logger.debug("📦 Lumières depuis cache mémoire")
+                return self._lights_cache
 
             # Refresh depuis cache smart_home_all ou API
             return self._refresh_lights_cache()

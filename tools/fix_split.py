@@ -1,4 +1,5 @@
 from pathlib import Path
+
 p=Path('cli/context.py')
 s=p.read_text(encoding='utf-8')
 old='self._sync_service = SyncService(self.auth, self.config, self.state_ma\nchine)'

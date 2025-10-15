@@ -15,7 +15,7 @@ Date: 7 octobre 2025
 
 import argparse
 import json
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter

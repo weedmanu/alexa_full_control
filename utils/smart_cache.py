@@ -309,7 +309,7 @@ class SmartCache:
         """
         import fnmatch
 
-        keys_to_invalidate = [key for key in self._entries.keys() if fnmatch.fnmatch(key, pattern)]
+        keys_to_invalidate = [key for key in self._entries if fnmatch.fnmatch(key, pattern)]
 
         count = 0
         for key in keys_to_invalidate:

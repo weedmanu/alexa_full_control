@@ -1,8 +1,7 @@
-"""
-Aide simplifiée pour la catégorie ANNOUNCEMENT.
-"""
+# noqa: E501
+# ruff: noqa: E501
+"""Aide simplifiée pour la catégorie ANNOUNCEMENT.
 
-ANNOUNCE_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 \033[1;90mUsage:\033[0m
 
@@ -25,6 +24,9 @@ ANNOUNCE_DESCRIPTION = """\
 \033[0;90mPour plus de détails:\033[0m \033[1;36malexa announcement --help-web\033[0m
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 """
+
+# Description courte utilisée par le parser
+ANNOUNCE_DESCRIPTION = "Aide pour la catégorie 'announcement' — envoyer, lister, effacer et lire les annonces."
 
 # Placeholders pour compatibilité avec le code existant
 CLEAR_HELP = "Voir aide principale: alexa announcement -h"

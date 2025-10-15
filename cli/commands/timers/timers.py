@@ -7,7 +7,7 @@ Date: 8 octobre 2025
 
 import argparse
 import json
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand

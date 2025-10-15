@@ -70,7 +70,7 @@ class MultiroomCommand(BaseCommand):
         )
 
         # Action: list
-        list_parser = subparsers.add_parser(
+        subparsers.add_parser(
             "list",
             help="Lister groupes",
             description=LIST_HELP,

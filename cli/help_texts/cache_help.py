@@ -1,8 +1,6 @@
-"""
-Aide simplifiée pour la catégorie CACHE.
-"""
+# ruff: noqa: E501
+"""Aide simplifiée pour la catégorie CACHE.
 
-CACHE_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 \033[1;90mUsage:\033[0m
 
@@ -25,6 +23,9 @@ CACHE_DESCRIPTION = """\
   \033[1;90malexa\033[0m \033[1;32mcache\033[0m \033[1;34mclear\033[0m
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 """
+
+# Description courte utilisée par le parser
+CACHE_DESCRIPTION = "Aide pour la catégorie 'cache' — inspection et gestion du cache local." 
 
 # Placeholders pour compatibilité avec le code existant
 CLEAR_HELP = "Voir aide principale: alexa cache -h"

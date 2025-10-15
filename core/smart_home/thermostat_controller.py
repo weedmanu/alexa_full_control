@@ -3,7 +3,7 @@ Contrôleur pour thermostats connectés - Thread-safe.
 """
 
 import threading
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 

@@ -2,6 +2,8 @@
 Aide simplifiée pour la catégorie REMINDER.
 """
 
+# ruff: noqa: E501
+
 REMINDER_DESCRIPTION = """\
 \033[1;30m──────────────────────────────────────────────────────────────────────\033[0m
 \033[1;90mUsage:\033[0m

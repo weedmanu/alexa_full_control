@@ -36,6 +36,8 @@ Autres fonctions communes :
 - format_more_help_main()               → Section aide (alexa -h uniquement)
 """
 
+# ruff: noqa: E501
+
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -257,7 +259,7 @@ class HelpComponents:
         # Variable pour suivre si on a déjà vu une catégorie
         seen_category = False
 
-        for i, part in enumerate(parts):
+        for _i, part in enumerate(parts):
             if part == "alexa":
                 colored_parts.append(f"{Colors.WHITE_BOLD}{part}{Colors.RESET}")
             elif part in ["--verbose", "--debug", "--json", "-v"]:
@@ -407,8 +409,7 @@ class HelpComponents:
 
 def format_header(icon: str, title: str) -> str:
     """Formate un header principal centré avec bordures."""
-    comp = HelpComponents()
-    return comp.header(icon, title)
+    return HelpComponents.header(icon, title)
 
 
 def format_features(
@@ -418,25 +419,24 @@ def format_features(
     show_title: bool = True,
 ) -> str:
     """Formate une section de fonctionnalités avec titre encadré."""
-    comp = HelpComponents()
+    # Utilise HelpComponents directement
 
     if show_title:
         separator = f"{Colors.GRAY_BOLD}{'━' * 100}{Colors.RESET}"
         title_line = f"{Colors.GRAY_BOLD}{emoji} {title}:{Colors.RESET}"
-        content = comp.bullet_list(items)
+        content = HelpComponents.bullet_list(items)
         return f"{separator}\n{title_line}\n{separator}\n\n{content}"
     else:
         # Pour l'aide principale, juste le contenu sans titre
-        content = comp.bullet_list(items)
+        content = HelpComponents.bullet_list(items)
         return f"\n{content}"
 
 
 def format_architecture(items: List[str]) -> str:
     """Formate une section architecture avec titre encadré."""
-    comp = HelpComponents()
     separator = f"{Colors.GRAY_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.GRAY_BOLD}🏗️ Architecture modulaire:{Colors.RESET}"
-    content = comp.bullet_list(items)
+    content = HelpComponents.bullet_list(items)
     return f"{separator}\n{title_line}\n{separator}\n\n{content}"
 
 
@@ -456,11 +456,11 @@ def format_usage(
         subactions: Sous-actions possibles (ex: "get|set")
         is_main: Si True, affiche l'usage général complet
     """
-    comp = HelpComponents()
+    # Utilise HelpComponents via ses méthodes statiques
     title_text = "Usage général" if is_main else "Usage"
     separator = f"{Colors.WHITE_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.WHITE_BOLD}📖 {title_text}:{Colors.RESET}"
-    usage = comp.usage_line("alexa", category, subcategory, action, subactions, is_main)
+    usage = HelpComponents.usage_line("alexa", category, subcategory, action, subactions, is_main)
     return f"{separator}\n{title_line}\n{separator}\n\n  {usage}"
 
 
@@ -472,7 +472,7 @@ def format_global_options(include_help_version: bool = True, category: Optional[
                              (pour les aides de catégories)
         category: Nom de la catégorie pour afficher des exemples contextuels (ex: "auth")
     """
-    comp = HelpComponents()
+    # Utilise HelpComponents via ses méthodes statiques
     separator = f"{Colors.MAGENTA_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.MAGENTA_BOLD}🔧 Options globales disponibles:{Colors.RESET}"
 
@@ -514,10 +514,10 @@ def format_global_options(include_help_version: bool = True, category: Optional[
         content = (
             desc
             + "\n"
-            + comp.option_list(standalone_options)
+            + HelpComponents.option_list(standalone_options)
             + desc2
             + "\n"
-            + comp.option_list(modifier_options)
+            + HelpComponents.option_list(modifier_options)
         )
     else:
         # Pour les aides de catégories : afficher uniquement les modificateurs avec <ACTION>
@@ -541,14 +541,14 @@ def format_global_options(include_help_version: bool = True, category: Optional[
             },
         ]
 
-        content = desc + "\n" + comp.option_list(modifier_options)
+    content = desc + "\n" + HelpComponents.option_list(modifier_options)
 
     return f"\n{separator}\n{title_line}\n{separator}\n{content}"
 
 
 def format_categories(categories: List[Dict[str, str]]) -> str:
     """Formate la section des catégories avec titre encadré."""
-    comp = HelpComponents()
+    # Utilise HelpComponents via ses méthodes statiques
     separator = f"{Colors.GREEN_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.GREEN_BOLD}📂 Catégories de commandes:{Colors.RESET}"
 
@@ -570,7 +570,7 @@ def format_categories(categories: List[Dict[str, str]]) -> str:
 
 def format_subcategories(subcategories: List[Dict[str, str]]) -> str:
     """Formate la section des sous-catégories avec titre encadré."""
-    comp = HelpComponents()
+    # Utilise HelpComponents via ses méthodes statiques
     separator = f"{Colors.CYAN_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.CYAN_BOLD}🔖 Sous-catégories disponibles:{Colors.RESET}"
 
@@ -597,7 +597,6 @@ def format_actions(actions: List[Dict[str, Any]]) -> str:
         actions: Liste de dictionnaires avec 'name', 'desc', et optionnellement 'options'
                  Exemple: {"name": "create", "desc": "...", "options": [{"flag": "--force", "description": "..."}]}
     """
-    comp = HelpComponents()
     separator = f"{Colors.ORANGE_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.ORANGE_BOLD}⚡ Actions disponibles et options possibles:{Colors.RESET}"
 
@@ -644,16 +643,14 @@ def format_actions(actions: List[Dict[str, Any]]) -> str:
 
 def format_action_options(options: List[Dict[str, str]]) -> str:
     """Formate la section des options d'action avec titre encadré."""
-    comp = HelpComponents()
     separator = f"{Colors.MAGENTA_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.MAGENTA_BOLD}⚙️ Options d'action:{Colors.RESET}"
-    content = comp.option_list(options)
+    content = HelpComponents.option_list(options)
     return f"\n{separator}\n{title_line}\n{separator}\n\n{content}"
 
 
 def format_examples(examples: List[str]) -> str:
     """Formate la section des exemples avec titre encadré et alignement dynamique."""
-    comp = HelpComponents()
     separator = f"{Colors.YELLOW_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.YELLOW_BOLD}📋 Exemples d'utilisation:{Colors.RESET}"
 
@@ -669,16 +666,15 @@ def format_examples(examples: List[str]) -> str:
     align_column = max(50, max_length + 2)
 
     # Deuxième passe : formater avec alignement
-    content = "\n".join(comp.example_with_alignment(ex, align_column) for ex in examples)
+    content = "\n".join(HelpComponents.example_with_alignment(ex, align_column) for ex in examples)
     return f"\n{separator}\n{title_line}\n{separator}\n\n{content}"
 
 
 def format_prerequisites(prereqs: List[str]) -> str:
     """Formate la section des prérequis avec titre encadré."""
-    comp = HelpComponents()
     separator = f"{Colors.RED_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.RED_BOLD}⚠️  Prérequis essentiels:{Colors.RESET}"
-    content = comp.bullet_list(prereqs)
+    content = HelpComponents.bullet_list(prereqs)
     closing_separator = "━" * 100  # Ligne finale sans couleur (comme le header principal)
     return f"\n{separator}\n{title_line}\n{separator}\n\n{content}\n\n{closing_separator}"
 
@@ -689,7 +685,6 @@ def format_current_category(category_name: str, description: str, emoji: str = "
     Utilise le même vert foncé que <CATEGORIE> dans la ligne d'usage (\\033[1;32m),
     en version GRAS avec des lignes ÉPAISSES (━).
     """
-    comp = HelpComponents()
     separator = f"{Colors.GREEN_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.GREEN_BOLD}{emoji} Catégorie actuelle:{Colors.RESET}"
     content = f"  {Colors.GREEN_BOLD}{category_name}{Colors.RESET} : {description}"
@@ -708,7 +703,6 @@ def format_category_options(
         category: Nom de la catégorie pour construire la ligne alexa <category> -h
         options_text: Texte brut des options (pour compatibilité)
     """
-    comp = HelpComponents()
     # Même teinte de vert, mais non-gras
     green_normal = "\033[0;32m"
     separator = f"{green_normal}{'─' * 100}{Colors.RESET}"
@@ -730,7 +724,6 @@ def format_category_options(
 
 def format_current_subcategory(subcategory_name: str, description: str, emoji: str = "🔖") -> str:
     """Formate la section 'Sous-catégorie actuelle' avec couleurs cohérentes."""
-    comp = HelpComponents()
     separator = f"{Colors.CYAN}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.CYAN}{emoji} Sous-catégorie actuelle:{Colors.RESET}"
     content = f"\n  {Colors.CYAN}{subcategory_name}{Colors.RESET} : {description}"
@@ -739,7 +732,6 @@ def format_current_subcategory(subcategory_name: str, description: str, emoji: s
 
 def format_subcategory_options(options_text: str) -> str:
     """Formate la section 'Options de la sous-catégorie actuelle' avec couleurs cohérentes."""
-    comp = HelpComponents()
     separator = f"{Colors.CYAN_BOLD}{'─' * 100}{Colors.RESET}"
     title_line = f"{Colors.CYAN}🔧 Options de la sous-catégorie actuelle:{Colors.RESET}"
     content = f"\n\n  {options_text}"
@@ -748,7 +740,6 @@ def format_subcategory_options(options_text: str) -> str:
 
 def format_more_help_main() -> str:
     """Formate la section 'Pour plus d'aide' pour l'aide principale avec titre encadré."""
-    comp = HelpComponents()
     separator = f"{Colors.WHITE_BOLD}{'━' * 100}{Colors.RESET}"
     title_line = f"{Colors.WHITE_BOLD}🆘 Pour plus d'aide:{Colors.RESET}"
 

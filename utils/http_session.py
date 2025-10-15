@@ -12,7 +12,7 @@ Date: 7 octobre 2025
 """
 
 from pathlib import Path
-from typing import Optional, Any, Union
+from typing import Any, Optional
 
 import requests
 import requests_cache
