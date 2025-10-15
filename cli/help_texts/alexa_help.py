@@ -281,9 +281,7 @@ class AlexaHelp:
         # Pour l'instant, retourner None - à implémenter avec le système modulaire
         return None
 
-    def get_action_help(
-        self, category: str, subcategory: Optional[str], action: str
-    ) -> Optional[str]:
+    def get_action_help(self, category: str, subcategory: Optional[str], action: str) -> Optional[str]:
         """
         Retourne l'aide d'une action spécifique.
 

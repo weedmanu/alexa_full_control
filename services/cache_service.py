@@ -8,12 +8,12 @@ Optimisé avec compression gzip pour réduire la taille des fichiers.
 import gzip
 import json
 import os
-import time
 import tempfile
+import time
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from threading import RLock
 from typing import Any, Dict, List, Optional
-from contextlib import contextmanager
 
 from loguru import logger
 
@@ -73,9 +73,7 @@ class CacheService:
         # Whether inter-process file locking is available
         self._portalocker_enabled = _portalocker is not None
         if not self._portalocker_enabled:
-            logger.debug(
-                "portalocker not available - inter-process cache locking is disabled"
-            )
+            logger.debug("portalocker not available - inter-process cache locking is disabled")
         self._stats = {
             "hits": 0,
             "misses": 0,
@@ -93,9 +91,7 @@ class CacheService:
 
         compression_status = "avec compression" if use_compression else "sans compression"
         json_copy_status = "avec copie JSON" if save_json_copy else "sans copie JSON"
-        logger.debug(
-            f"CacheService initialisé: {self.cache_dir} ({compression_status}, {json_copy_status})"
-        )
+        logger.debug(f"CacheService initialisé: {self.cache_dir} ({compression_status}, {json_copy_status})")
 
     def get(self, key: str, ignore_ttl: bool = False) -> Optional[Dict[str, Any]]:
         """
@@ -116,46 +112,45 @@ class CacheService:
             >>> devices = cache.get("devices", ignore_ttl=True)
         """
         # Use in-process lock plus optional inter-process file lock per-key
-        with self._lock:
-            with self._file_lock(key):
-                # Vérifier expiration (sauf si ignore_ttl=True)
-                if not ignore_ttl and self._is_expired(key):
-                    logger.debug(f"📦 Cache MISS (expired): {key}")
+        with self._lock, self._file_lock(key):
+            # Vérifier expiration (sauf si ignore_ttl=True)
+            if not ignore_ttl and self._is_expired(key):
+                logger.debug(f"📦 Cache MISS (expired): {key}")
+                self._stats["misses"] += 1
+                return None
+
+            # Chercher fichier compressé ou non compressé
+            cache_file_gz = self.cache_dir / f"{key}.json.gz"
+            cache_file = self.cache_dir / f"{key}.json"
+
+            # Priorité au fichier compressé
+            if cache_file_gz.exists():
+                try:
+                    with gzip.open(cache_file_gz, "rt", encoding="utf-8") as f:
+                        data = json.load(f)
+                    ttl_info = " (ignoring TTL)" if ignore_ttl else ""
+                    logger.debug(f"✅ Cache HIT (compressed): {key}{ttl_info}")
+                    self._stats["hits"] += 1
+                    return data
+                except (json.JSONDecodeError, OSError) as e:
+                    logger.error(f"Erreur lecture cache compressé {key}: {e}")
                     self._stats["misses"] += 1
                     return None
-
-                # Chercher fichier compressé ou non compressé
-                cache_file_gz = self.cache_dir / f"{key}.json.gz"
-                cache_file = self.cache_dir / f"{key}.json"
-
-                # Priorité au fichier compressé
-                if cache_file_gz.exists():
-                    try:
-                        with gzip.open(cache_file_gz, "rt", encoding="utf-8") as f:
-                            data = json.load(f)
-                        ttl_info = " (ignoring TTL)" if ignore_ttl else ""
-                        logger.debug(f"✅ Cache HIT (compressed): {key}{ttl_info}")
-                        self._stats["hits"] += 1
-                        return data
-                    except (json.JSONDecodeError, OSError) as e:
-                        logger.error(f"Erreur lecture cache compressé {key}: {e}")
-                        self._stats["misses"] += 1
-                        return None
-                elif cache_file.exists():
-                    try:
-                        data = json.loads(cache_file.read_text(encoding="utf-8"))
-                        ttl_info = " (ignoring TTL)" if ignore_ttl else ""
-                        logger.debug(f"✅ Cache HIT: {key}{ttl_info}")
-                        self._stats["hits"] += 1
-                        return data
-                    except (json.JSONDecodeError, OSError) as e:
-                        logger.error(f"Erreur lecture cache {key}: {e}")
-                        self._stats["misses"] += 1
-                        return None
-                else:
-                    logger.debug(f"📦 Cache MISS (not found): {key}")
+            elif cache_file.exists():
+                try:
+                    data = json.loads(cache_file.read_text(encoding="utf-8"))
+                    ttl_info = " (ignoring TTL)" if ignore_ttl else ""
+                    logger.debug(f"✅ Cache HIT: {key}{ttl_info}")
+                    self._stats["hits"] += 1
+                    return data
+                except (json.JSONDecodeError, OSError) as e:
+                    logger.error(f"Erreur lecture cache {key}: {e}")
                     self._stats["misses"] += 1
                     return None
+            else:
+                logger.debug(f"📦 Cache MISS (not found): {key}")
+                self._stats["misses"] += 1
+                return None
 
     def set(self, key: str, data: Dict[str, Any], ttl_seconds: int):
         """
@@ -170,136 +165,122 @@ class CacheService:
             >>> cache.set("devices", {"devices": devices_list}, ttl_seconds=3600)
             >>> # Cache valide pendant 1 heure, compressé automatiquement
         """
-        with self._lock:
-            # Acquire per-key file lock to avoid concurrent writers/readers
-            with self._file_lock(key):
-                try:
-                    # Sérialiser JSON (compact, sans indentation pour meilleure compression)
-                    json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
-                    original_size = len(json_str.encode("utf-8"))
+        with self._lock, self._file_lock(key):
+            try:
+                # Sérialiser JSON (compact, sans indentation pour meilleure compression)
+                json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+                original_size = len(json_str.encode("utf-8"))
 
-                    if self.use_compression:
-                        # Sauvegarder version compressée de façon atomique
-                        cache_file = self.cache_dir / f"{key}.json.gz"
-                        tmp_fd, tmp_path = tempfile.mkstemp(dir=self.cache_dir, prefix=f"{key}.", suffix='.json.gz.tmp')
-                        try:
-                            # write compressed bytes to temp file
-                            compressed_bytes = gzip.compress(json_str.encode('utf-8'))
-                            with os.fdopen(tmp_fd, 'wb') as tf:
-                                tf.write(compressed_bytes)
-                                tf.flush()
-                                os.fsync(tf.fileno())
-                            # atomic replace
-                            os.replace(tmp_path, str(cache_file))
-                            compressed_size = cache_file.stat().st_size
-                        finally:
-                            # ensure tmp file removed if something went wrong
-                            if os.path.exists(tmp_path):
-                                try:
-                                    os.remove(tmp_path)
-                                except OSError:
-                                    pass
-                        compression_ratio = (
-                            (1 - compressed_size / original_size) * 100 if original_size > 0 else 0
-                        )
+                if self.use_compression:
+                    # Sauvegarder version compressée de façon atomique
+                    cache_file = self.cache_dir / f"{key}.json.gz"
+                    tmp_fd, tmp_path = tempfile.mkstemp(dir=self.cache_dir, prefix=f"{key}.", suffix=".json.gz.tmp")
+                    try:
+                        # write compressed bytes to temp file
+                        compressed_bytes = gzip.compress(json_str.encode("utf-8"))
+                        with os.fdopen(tmp_fd, "wb") as tf:
+                            tf.write(compressed_bytes)
+                            tf.flush()
+                            os.fsync(tf.fileno())
+                        # atomic replace
+                        os.replace(tmp_path, str(cache_file))
+                        compressed_size = cache_file.stat().st_size
+                    finally:
+                        # ensure tmp file removed if something went wrong
+                        if os.path.exists(tmp_path):
+                            with suppress(OSError):
+                                os.remove(tmp_path)
+                    compression_ratio = (1 - compressed_size / original_size) * 100 if original_size > 0 else 0
 
-                        # Supprimer ancienne version non compressée si existe
-                        old_file = self.cache_dir / f"{key}.json"
-                        if old_file.exists():
-                            old_file.unlink()
+                    # Supprimer ancienne version non compressée si existe
+                    old_file = self.cache_dir / f"{key}.json"
+                    if old_file.exists():
+                        old_file.unlink()
 
-                        log_msg_prefix = f"{SharedIcons.SAVE} Cache saved (compressed): {key}"
-                        log_msg_details_part1 = f" (TTL: {ttl_seconds}s, {original_size}→{compressed_size} bytes,"
-                        log_msg_details_part2 = f" -{compression_ratio:.1f}%)"
-                        log_msg = log_msg_prefix + log_msg_details_part1 + log_msg_details_part2
-                    else:
-                        # Sauvegarder version non compressée de façon atomique (indentée pour lisibilité)
-                        cache_file = self.cache_dir / f"{key}.json"
-                        tmp_fd, tmp_path = tempfile.mkstemp(dir=self.cache_dir, prefix=f"{key}.", suffix='.json.tmp')
-                        try:
-                            with os.fdopen(tmp_fd, 'w', encoding='utf-8') as tf:
-                                tf.write(json.dumps(data, indent=2, ensure_ascii=False))
-                                tf.flush()
-                                os.fsync(tf.fileno())
-                            os.replace(tmp_path, str(cache_file))
-                            compressed_size = cache_file.stat().st_size
-                        finally:
-                            if os.path.exists(tmp_path):
-                                try:
-                                    os.remove(tmp_path)
-                                except OSError:
-                                    pass
-                        compression_ratio = 0
+                    log_msg_prefix = f"{SharedIcons.SAVE} Cache saved (compressed): {key}"
+                    log_msg_details_part1 = f" (TTL: {ttl_seconds}s, {original_size}\u2192{compressed_size} bytes,"
+                    log_msg_details_part2 = f" -{compression_ratio:.1f}%)"
+                    log_msg = log_msg_prefix + log_msg_details_part1 + log_msg_details_part2
+                else:
+                    # Sauvegarder version non compressée de façon atomique (indentée pour lisibilité)
+                    cache_file = self.cache_dir / f"{key}.json"
+                    tmp_fd, tmp_path = tempfile.mkstemp(dir=self.cache_dir, prefix=f"{key}.", suffix=".json.tmp")
+                    try:
+                        with os.fdopen(tmp_fd, "w", encoding="utf-8") as tf:
+                            tf.write(json.dumps(data, indent=2, ensure_ascii=False))
+                            tf.flush()
+                            os.fsync(tf.fileno())
+                        os.replace(tmp_path, str(cache_file))
+                        compressed_size = cache_file.stat().st_size
+                    finally:
+                        if os.path.exists(tmp_path):
+                            with suppress(OSError):
+                                os.remove(tmp_path)
+                    compression_ratio = 0
 
-                        # Supprimer ancienne version compressée si existe
-                        old_file = self.cache_dir / f"{key}.json.gz"
-                        if old_file.exists():
-                            old_file.unlink()
+                    # Supprimer ancienne version compressée si existe
+                    old_file = self.cache_dir / f"{key}.json.gz"
+                    if old_file.exists():
+                        old_file.unlink()
 
-                        log_msg = (
-                            f"{SharedIcons.SAVE} Cache saved: {key}"
-                            f" (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
-                        )
+                    log_msg = (
+                        f"{SharedIcons.SAVE} Cache saved: {key}"
+                        f" (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
+                    )
 
-                    # Sauvegarder aussi une copie JSON lisible si demandé
-                    if self.save_json_copy and self.use_compression:
-                        # Write JSON copy atomically as well
-                        json_file = self.cache_dir / f"{key}.json"
-                        tmp_fd, tmp_path = tempfile.mkstemp(
-                            dir=self.cache_dir, prefix=f"{key}._copy.", suffix='.json.tmp'
-                        )
-                        try:
-                            with os.fdopen(tmp_fd, 'w', encoding='utf-8') as tf:
-                                tf.write(json.dumps(data, indent=2, ensure_ascii=False))
-                                tf.flush()
-                                os.fsync(tf.fileno())
-                            os.replace(tmp_path, str(json_file))
-                            logger.debug(f"{SharedIcons.FILE} Copie JSON sauvegardée: {key}.json")
-                        except OSError as e:
-                            logger.warning(f"Impossible de sauvegarder copie JSON {key}: {e}")
-                        finally:
-                            if os.path.exists(tmp_path):
-                                try:
-                                    os.remove(tmp_path)
-                                except OSError:
-                                    pass
+                # Sauvegarder aussi une copie JSON lisible si demandé
+                if self.save_json_copy and self.use_compression:
+                    # Write JSON copy atomically as well
+                    json_file = self.cache_dir / f"{key}.json"
+                    tmp_fd, tmp_path = tempfile.mkstemp(
+                        dir=self.cache_dir, prefix=f"{key}._copy.", suffix=".json.tmp"
+                    )
+                    try:
+                        with os.fdopen(tmp_fd, "w", encoding="utf-8") as tf:
+                            tf.write(json.dumps(data, indent=2, ensure_ascii=False))
+                            tf.flush()
+                            os.fsync(tf.fileno())
+                        os.replace(tmp_path, str(json_file))
+                        logger.debug(f"{SharedIcons.FILE} Copie JSON sauvegardée: {key}.json")
+                    except OSError as e:
+                        logger.warning(f"Impossible de sauvegarder copie JSON {key}: {e}")
+                    finally:
+                        if os.path.exists(tmp_path):
+                            with suppress(OSError):
+                                os.remove(tmp_path)
 
-                    # Mettre à jour metadata
-                    current_time = time.time()
-                    self.metadata[key] = {
-                        "timestamp": current_time,
-                        "ttl": ttl_seconds,
-                        "expires_at": current_time + ttl_seconds,
-                        "size_bytes": compressed_size,
-                        "compressed": self.use_compression,
-                        "original_size": original_size if self.use_compression else compressed_size,
-                        "compression_ratio": compression_ratio,
-                        "has_json_copy": self.save_json_copy and self.use_compression,
-                    }
+                # Mettre à jour metadata
+                current_time = time.time()
+                self.metadata[key] = {
+                    "timestamp": current_time,
+                    "ttl": ttl_seconds,
+                    "expires_at": current_time + ttl_seconds,
+                    "size_bytes": compressed_size,
+                    "compressed": self.use_compression,
+                    "original_size": original_size if self.use_compression else compressed_size,
+                    "compression_ratio": compression_ratio,
+                    "has_json_copy": self.save_json_copy and self.use_compression,
+                }
 
-                    # Save metadata under file lock to avoid concurrent metadata updates
-                    with self._file_lock('.metadata'):
-                        self._save_metadata()
-                    self._stats["writes"] += 1
+                # Save metadata under file lock to avoid concurrent metadata updates
+                with self._file_lock(".metadata"):
+                    self._save_metadata()
+                self._stats["writes"] += 1
 
-                    # Mettre à jour ratio compression moyen
-                    if self.use_compression:
-                        total_ratio = sum(
-                            meta.get("compression_ratio", 0)
-                            for meta in self.metadata.values()
-                            if meta.get("compressed", False)
-                        )
-                        compressed_count = sum(
-                            1 for meta in self.metadata.values() if meta.get("compressed", False)
-                        )
-                        self._stats["compression_ratio"] = (
-                            total_ratio / compressed_count if compressed_count > 0 else 0
-                        )
+                # Mettre à jour ratio compression moyen
+                if self.use_compression:
+                    total_ratio = sum(
+                        meta.get("compression_ratio", 0)
+                        for meta in self.metadata.values()
+                        if meta.get("compressed", False)
+                    )
+                    compressed_count = sum(1 for meta in self.metadata.values() if meta.get("compressed", False))
+                    self._stats["compression_ratio"] = total_ratio / compressed_count if compressed_count > 0 else 0
 
-                    logger.info(log_msg)
+                logger.info(log_msg)
 
-                except (OSError, TypeError) as e:
-                    logger.error(f"Erreur sauvegarde cache {key}: {e}")
+            except (OSError, TypeError) as e:
+                logger.error(f"Erreur sauvegarde cache {key}: {e}")
 
     def invalidate(self, key: str) -> bool:
         """
@@ -314,42 +295,40 @@ class CacheService:
         Example:
             >>> cache.invalidate("devices")  # Force refresh au prochain get()
         """
-        with self._lock:
-            # Acquire per-key lock to avoid races with writers
-            with self._file_lock(key):
-                cache_file_gz = self.cache_dir / f"{key}.json.gz"
-                cache_file_json = self.cache_dir / f"{key}.json"
-                deleted = False
+        with self._lock, self._file_lock(key):
+            cache_file_gz = self.cache_dir / f"{key}.json.gz"
+            cache_file_json = self.cache_dir / f"{key}.json"
+            deleted = False
 
-                # Supprimer fichier compressé
-                if cache_file_gz.exists():
-                    try:
-                        cache_file_gz.unlink()
-                        deleted = True
-                    except OSError as e:
-                        logger.error(f"Erreur suppression cache compressé {key}: {e}")
-
-                # Supprimer fichier JSON lisible
-                if cache_file_json.exists():
-                    try:
-                        cache_file_json.unlink()
-                        deleted = True
-                    except OSError as e:
-                        logger.error(f"Erreur suppression cache JSON {key}: {e}")
-
-                # Supprimer metadata
-                if key in self.metadata:
-                    del self.metadata[key]
-                    # update metadata with metadata lock
-                    with self._file_lock('.metadata'):
-                        self._save_metadata()
+            # Supprimer fichier compressé
+            if cache_file_gz.exists():
+                try:
+                    cache_file_gz.unlink()
                     deleted = True
+                except OSError as e:
+                    logger.error(f"Erreur suppression cache compressé {key}: {e}")
 
-                if deleted:
-                    self._stats["invalidations"] += 1
-                    logger.info(f"🗑️  Cache invalidated: {key}")
+            # Supprimer fichier JSON lisible
+            if cache_file_json.exists():
+                try:
+                    cache_file_json.unlink()
+                    deleted = True
+                except OSError as e:
+                    logger.error(f"Erreur suppression cache JSON {key}: {e}")
 
-                return deleted
+            # Supprimer metadata
+            if key in self.metadata:
+                del self.metadata[key]
+                # update metadata with metadata lock
+                with self._file_lock(".metadata"):
+                    self._save_metadata()
+                deleted = True
+
+            if deleted:
+                self._stats["invalidations"] += 1
+                logger.info(f"🗑️  Cache invalidated: {key}")
+
+            return deleted
 
     def clear_all_except(self, preserve_keys: List[str]) -> int:
         """
@@ -449,7 +428,7 @@ class CacheService:
     def _load_metadata(self):
         """Charge le fichier metadata au démarrage."""
         # Load metadata under metadata lock to avoid partial reads during writes
-        with self._file_lock('.metadata'):
+        with self._file_lock(".metadata"):
             if self.metadata_file.exists():
                 try:
                     self.metadata = json.loads(self.metadata_file.read_text(encoding="utf-8"))
@@ -462,19 +441,17 @@ class CacheService:
         """Sauvegarde le fichier metadata."""
         try:
             # Write metadata atomically
-            tmp_fd, tmp_path = tempfile.mkstemp(dir=self.cache_dir, prefix='.metadata.', suffix='.tmp')
+            tmp_fd, tmp_path = tempfile.mkstemp(dir=self.cache_dir, prefix=".metadata.", suffix=".tmp")
             try:
-                with os.fdopen(tmp_fd, 'w', encoding='utf-8') as tf:
+                with os.fdopen(tmp_fd, "w", encoding="utf-8") as tf:
                     tf.write(json.dumps(self.metadata, indent=2, ensure_ascii=False))
                     tf.flush()
                     os.fsync(tf.fileno())
                 os.replace(tmp_path, str(self.metadata_file))
             finally:
                 if os.path.exists(tmp_path):
-                    try:
+                    with suppress(OSError):
                         os.remove(tmp_path)
-                    except OSError:
-                        pass
         except OSError as e:
             logger.error(f"Erreur sauvegarde metadata: {e}")
 
@@ -511,10 +488,8 @@ class CacheService:
                 try:
                     yield
                 finally:
-                    try:
+                    with suppress(Exception):
                         _portalocker.unlock(lf)
-                    except Exception:
-                        pass
         except Exception:
             # If opening/locking fails, yield as fallback
             yield

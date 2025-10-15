@@ -16,9 +16,16 @@ class TestActivityManager(unittest.TestCase):
 
     def setUp(self):
         self.auth = MagicMock()
+        # Ensure legacy .session exists for managers that may wrap auth into http_client
+        self.auth.session = MagicMock()
+        # Provide a typed http_client mock for tests (allows setting .get/.post/.put/.delete)
+        self.http_client = MagicMock()
+        self.http_client.csrf = getattr(self.auth, "csrf", None)
         self.config = MagicMock()
         self.state_machine = MagicMock()
         self.activity_manager = ActivityManager(self.auth, self.config, self.state_machine)
+        # Ensure the ActivityManager uses the typed http_client mock for API calls
+        self.activity_manager.http_client = self.http_client
 
     def test_initialization(self):
         self.assertIsNotNone(self.activity_manager)
@@ -52,12 +59,12 @@ class TestActivityManager(unittest.TestCase):
     @patch('core.activity_manager.datetime')
     def test_fetch_privacy_api_records(self, mock_datetime):
         mock_datetime.now.return_value = datetime(2023, 1, 1)
-        self.auth.session.post.return_value.json.return_value = {'customerHistoryRecords': [{'id': 1}]}
+        self.http_client.post.return_value.json.return_value = {'customerHistoryRecords': [{'id': 1}]}
 
         records = self.activity_manager._fetch_privacy_api_records(10, None, 'test_csrf')
 
         self.assertEqual(len(records), 1)
-        self.auth.session.post.assert_called_once()
+        self.http_client.post.assert_called_once()
 
     def test_save_activities_to_cache(self):
         with patch('core.activity_manager.ActivityManager._save_to_local_cache') as mock_save:
@@ -95,7 +102,7 @@ class TestActivityManager(unittest.TestCase):
     @patch('core.activity_manager.ActivityManager._extract_csrf_from_html', return_value='html_csrf')
     def test_get_privacy_csrf_from_html(self, mock_extract):
         self.auth.csrf = None
-        self.auth.session.get.return_value.text = '<html></html>'
+        self.http_client.get.return_value.text = '<html></html>'
 
         csrf = self.activity_manager.get_privacy_csrf()
 
@@ -205,7 +212,7 @@ class TestActivityManager(unittest.TestCase):
         mock_get_cache.assert_called_once()
 
     def test_fetch_privacy_api_records_with_limit(self):
-        self.auth.session.post.return_value.json.return_value = {'customerHistoryRecords': [{'id': 1}, {'id': 2}]}
+        self.http_client.post.return_value.json.return_value = {'customerHistoryRecords': [{'id': 1}, {'id': 2}]}
         records = self.activity_manager._fetch_privacy_api_records(1, None, 'test_csrf')
         self.assertEqual(len(records), 1)
 
@@ -247,7 +254,8 @@ class TestActivityManager(unittest.TestCase):
     @patch('requests.get', side_effect=Exception('Request failed'))
     def test_get_privacy_csrf_html_request_fails(self, mock_get):
         self.auth.csrf = None
-        self.auth.session.get.side_effect = Exception("Request failed")
+        # Use http_client mock for migrated tests
+        self.http_client.get.side_effect = Exception("Request failed")
         csrf = self.activity_manager.get_privacy_csrf()
         self.assertIsNone(csrf)
 
@@ -601,9 +609,14 @@ class TestDeviceManager(unittest.TestCase):
 
     def setUp(self):
         self.auth = MagicMock()
+        # Provide a .session mock for any code that expects requests.Session on auth
+        self.auth.session = MagicMock()
+        # Provide a typed http_client for tests (migration shim)
+        from core.base_manager import create_http_client_from_auth
+        self.http_client = create_http_client_from_auth(self.auth)
         self.state_machine = MagicMock()
         self.cache_service = MagicMock()
-        self.device_manager = DeviceManager(self.auth, self.state_machine, cache_service=self.cache_service)
+        self.device_manager = DeviceManager(self.auth, self.state_machine, cache_service=self.cache_service, http_client=self.http_client)
         self.mock_devices = [
             {"accountName": "Echo Dot", "serialNumber": "123", "online": True},
             {"accountName": "Echo Show", "serialNumber": "456", "online": False},
@@ -635,8 +648,8 @@ class TestDeviceManager(unittest.TestCase):
 
     def test_get_devices_from_api(self):
         self.cache_service.get.return_value = None
-        self.auth.get.return_value.status_code = 200
-        self.auth.get.return_value.json.return_value = {"devices": self.mock_devices}
+        self.http_client.get.return_value.status_code = 200
+        self.http_client.get.return_value.json.return_value = {"devices": self.mock_devices}
 
         devices = self.device_manager.get_devices()
 
@@ -645,7 +658,7 @@ class TestDeviceManager(unittest.TestCase):
 
     def test_get_devices_api_fails(self):
         self.cache_service.get.return_value = None
-        self.auth.get.return_value = None
+        self.http_client.get.return_value = None
 
         devices = self.device_manager.get_devices()
 
@@ -693,6 +706,11 @@ class TestAlarmManager(unittest.TestCase):
 
     def setUp(self):
         self.auth = MagicMock()
+        # Provide legacy session on auth to keep tests compatible with migration
+        self.auth.session = MagicMock()
+        # Provide a typed http_client for tests (migration shim)
+        from core.base_manager import create_http_client_from_auth
+        self.http_client = create_http_client_from_auth(self.auth)
         self.config = MagicMock()
         self.state_machine = MagicMock()
         self.cache_service = MagicMock()
@@ -707,13 +725,13 @@ class TestAlarmManager(unittest.TestCase):
 
     def test_create_alarm_success(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.post.return_value.status_code = 200
-        self.auth.session.post.return_value.json.return_value = {"id": "new_alarm"}
+        self.http_client.post.return_value.status_code = 200
+        self.http_client.post.return_value.json.return_value = {"id": "new_alarm"}
 
         result = self.alarm_manager.create_alarm("123", "A_TYPE", "2023-10-27T10:00:00", label="Test", sound="sound1")
 
         self.assertEqual(result, {"id": "new_alarm"})
-        self.auth.session.post.assert_called_once()
+        self.http_client.post.assert_called_once()
         self.assertIsNone(self.alarm_manager._alarms_cache)
 
     def test_create_alarm_fails_connection(self):
@@ -723,7 +741,7 @@ class TestAlarmManager(unittest.TestCase):
 
     def test_create_alarm_api_exception(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.post.side_effect = requests.exceptions.RequestException
+        self.http_client.post.side_effect = requests.exceptions.RequestException
         result = self.alarm_manager.create_alarm("123", "A_TYPE", "2023-10-27T10:00:00")
         self.assertIsNone(result)
 
@@ -765,28 +783,28 @@ class TestAlarmManager(unittest.TestCase):
         self.assertEqual(alarms[0]['id'], "1")
 
     def test_refresh_alarms_cache_empty_response(self):
-        self.auth.session.get.return_value.content = b' '
+        self.http_client.get.return_value.content = b' '
         alarms = self.alarm_manager._refresh_alarms_cache()
         self.assertEqual(alarms, [])
 
     def test_refresh_alarms_cache_json_error(self):
-        self.auth.session.get.return_value.json.side_effect = ValueError
+        self.http_client.get.return_value.json.side_effect = ValueError
         alarms = self.alarm_manager._refresh_alarms_cache()
         self.assertEqual(alarms, [])
 
     def test_refresh_alarms_cache_api_error(self):
-        self.auth.session.get.side_effect = requests.exceptions.RequestException
+        self.http_client.get.side_effect = requests.exceptions.RequestException
         alarms = self.alarm_manager._refresh_alarms_cache()
         self.assertEqual(alarms, [])
 
     def test_delete_alarm_success(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.delete.return_value.status_code = 200
+        self.http_client.delete.return_value.status_code = 200
 
         result = self.alarm_manager.delete_alarm("123", "A_TYPE", "alarm_id")
 
         self.assertTrue(result)
-        self.auth.session.delete.assert_called_once()
+        self.http_client.delete.assert_called_once()
         self.assertIsNone(self.alarm_manager._alarms_cache)
 
     def test_delete_alarm_fails_connection(self):
@@ -796,18 +814,18 @@ class TestAlarmManager(unittest.TestCase):
 
     def test_delete_alarm_api_exception(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.delete.side_effect = requests.exceptions.RequestException
+        self.http_client.delete.side_effect = requests.exceptions.RequestException
         result = self.alarm_manager.delete_alarm("123", "A_TYPE", "alarm_id")
         self.assertFalse(result)
 
     def test_update_alarm_success(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.put.return_value.status_code = 200
+        self.http_client.put.return_value.status_code = 200
 
         result = self.alarm_manager.update_alarm("123", "A_TYPE", "alarm_id", time="11:00", sound="sound2")
 
         self.assertTrue(result)
-        self.auth.session.put.assert_called_once()
+        self.http_client.put.assert_called_once()
         self.assertIsNone(self.alarm_manager._alarms_cache)
 
     def test_update_alarm_fails_connection(self):
@@ -822,18 +840,18 @@ class TestAlarmManager(unittest.TestCase):
 
     def test_update_alarm_api_exception(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.put.side_effect = requests.exceptions.RequestException
+        self.http_client.put.side_effect = requests.exceptions.RequestException
         result = self.alarm_manager.update_alarm("123", "A_TYPE", "alarm_id", time="11:00")
         self.assertFalse(result)
 
     def test_set_alarm_enabled(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.put.return_value.status_code = 200
+        self.http_client.put.return_value.status_code = 200
 
         result = self.alarm_manager.set_alarm_enabled("123", "A_TYPE", "alarm_id", True)
 
         self.assertTrue(result)
-        self.auth.session.put.assert_called_once()
+        self.http_client.put.assert_called_once()
         self.assertIsNone(self.alarm_manager._alarms_cache)
 
     def test_set_alarm_enabled_fails_connection(self):
@@ -843,7 +861,7 @@ class TestAlarmManager(unittest.TestCase):
 
     def test_set_alarm_enabled_api_exception(self):
         self.state_machine.can_execute_commands = True
-        self.auth.session.put.side_effect = requests.exceptions.RequestException
+        self.http_client.put.side_effect = requests.exceptions.RequestException
         result = self.alarm_manager.set_alarm_enabled("123", "A_TYPE", "alarm_id", True)
         self.assertFalse(result)
 

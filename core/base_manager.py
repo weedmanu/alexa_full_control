@@ -7,16 +7,17 @@ Fournit:
 - RLock pour thread-safety
 - logger binding
 """
-from typing import Generic, Optional, TypeVar, List, Any
-import requests
-from threading import RLock
-import time
 
+import time
+from threading import RLock
+from typing import Any, Generic, List, Optional, TypeVar
+
+import requests
 from loguru import logger
 
-from services.cache_service import CacheService
 from core.state_machine import AlexaStateMachine
 from core.types import HTTPClientProtocol
+from services.cache_service import CacheService
 
 
 class _ClientWrapper:
@@ -41,6 +42,18 @@ class _ClientWrapper:
 
     def delete(self, url: str, **kwargs: Any) -> "requests.Response":
         return self._session.delete(url, **kwargs)
+
+
+def create_http_client_from_auth(auth: Any) -> HTTPClientProtocol:
+    """Fabrique publique qui retourne un client HTTP utilisable depuis un objet legacy `auth`.
+
+    Si `auth` expose `.session` (ancien pattern), on wrap la session dans un objet
+    compatible (get/post/put/delete) et on expose `csrf` si présent. Sinon, on
+    retourne directement `auth` (on suppose qu'il implémente déjà l'interface).
+    """
+    if hasattr(auth, "session"):
+        return _ClientWrapper(auth.session, getattr(auth, "csrf", None))
+    return auth
 
 
 T = TypeVar("T")

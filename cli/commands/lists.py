@@ -76,9 +76,7 @@ class ListsCommand(BaseCommand):
             default="medium",
             help="Priorité de la tâche (uniquement pour todo, défaut: medium)",
         )
-        add_parser.add_argument(
-            "-d", "--due-date", help="Date d'échéance (uniquement pour todo, format: YYYY-MM-DD)"
-        )
+        add_parser.add_argument("-d", "--due-date", help="Date d'échéance (uniquement pour todo, format: YYYY-MM-DD)")
 
         # Action: remove
         remove_parser = subparsers.add_parser(
@@ -137,9 +135,7 @@ class ListsCommand(BaseCommand):
 
             # Validation de la priorité pour les tâches
             if list_type == "todo" and args.priority not in ["low", "medium", "high"]:
-                self.error(
-                    f"❌ Priorité invalide '{args.priority}'. Valeurs possibles: low, medium, high"
-                )
+                self.error(f"❌ Priorité invalide '{args.priority}'. Valeurs possibles: low, medium, high")
                 return False
 
             # Validation de la date d'échéance pour les tâches
@@ -149,9 +145,7 @@ class ListsCommand(BaseCommand):
 
                     datetime.strptime(args.due_date, "%Y-%m-%d")
                 except ValueError:
-                    self.error(
-                        f"❌ Format de date invalide '{args.due_date}'. Utilisez le format YYYY-MM-DD"
-                    )
+                    self.error(f"❌ Format de date invalide '{args.due_date}'. Utilisez le format YYYY-MM-DD")
                     return False
 
             # Récupérer le serial du device si spécifié
@@ -360,9 +354,7 @@ class ListsCommand(BaseCommand):
                     return False
 
             # Pour les tâches ou si completed_only, pas de confirmation spéciale
-            success = list_mgr.clear_list(
-                list_type, completed_only=args.completed_only, device_serial=device_serial
-            )
+            success = list_mgr.clear_list(list_type, completed_only=args.completed_only, device_serial=device_serial)
             if success:
                 if list_type == "shopping":
                     self.success("✅ Liste de courses vidée")
@@ -400,11 +392,26 @@ class ListsCommand(BaseCommand):
 
             ctx = self.require_context()
             auth = getattr(ctx, "auth", None)
-            if not auth or not getattr(auth, "session", None):
-                self.logger.debug("Auth ou session manquante pour récupérer HTML")
+            if not auth:
+                self.logger.debug("Auth manquante pour récupérer HTML")
                 return False
 
-            response = auth.session.get(url, headers={"csrf": auth.csrf}, timeout=5)
+            # Use the compatibility factory to obtain an http_client from legacy auth
+            try:
+                from core.base_manager import create_http_client_from_auth
+
+                client = create_http_client_from_auth(auth)
+            except Exception:
+                # Conservative fallback: keep legacy behavior if factory import fails
+                # Do not access legacy `session` attribute here; use the auth object
+                # directly as a last-resort HTTP client (adapter exists elsewhere).
+                client = auth
+
+            if not client:
+                self.logger.debug("Client HTTP non disponible pour récupérer HTML")
+                return False
+
+            response = client.get(url, headers={"csrf": getattr(client, "csrf", getattr(auth, "csrf", ""))}, timeout=5)
 
             if response.status_code != 200:
                 self.logger.debug(f"Impossible de récupérer la page HTML: {response.status_code}")
@@ -520,16 +527,11 @@ class ListsCommand(BaseCommand):
 
                     for keyword in empty_keywords:
                         if keyword in response_lower:
-                            self.logger.debug(
-                                f"Liste {list_type} détectée comme vide via réponse vocale"
-                            )
+                            self.logger.debug(f"Liste {list_type} détectée comme vide via réponse vocale")
                             return True
 
                     # Si la réponse contient des éléments spécifiques, la liste n'est pas vide
-                    if any(
-                        word in response_lower
-                        for word in ["pain", "lait", "œuf", "farine", "beurre", "fromage"]
-                    ):
+                    if any(word in response_lower for word in ["pain", "lait", "œuf", "farine", "beurre", "fromage"]):
                         self.logger.debug(f"Liste {list_type} contient des éléments")
                         return False
 

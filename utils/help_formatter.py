@@ -44,10 +44,7 @@ from typing import Any, Dict, List, Optional
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🎨 PALETTE DE COULEURS STANDARDISÉE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-
 from utils.term import Colors
-
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🏗️ COMPOSANTS DE BASE
@@ -672,9 +669,7 @@ def format_current_category(category_name: str, description: str, emoji: str = "
     return f"\n{separator}\n{title_line}\n{separator}\n\n{content}"
 
 
-def format_category_options(
-    category: Optional[str] = None, options_text: Optional[str] = None
-) -> str:
+def format_category_options(category: Optional[str] = None, options_text: Optional[str] = None) -> str:
     """Formate la section 'Options de la catégorie actuelle' avec couleurs cohérentes.
 
     Utilise le MÊME vert foncé que <CATEGORIE> (\\033[0;32m = version NON-GRAS du \\033[1;32m),
@@ -752,14 +747,7 @@ def format_more_help_main() -> str:
     ]
 
     content = (
-        desc
-        + "\n".join(nav_items)
-        + "\n"
-        + examples_title
-        + "\n".join(examples)
-        + "\n"
-        + tips_title
-        + "\n".join(tips)
+        desc + "\n".join(nav_items) + "\n" + examples_title + "\n".join(examples) + "\n" + tips_title + "\n".join(tips)
     )
 
     return f"\n{separator}\n{title_line}\n{separator}\n{content}"
@@ -834,9 +822,7 @@ class HelpBuilder:
 
     def add_global_options(self) -> "HelpBuilder":
         """Ajoute les options globales standard."""
-        title = self.components.section_title(
-            "🔧", "Options globales disponibles", Colors.MAGENTA_BOLD
-        )
+        title = self.components.section_title("🔧", "Options globales disponibles", Colors.MAGENTA_BOLD)
 
         desc = "\n  Options autonomes (peuvent être utilisées seules) :\n"
 

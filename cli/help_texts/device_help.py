@@ -47,7 +47,7 @@ VOLUME_HELP = "Voir aide principale: alexa device -h"
 
 # Description constant exported for CLI help imports
 DEVICE_DESCRIPTION = (
-  'Gestion des appareils (liste, informations, contrôle du volume). '
-  'Exemples: "alexa device list", "alexa device info --device \"Salon Echo\"", '
-  '"alexa device volume set --device \"Salon Echo\" --level 50".'
+    "Gestion des appareils (liste, informations, contrôle du volume). "
+    'Exemples: "alexa device list", "alexa device info --device "Salon Echo"", '
+    '"alexa device volume set --device "Salon Echo" --level 50".'
 )

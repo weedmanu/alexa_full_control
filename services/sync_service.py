@@ -73,6 +73,14 @@ class SyncService:
 
         logger.info("SyncService initialisé (lazy loading activé)")
 
+        # Compatibility: expose a http_client-like wrapper when legacy auth is provided
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
+
     def sync_devices_only(self, force: bool = False) -> Dict[str, Any]:
         """
         Synchronise uniquement les appareils Alexa au démarrage.
@@ -141,9 +149,7 @@ class SyncService:
         Returns:
             Dict avec statistiques de synchronisation
         """
-        logger.info(
-            f"{SharedIcons.SYNC} Synchronisation complète demandée (lazy loading activé)..."
-        )
+        logger.info(f"{SharedIcons.SYNC} Synchronisation complète demandée (lazy loading activé)...")
 
         # Forcer le chargement de toutes les données
         self.get_smart_home_devices(force=force)
@@ -360,7 +366,7 @@ class SyncService:
     def _sync_alexa_devices(self) -> List[Dict[str, Any]]:
         """Synchronise les appareils Alexa."""
         try:
-            response = self.auth.session.get(
+            response = self.http_client.get(
                 f"https://{self.config.alexa_domain}/api/devices-v2/device",
                 headers={"csrf": self.auth.csrf},
                 timeout=10,
@@ -380,13 +386,13 @@ class SyncService:
     def _sync_smart_home_devices(self) -> List[Dict[str, Any]]:
         """Synchronise les smart home devices."""
         try:
-            response = self.auth.session.get(
+            response = self.http_client.get(
                 f"https://{self.config.alexa_domain}/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome",
                 headers={
                     "Content-Type": "application/json; charset=UTF-8",
                     "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
                     "Origin": f"https://alexa.{self.config.amazon_domain}",
-                    "csrf": self.auth.csrf,
+                    "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                 },
                 timeout=10,
             )
@@ -395,9 +401,7 @@ class SyncService:
 
             # Sauvegarder UNIQUEMENT le fichier global
             # Le tri par catégorie se fera à la demande par les controllers
-            self.cache_service.set(
-                "smart_home_all", {"devices": devices}, ttl_seconds=1800
-            )  # 30min
+            self.cache_service.set("smart_home_all", {"devices": devices}, ttl_seconds=1800)  # 30min
 
             return devices
         except Exception as e:
@@ -407,9 +411,9 @@ class SyncService:
     def _sync_notifications(self) -> List[Dict[str, Any]]:
         """Synchronise les alarmes et rappels."""
         try:
-            response = self.auth.session.get(
+            response = self.http_client.get(
                 f"https://{self.config.alexa_domain}/api/notifications",
-                headers={"csrf": self.auth.csrf},
+                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )
             response.raise_for_status()
@@ -417,9 +421,7 @@ class SyncService:
             notifications = data.get("notifications", [])
 
             # Sauvegarder dans cache
-            self.cache_service.set(
-                "alarms_and_reminders", {"notifications": notifications}, ttl_seconds=600
-            )  # 10min
+            self.cache_service.set("alarms_and_reminders", {"notifications": notifications}, ttl_seconds=600)  # 10min
 
             return notifications
         except Exception as e:
@@ -441,9 +443,9 @@ class SyncService:
     def _sync_routines(self) -> List[Dict[str, Any]]:
         """Synchronise les routines Alexa."""
         try:
-            response = self.auth.session.get(
+            response = self.http_client.get(
                 f"https://{self.config.alexa_domain}/api/behaviors/v2/automations",
-                headers={"csrf": self.auth.csrf},
+                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=15,
             )
             response.raise_for_status()

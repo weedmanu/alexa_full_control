@@ -79,9 +79,7 @@ class LibraryCommands(MusicSubCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil",
         )
-        playlist_parser.add_argument(
-            "--id", type=str, required=True, metavar="PLAYLIST_ID", help="ID de la playlist"
-        )
+        playlist_parser.add_argument("--id", type=str, required=True, metavar="PLAYLIST_ID", help="ID de la playlist")
         playlist_parser.add_argument(
             "--type",
             type=str,
@@ -89,9 +87,7 @@ class LibraryCommands(MusicSubCommand):
             default="library",
             help="Type de playlist (défaut: library)",
         )
-        playlist_parser.add_argument(
-            "--shuffle", action="store_true", help="Lire en mode aléatoire"
-        )
+        playlist_parser.add_argument("--shuffle", action="store_true", help="Lire en mode aléatoire")
 
         # Action: library
         library_parser = subparsers.add_parser(
@@ -101,19 +97,11 @@ class LibraryCommands(MusicSubCommand):
             formatter_class=ActionHelpFormatter,
         )
         library_group = library_parser.add_mutually_exclusive_group(required=True)
-        library_group.add_argument(
-            "--playlists", action="store_true", help="Lister les playlists bibliothèque"
-        )
+        library_group.add_argument("--playlists", action="store_true", help="Lister les playlists bibliothèque")
         library_group.add_argument("--purchases", action="store_true", help="Lister les achats")
-        library_group.add_argument(
-            "--imported", action="store_true", help="Lister les titres importés"
-        )
-        library_group.add_argument(
-            "--prime-playlists", action="store_true", help="Lister les playlists Prime Music"
-        )
-        library_group.add_argument(
-            "--prime-stations", action="store_true", help="Lister les stations Prime Music"
-        )
+        library_group.add_argument("--imported", action="store_true", help="Lister les titres importés")
+        library_group.add_argument("--prime-playlists", action="store_true", help="Lister les playlists Prime Music")
+        library_group.add_argument("--prime-stations", action="store_true", help="Lister les stations Prime Music")
         library_parser.add_argument(
             "-d",
             "--device",
@@ -159,9 +147,7 @@ class LibraryCommands(MusicSubCommand):
                     shuffle=args.shuffle,
                 )
             else:
-                self.info(
-                    f"💿 Lecture album '{args.album}' de {args.artist} sur '{args.device}'..."
-                )
+                self.info(f"💿 Lecture album '{args.album}' de {args.artist} sur '{args.device}'...")
                 result = self.call_with_breaker(
                     ctx.music_library.play_library_track,
                     serial,

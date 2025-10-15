@@ -9,8 +9,6 @@ import sys
 from pathlib import Path
 from typing import Any, List, Optional
 
-from utils.term import should_colorize
-
 # Pre-declare logger so type checkers have a stable name and type for it.
 logger: Any = None
 LOGURU_AVAILABLE = False
@@ -181,11 +179,7 @@ def _get_format_record():
         # Afficher la localisation seulement pour les erreurs ou en mode debug
         show_location = level_name in ["ERROR", "CRITICAL"] or level_no <= 10  # DEBUG level
 
-        location_part = (
-            " | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan>"
-            if show_location
-            else ""
-        )
+        location_part = " | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan>" if show_location else ""
 
         return (
             "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
@@ -260,7 +254,7 @@ def setup_loguru_logger(
     # Tests patch stdout to a non-tty; to maintain readable output and meet
     # test expectations, enable colorization unless the caller explicitly
     # requested no_color. This keeps behavior predictable under test.
-    colorize = False if no_color else True
+    colorize = not no_color
     logger.add(
         sys.stdout,
         format=format_record,
@@ -304,9 +298,7 @@ def setup_loguru_logger(
     logger.success("Système de logging initialisé avec succès")
 
 
-def setup_logger(
-    name: str, log_file: Optional[Path] = None, level: int = logging.INFO
-) -> logging.Logger:
+def setup_logger(name: str, log_file: Optional[Path] = None, level: int = logging.INFO) -> logging.Logger:
     """Configure un logger avec sortie console et fichier optionnel.
 
     DEPRECATED: Utiliser setup_loguru_logger() à la place.

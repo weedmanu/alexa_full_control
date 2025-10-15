@@ -47,9 +47,7 @@ class CommandAction(str, Enum):
 class DeviceCommand:
     """Commande pour contrôler un device."""
 
-    def __init__(
-        self, device_id: str, action: CommandAction, parameters: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, device_id: str, action: CommandAction, parameters: Optional[Dict[str, Any]] = None):
         self.device_id = device_id
         self.action = action
         self.parameters = parameters or {}
@@ -92,8 +90,6 @@ class CommandResult:
         return cls(success=True, message=message, data=data)
 
     @classmethod
-    def error_result(
-        cls, message: str, error_code: str, data: Optional[Dict[str, Any]] = None
-    ) -> "CommandResult":
+    def error_result(cls, message: str, error_code: str, data: Optional[Dict[str, Any]] = None) -> "CommandResult":
         """Factory pour créer un résultat d'erreur."""
         return cls(success=False, message=message, error_code=error_code, data=data)

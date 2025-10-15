@@ -2,29 +2,32 @@
 Contrôleur générique pour appareils Smart Home - Thread-safe.
 """
 
-import threading
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from core.base_manager import BaseManager
 from services.cache_service import CacheService
 
 from ..circuit_breaker import CircuitBreaker
 from ..state_machine import AlexaStateMachine
 
 
-class SmartDeviceController:
-    """Contrôleur thread-safe pour appareils connectés (serrures, volets, etc.)."""
+class SmartDeviceController(BaseManager[Dict[str, Any]]):
+    """Contrôleur thread-safe pour appareils connectés (serrures, volets, etc.).
+
+    Hérite de `BaseManager` pour utiliser `self.http_client`, cache et locks.
+    """
 
     def __init__(
-        self, auth, config, state_machine=None, cache_service: Optional[CacheService] = None
-    ):
-        self.auth = auth
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
+        self,
+        http_client: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        cache_service: Optional[CacheService] = None,
+    ) -> None:
+        super().__init__(http_client, config, state_machine or AlexaStateMachine(), cache_service)
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
-        self._lock = threading.RLock()
-        self.cache_service = cache_service or CacheService()
         self._locks_cache: Optional[List[Dict[str, Any]]] = None
         self._plugs_cache: Optional[List[Dict[str, Any]]] = None
         self._all_devices_cache: Optional[List[Dict[str, Any]]] = None
@@ -125,7 +128,7 @@ class SmartDeviceController:
     def _lock_control(self, entity_id: str, action: str) -> bool:
         """Contrôle une serrure."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             try:
                 directive = {
@@ -141,10 +144,10 @@ class SmartDeviceController:
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -157,7 +160,7 @@ class SmartDeviceController:
     def set_percentage(self, entity_id: str, percentage: int) -> bool:
         """Définit un pourcentage (volets, stores, etc.) 0-100."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             if not 0 <= percentage <= 100:
                 logger.error(f"Pourcentage invalide: {percentage} (0-100)")
@@ -176,10 +179,10 @@ class SmartDeviceController:
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -192,13 +195,13 @@ class SmartDeviceController:
     def get_device_state(self, entity_id: str) -> Optional[Dict]:
         """Récupère l'état d'un appareil."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return None
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/phoenix/state/{entity_id}",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()

@@ -20,6 +20,12 @@ class EqualizerManager:
         self.state_machine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
         logger.info("EqualizerManager initialisé")
 
     def get_equalizer(self, device_serial: str, device_type: str) -> Optional[Dict]:
@@ -29,9 +35,9 @@ class EqualizerManager:
                 return None
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/equalizer/{device_serial}/{device_type}",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -40,9 +46,7 @@ class EqualizerManager:
                 logger.error(f"Erreur récupération égaliseur: {e}")
                 return None
 
-    def set_equalizer(
-        self, device_serial: str, device_type: str, bass: int, midrange: int, treble: int
-    ) -> bool:
+    def set_equalizer(self, device_serial: str, device_type: str, bass: int, midrange: int, treble: int) -> bool:
         """Définit l'égaliseur (bass, midrange, treble: -6 à +6)."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -57,10 +61,10 @@ class EqualizerManager:
             try:
                 payload = {"bass": bass, "midrange": midrange, "treble": treble}
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/equalizer/{device_serial}/{device_type}",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()

@@ -34,9 +34,7 @@ class RemindersCommands(TimeSubCommand):
                 self.error("Utilisez soit --datetime, soit --recurrence + --time (pas les deux)")
                 return False
 
-            if not args.datetime and not (
-                getattr(args, "recurrence", None) and getattr(args, "time", None)
-            ):
+            if not args.datetime and not (getattr(args, "recurrence", None) and getattr(args, "time", None)):
                 self.error("Spécifiez soit --datetime, soit --recurrence + --time")
                 return False
 
@@ -56,9 +54,7 @@ class RemindersCommands(TimeSubCommand):
                 self.info(f"   Texte: {args.label}")
                 self.info(f"   Date: {args.datetime}")
 
-                result = self.call_with_breaker(
-                    ctx.reminder_mgr.create_reminder, serial, args.label, args.datetime
-                )
+                result = self.call_with_breaker(ctx.reminder_mgr.create_reminder, serial, args.label, args.datetime)
             else:
                 # Rappel récurrent
                 recurrence = getattr(args, "recurrence", None)

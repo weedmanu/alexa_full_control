@@ -308,18 +308,14 @@ class DNDCommand(BaseCommand):
                 return False
 
             days_text = f" ({', '.join(days)})" if days else " (tous les jours)"
-            self.info(
-                f"📅 Programmation DND sur '{args.device}': {args.start}-{args.end}{days_text}..."
-            )
+            self.info(f"📅 Programmation DND sur '{args.device}': {args.start}-{args.end}{days_text}...")
 
             ctx = self.require_context()
             if not ctx.dnd_mgr:
                 self.error("DNDManager non disponible")
                 return False
 
-            result = self.call_with_breaker(
-                ctx.dnd_mgr.set_dnd_schedule, serial, args.start, args.end, days
-            )
+            result = self.call_with_breaker(ctx.dnd_mgr.set_dnd_schedule, serial, args.start, args.end, days)
 
             if result:
                 self.success(f"✅ Programmation DND configurée sur '{args.device}'")

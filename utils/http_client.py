@@ -5,15 +5,15 @@ Combine authenticaton injection, cache via OptimizedHTTPSession,
 et protection par CircuitBreaker. Convertit erreurs HTTP en exceptions
 typiées (core.exceptions).
 """
+
 from typing import Any, Dict, Optional
 
 import requests
 from loguru import logger
 
-from utils.http_session import OptimizedHTTPSession
-from core.types import HTTPClientProtocol
-from core.circuit_breaker import CircuitBreaker
 from core import exceptions
+from core.circuit_breaker import CircuitBreaker
+from utils.http_session import OptimizedHTTPSession
 
 
 class AlexaHTTPClient:
@@ -78,9 +78,7 @@ class AlexaHTTPClient:
         except Exception:
             response_json = None
 
-        raise exceptions.APIError(
-            f"Erreur API: HTTP {status}", status_code=status, response=response_json
-        ) from error
+        raise exceptions.APIError(f"Erreur API: HTTP {status}", status_code=status, response=response_json) from error
 
     def get(self, url: str, **kwargs: Any) -> requests.Response:
         """Requête GET avec auth injection, cache et circuit breaker.

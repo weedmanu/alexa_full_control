@@ -268,9 +268,7 @@ class AlexaNetworkDiscovery:
             >>> if ip:
             ...     print(f"Salon Echo trouvé à {ip}")
         """
-        logger.info(
-            f"{SharedIcons.SEARCH} Recherche de l'appareil {serial[:8]}... sur {subnet}.0/24"
-        )
+        logger.info(f"{SharedIcons.SEARCH} Recherche de l'appareil {serial[:8]}... sur {subnet}.0/24")
 
         # Essayer mDNS d'abord
         try:

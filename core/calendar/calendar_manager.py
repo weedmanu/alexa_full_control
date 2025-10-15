@@ -68,6 +68,13 @@ class CalendarManager:
         self.voice_service = voice_service
         self.device_manager = device_manager
         self._privacy_csrf_cache = None
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            # Fallback: utiliser directement l'objet auth (legacy auth expose session)
+            self.http_client = self.auth
         logger.debug("CalendarManager initialisé (mode TextCommand)")
 
     def get_privacy_csrf(self) -> Optional[str]:
@@ -121,7 +128,7 @@ class CalendarManager:
                 logger.debug(f"Test {method} {endpoint}")
 
                 headers = {
-                    "csrf": self.auth.csrf,
+                    "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     "anti-csrftoken-a2z": privacy_csrf,
                     "Content-Type": "application/json; charset=UTF-8",
                 }
@@ -129,9 +136,9 @@ class CalendarManager:
                 if method == "POST":
                     # Payload minimal pour POST
                     payload: Dict[str, Any] = {}
-                    response = self.auth.session.post(url, json=payload, headers=headers)
+                    response = self.http_client.post(url, json=payload, headers=headers)
                 else:
-                    response = self.auth.session.get(url, headers=headers)
+                    response = self.http_client.get(url, headers=headers)
 
                 results[f"{method} {endpoint}"] = {
                     "status": response.status_code,
@@ -155,9 +162,7 @@ class CalendarManager:
 
         return results
 
-    def query_events(
-        self, timeframe: str = "aujourd'hui", device_name: Optional[str] = None
-    ) -> Optional[str]:
+    def query_events(self, timeframe: str = "aujourd'hui", device_name: Optional[str] = None) -> Optional[str]:
         """
         Interroge Alexa sur les événements du calendrier via commande vocale.
 
@@ -195,9 +200,7 @@ class CalendarManager:
             # Construire la commande vocale
             command = f"quels sont mes événements {timeframe}"
 
-            logger.debug(
-                f"Commande calendrier: '{command}' sur {device_name} (serial={device_serial})"
-            )
+            logger.debug(f"Commande calendrier: '{command}' sur {device_name} (serial={device_serial})")
 
             # Envoyer la commande via TextCommand
             success = self.voice_service.speak(command, device_serial)
@@ -270,9 +273,7 @@ class CalendarManager:
             None (fonctionnalité non disponible)
         """
         logger.warning("⚠️ Création d'événements non disponible via API Alexa")
-        logger.info(
-            "💡 Utilisez Google Calendar, Outlook ou Apple Calendar pour créer des événements"
-        )
+        logger.info("💡 Utilisez Google Calendar, Outlook ou Apple Calendar pour créer des événements")
 
         # Alternative: essayer une commande vocale (limitée)
         if self.voice_service:

@@ -13,14 +13,35 @@ from ..state_machine import AlexaStateMachine
 
 
 class DeviceSettingsManager:
-    """Gestionnaire thread-safe des paramètres d'appareils."""
+    """Gestionnaire thread-safe des paramètres d'appareils.
 
-    def __init__(self, auth, config, state_machine=None):
-        self.auth = auth
+    Utilise `http_client` (wrapper créé automatiquement à partir de `auth`
+    si l'appelant passe encore un objet legacy). Cela permet la migration
+    progressive vers `BaseManager`-style HTTP client.
+    """
+
+    def __init__(self, auth_or_http, config, state_machine=None):
+        # auth_or_http peut être soit l'ancien AuthClient, soit un http_client
+        # compatible (ayant get/post/put/delete et attribut csrf)
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
+
+        # Normaliser vers http_client (compatibilité legacy)
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            # Si auth_or_http ressemble à un auth legacy, la fabrique retournera un wrapper
+            self.http_client = (
+                create_http_client_from_auth(auth_or_http) if hasattr(auth_or_http, "session") else auth_or_http
+            )
+        except Exception:
+            self.http_client = getattr(auth_or_http, "session", auth_or_http)
+
+        # Exposer également auth pour compatibilité code existant
+        self.auth = getattr(auth_or_http, "auth", auth_or_http)
+
         logger.info("DeviceSettingsManager initialisé")
 
     def get_device_settings(self, device_serial: str, device_type: str) -> Optional[Dict]:
@@ -30,9 +51,9 @@ class DeviceSettingsManager:
                 return None
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/device-preferences/{device_serial}",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -60,10 +81,10 @@ class DeviceSettingsManager:
                     "wakeWord": wake_word,
                 }
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/wake-word",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -85,10 +106,10 @@ class DeviceSettingsManager:
                     "timeZoneId": timezone,
                 }
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/device-preferences/time-zone",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -110,10 +131,10 @@ class DeviceSettingsManager:
                     "locale": locale,
                 }
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/device-preferences/locale",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -167,10 +188,10 @@ class DeviceSettingsManager:
                 }
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/behaviors/preview",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -188,9 +209,9 @@ class DeviceSettingsManager:
 
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -218,9 +239,9 @@ class DeviceSettingsManager:
         try:
             url = f"https://{self.config.alexa_domain}/api/bootstrap?version=0"
             response = self.breaker.call(
-                self.auth.session.get,
+                self.http_client.get,
                 url,
-                headers={"csrf": self.auth.csrf},
+                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )
             response.raise_for_status()

@@ -98,9 +98,7 @@ class SmartHomeCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        list_parser.add_argument(
-            "--filter", type=str, metavar="KEYWORD", help="Filtrer par nom ou type"
-        )
+        list_parser.add_argument("--filter", type=str, metavar="KEYWORD", help="Filtrer par nom ou type")
         list_parser.add_argument(
             "--type",
             type=str,
@@ -132,9 +130,7 @@ class SmartHomeCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        control_parser.add_argument(
-            "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité"
-        )
+        control_parser.add_argument("--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité")
         control_parser.add_argument(
             "--operation",
             type=str,
@@ -158,9 +154,7 @@ class SmartHomeCommand(BaseCommand):
             metavar="ENTITY_ID",
             help="ID de l'entité serrure (ex: lock.entree)",
         )
-        lock_parser.add_argument(
-            "--code", type=str, metavar="CODE", help="Code de sécurité (optionnel)"
-        )
+        lock_parser.add_argument("--code", type=str, metavar="CODE", help="Code de sécurité (optionnel)")
 
         # Action: unlock
         unlock_parser = subparsers.add_parser(
@@ -173,9 +167,7 @@ class SmartHomeCommand(BaseCommand):
         unlock_parser.add_argument(
             "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité serrure"
         )
-        unlock_parser.add_argument(
-            "--code", type=str, required=True, metavar="CODE", help="Code de sécurité"
-        )
+        unlock_parser.add_argument("--code", type=str, required=True, metavar="CODE", help="Code de sécurité")
 
         # Action: status
         status_parser = subparsers.add_parser(
@@ -185,9 +177,7 @@ class SmartHomeCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        status_parser.add_argument(
-            "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité"
-        )
+        status_parser.add_argument("--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité")
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
@@ -463,9 +453,9 @@ class SmartHomeCommand(BaseCommand):
                 supported_props = device.get("supportedProperties", [])
                 if supported_props:
                     # Filtrer les propriétés importantes
-                    important_props = [
-                        p for p in supported_props if not p.startswith("Alexa.Operation.")
-                    ][:3]  # Limiter à 3
+                    important_props = [p for p in supported_props if not p.startswith("Alexa.Operation.")][
+                        :3
+                    ]  # Limiter à 3
                     if important_props:
                         print(f"     Actions: {', '.join(important_props)}")
                 print()

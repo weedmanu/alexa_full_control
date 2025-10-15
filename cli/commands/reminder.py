@@ -108,9 +108,7 @@ class ReminderCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        create_parser.add_argument(
-            "--label", type=str, required=True, metavar="TEXT", help="Texte du rappel"
-        )
+        create_parser.add_argument("--label", type=str, required=True, metavar="TEXT", help="Texte du rappel")
         create_parser.add_argument(
             "--datetime",
             type=str,
@@ -138,9 +136,7 @@ class ReminderCommand(BaseCommand):
         delete_parser.add_argument(
             "--id", type=str, required=True, metavar="REMINDER_ID", help="ID du rappel à supprimer"
         )
-        delete_parser.add_argument(
-            "--force", action="store_true", help="Supprimer sans confirmation"
-        )
+        delete_parser.add_argument("--force", action="store_true", help="Supprimer sans confirmation")
 
         # Action: complete
         complete_parser = subparsers.add_parser(
@@ -268,9 +264,7 @@ class ReminderCommand(BaseCommand):
                 self.info(f"   Texte: {args.label}")
                 self.info(f"   Date: {args.datetime}")
 
-                result = self.call_with_breaker(
-                    ctx.reminder_mgr.create_reminder, serial, args.label, args.datetime
-                )
+                result = self.call_with_breaker(ctx.reminder_mgr.create_reminder, serial, args.label, args.datetime)
             else:
                 # Rappel récurrent
                 self.info(f"🔁 Création rappel récurrent pour '{device_name}'...")
@@ -401,12 +395,8 @@ class ReminderCommand(BaseCommand):
             # Tronquer l'ID pour l'affichage
             short_id = reminder_id.split("-")[-1][:8] if "-" in reminder_id else reminder_id[:8]
 
-            table_data.append(
-                [label, device_name, datetime_display, status_emoji, repeat_text, short_id]
-            )
+            table_data.append([label, device_name, datetime_display, status_emoji, repeat_text, short_id])
 
         # Afficher le tableau
-        table = self.format_table(
-            table_data, ["Nom", "Appareil", "Date/Heure", "Statut", "Répétition", "ID"]
-        )
+        table = self.format_table(table_data, ["Nom", "Appareil", "Date/Heure", "Statut", "Répétition", "ID"])
         print(table)

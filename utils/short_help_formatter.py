@@ -115,9 +115,7 @@ class ShortHelpFormatter:
 
             # Colorer l'action en vert et la description en gris
             colored_action = f"{ShortHelpFormatter.COLOR_ACTION}{action}{ShortHelpFormatter.RESET}"
-            colored_desc = (
-                f"{ShortHelpFormatter.COLOR_DESCRIPTION}: {description}{ShortHelpFormatter.RESET}"
-            )
+            colored_desc = f"{ShortHelpFormatter.COLOR_DESCRIPTION}: {description}{ShortHelpFormatter.RESET}"
 
             lines.append(f"  • {colored_action:<70} {colored_desc}")
         lines.append("")
@@ -134,9 +132,7 @@ class ShortHelpFormatter:
             lines.append("  Avec une option globale :")
             lines.append("")
             for example in global_examples:
-                lines.append(
-                    f"\t{ShortHelpFormatter.COLOR_EXAMPLE}{example}{ShortHelpFormatter.RESET}"
-                )
+                lines.append(f"\t{ShortHelpFormatter.COLOR_EXAMPLE}{example}{ShortHelpFormatter.RESET}")
 
         lines.append("")
 

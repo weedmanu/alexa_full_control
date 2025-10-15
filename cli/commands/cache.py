@@ -33,9 +33,7 @@ class CacheCommand(BaseCommand):
         # Description simplifiée
         parser.description = CACHE_DESCRIPTION
 
-        subparsers = parser.add_subparsers(
-            dest="action", help="Actions de gestion du cache", required=True
-        )
+        subparsers = parser.add_subparsers(dest="action", help="Actions de gestion du cache", required=True)
 
         # cache status
         subparsers.add_parser(

@@ -21,6 +21,13 @@ class ReminderManager:
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
         logger.info("ReminderManager initialisé")
+        # Normaliser vers http_client pour migration progressive
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
 
     def _check_connection(self) -> bool:
         return self.state_machine.can_execute_commands
@@ -48,12 +55,12 @@ class ReminderManager:
                     "recurringPattern": recurring,
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/reminders",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     json=payload,
                     timeout=10,
@@ -72,12 +79,12 @@ class ReminderManager:
                 return []
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/reminders",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     timeout=10,
                 )
@@ -94,11 +101,11 @@ class ReminderManager:
                 return False
             try:
                 response = self.breaker.call(
-                    self.auth.session.delete,
+                    self.http_client.delete,
                     f"https://{self.config.alexa_domain}/api/reminders/{reminder_id}",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     timeout=10,
                 )

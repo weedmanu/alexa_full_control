@@ -10,7 +10,7 @@ Ce module gère les routines Alexa (automation scenarios) avec:
 """
 
 import threading
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
@@ -92,9 +92,7 @@ class RoutineManager:
             # 1. Cache mémoire (TTL 5min)
             if self._routines_cache and not self._is_cache_expired():
                 logger.debug("Routines depuis cache mémoire")
-                return self._filter_routines(
-                    self._routines_cache, enabled_only, disabled_only, limit
-                )
+                return self._filter_routines(self._routines_cache, enabled_only, disabled_only, limit)
 
             # 2. Cache disque (TTL 1h)
             cache_data = self.cache_service.get("routines")
@@ -136,10 +134,12 @@ class RoutineManager:
             # Endpoint API routines (v2 automations)
             url = f"https://{self.config.alexa_domain}/api/behaviors/v2/automations"
 
+            # Use unified http_client when available; ensure non-None for mypy
+            http_client: Any = getattr(self, "http_client", None) or self.auth
             response = self.breaker.call(
-                self.auth.session.get,
+                http_client.get,
                 url,
-                headers={"csrf": self.auth.csrf},
+                headers={"csrf": getattr(http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=15,
             )
             response.raise_for_status()
@@ -186,8 +186,7 @@ class RoutineManager:
                 return False
 
             if not automation_id or not (
-                automation_id.startswith("amzn1.alexa.routine")
-                or automation_id.startswith("amzn1.alexa.automation")
+                automation_id.startswith("amzn1.alexa.routine") or automation_id.startswith("amzn1.alexa.automation")
             ):
                 logger.error(f"ID routine invalide: {automation_id}")
                 return False
@@ -218,9 +217,7 @@ class RoutineManager:
 
                 # 4. Remplacer les placeholders si device fourni
                 if device_serial or device_type:
-                    logger.debug(
-                        f"Remplacement device dans la séquence: serial={device_serial}, type={device_type}"
-                    )
+                    logger.debug(f"Remplacement device dans la séquence: serial={device_serial}, type={device_type}")
 
                     # Remplacer les placeholders standards
                     if device_serial:
@@ -228,12 +225,8 @@ class RoutineManager:
                         logger.debug(f"Placeholder ALEXA_CURRENT_DSN remplacé par {device_serial}")
 
                     if device_type:
-                        sequence_str = sequence_str.replace(
-                            "ALEXA_CURRENT_DEVICE_TYPE", device_type
-                        )
-                        logger.debug(
-                            f"Placeholder ALEXA_CURRENT_DEVICE_TYPE remplacé par {device_type}"
-                        )
+                        sequence_str = sequence_str.replace("ALEXA_CURRENT_DEVICE_TYPE", device_type)
+                        logger.debug(f"Placeholder ALEXA_CURRENT_DEVICE_TYPE remplacé par {device_type}")
 
                     # Pour les routines statiques sans placeholders, remplacer les deviceSerialNumber en dur
                     # Ceci permet de forcer l'exécution sur le device choisi
@@ -274,11 +267,12 @@ class RoutineManager:
                     "status": "ENABLED",
                 }
 
+                http_client: Any = getattr(self, "http_client", None) or self.auth
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    http_client.post,
                     url,
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()

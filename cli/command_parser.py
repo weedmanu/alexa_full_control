@@ -29,9 +29,7 @@ class ColoredHelpFormatter(argparse.RawDescriptionHelpFormatter):
     Contrôle l'ordre d'affichage : Titre → Usage → Options → Actions → Options d'action → Exemples
     """
 
-    def _format_usage(
-        self, usage: Optional[str], actions: Any, groups: Any, prefix: Optional[str]
-    ) -> str:
+    def _format_usage(self, usage: Optional[str], actions: Any, groups: Any, prefix: Optional[str]) -> str:
         """Formatte la ligne d'usage avec couleurs."""
         if prefix is None:
             prefix = "\033[1;36mUsage:\033[0m "
@@ -76,9 +74,7 @@ class ColoredHelpFormatter(argparse.RawDescriptionHelpFormatter):
         # Ajouter des couleurs aux sections principales
         help_text = help_text.replace("usage:", "\033[1;36mUsage:\033[0m")
         help_text = help_text.replace("options:", "\033[1;35mOptions:\033[0m")
-        help_text = help_text.replace(
-            "positional arguments:", "\033[1;35mArguments positionnels:\033[0m"
-        )
+        help_text = help_text.replace("positional arguments:", "\033[1;35mArguments positionnels:\033[0m")
 
         return help_text
 
@@ -219,9 +215,7 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
                 continue
 
             # Détecter les autres sections
-            if "\033[1;36mUsage:\033[0m" in line or (
-                "Usage:" in line and "alexa [OPTIONS_GLOBALES]" in line
-            ):
+            if "\033[1;36mUsage:\033[0m" in line or ("Usage:" in line and "alexa [OPTIONS_GLOBALES]" in line):
                 current_section = "usage"
                 # Colorer les parties de la ligne usage comme dans l'aide principale
                 line = line.replace("Usage:", "\033[1;36mUsage:\033[0m")
@@ -235,10 +229,7 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
             elif line == "\033[1;35mOptions:\033[0m" or line == "options:":
                 current_section = "options"
                 options_section.append(line)
-            elif (
-                line == "\033[1;35mArguments positionnels:\033[0m"
-                or line == "positional arguments:"
-            ):
+            elif line == "\033[1;35mArguments positionnels:\033[0m" or line == "positional arguments:":
                 current_section = "positionals"
                 positionals_section.append(line)
             elif "\033[1;32m🎯 Fonctionnalités principales:\033[0m" in line:
@@ -360,22 +351,12 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         # 3. Catégories disponibles
         if categories_section:
             # Compter le nombre de catégories listées (lignes non vides après le titre)
-            category_count = sum(
-                1
-                for line in categories_section[1:]
-                if line.strip() and not line.startswith("\033[")
-            )
+            category_count = sum(1 for line in categories_section[1:] if line.strip() and not line.startswith("\033["))
             # Si une seule catégorie, c'est une aide de catégorie spécifique
-            title_text = (
-                "🎯 Catégorie actuelle:" if category_count == 1 else "🎯 Catégories disponibles:"
-            )
+            title_text = "🎯 Catégorie actuelle:" if category_count == 1 else "🎯 Catégories disponibles:"
             # Ajouter de la couleur au titre des catégories (vert comme <CATEGORY>)
             for i, line in enumerate(categories_section):
-                if (
-                    "🎯 Catégories disponibles:" in line
-                    or "🎯 Catégorie:" in line
-                    or "🎯 Catégorie actuelle:" in line
-                ):
+                if "🎯 Catégories disponibles:" in line or "🎯 Catégorie:" in line or "🎯 Catégorie actuelle:" in line:
                     categories_section[i] = f"\033[1;32m{title_text}\033[0m"
                     break
             reordered_lines.extend(categories_section)
@@ -521,9 +502,7 @@ class CommandParser:
         parser.add_argument("--version", action="version", version=f"%(prog)s {self.version}")
 
         # Arguments globaux (mais sans -h/--help automatique)
-        parser.add_argument(
-            "-v", "--verbose", action="store_true", help="Mode verbeux (affiche logs détaillés)"
-        )
+        parser.add_argument("-v", "--verbose", action="store_true", help="Mode verbeux (affiche logs détaillés)")
 
         parser.add_argument(
             "--debug",

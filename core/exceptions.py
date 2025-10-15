@@ -1,9 +1,9 @@
-"""
-Hiérarchie d'exceptions personnalisées pour Alexa Full Control.
+"""Hiérarchie d'exceptions personnalisées pour Alexa Full Control.
 
 Ce module centralise toutes les exceptions métier pour une gestion
-d'erreur typée et informative.
+des erreurs typée et informative.
 """
+
 from typing import Any, Dict, List, Optional
 
 
@@ -19,7 +19,7 @@ class AuthenticationError(AlexaError):
         can_refresh: Indique si une tentative de rafraîchissement est possible
     """
 
-    def __init__(self, message: str, can_refresh: bool = True) -> None:
+    def __init__(self, message: str = "Authentication failed", can_refresh: bool = True) -> None:
         super().__init__(message)
         self.can_refresh: bool = can_refresh
 
@@ -35,7 +35,7 @@ class APIError(AlexaError):
 
     def __init__(
         self,
-        message: str,
+        message: str = "API error",
         status_code: Optional[int] = None,
         response: Optional[Dict[str, Any]] = None,
     ) -> None:

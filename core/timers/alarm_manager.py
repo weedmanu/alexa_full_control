@@ -45,14 +45,20 @@ class AlarmManager:
         self.state_machine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
         self._lock = threading.RLock()
+        # Normalize http_client for migration compatibility
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
+
         logger.info("AlarmManager initialisé")
 
     def _check_connection(self) -> bool:
         """Vérifie l'état de la connexion."""
         if not self.state_machine.can_execute_commands:
-            logger.error(
-                f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}"
-            )
+            logger.error(f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}")
             return False
         return True
 
@@ -87,9 +93,7 @@ class AlarmManager:
                     # Format simple HH:MM
                     hour, minute = alarm_time.split(":")
                     now = datetime.now()
-                    alarm_datetime = now.replace(
-                        hour=int(hour), minute=int(minute), second=0, microsecond=0
-                    )
+                    alarm_datetime = now.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
                     alarm_time_iso = alarm_datetime.isoformat() + ".000"
                 else:
                     alarm_time_iso = alarm_time
@@ -106,13 +110,13 @@ class AlarmManager:
                 }
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/alarms",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
                         "Origin": f"https://alexa.{self.config.amazon_domain}",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     json=payload,
                     timeout=10,
@@ -148,12 +152,12 @@ class AlarmManager:
 
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/alarms",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     timeout=10,
                 )
@@ -191,12 +195,12 @@ class AlarmManager:
 
             try:
                 response = self.breaker.call(
-                    self.auth.session.delete,
+                    self.http_client.delete,
                     f"https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     timeout=10,
                 )
@@ -212,9 +216,7 @@ class AlarmManager:
                 logger.error(f"Erreur inattendue: {e}")
                 return False
 
-    def set_alarm_enabled(
-        self, device_serial: str, device_type: str, alarm_id: str, enabled: bool
-    ) -> bool:
+    def set_alarm_enabled(self, device_serial: str, device_type: str, alarm_id: str, enabled: bool) -> bool:
         """
         Active ou désactive une alarme.
 
@@ -261,9 +263,7 @@ class AlarmManager:
                     if ":" in alarm_time and "T" not in alarm_time:
                         hour, minute = alarm_time.split(":")
                         now = datetime.now()
-                        alarm_datetime = now.replace(
-                            hour=int(hour), minute=int(minute), second=0, microsecond=0
-                        )
+                        alarm_datetime = now.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
                         payload["alarmTime"] = alarm_datetime.isoformat() + ".000"
                     else:
                         payload["alarmTime"] = alarm_time
@@ -275,12 +275,12 @@ class AlarmManager:
                     payload["status"] = "ON" if enabled else "OFF"
 
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     json=payload,
                     timeout=10,

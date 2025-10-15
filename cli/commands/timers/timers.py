@@ -39,9 +39,7 @@ class TimersCommands(TimeSubCommand):
             duration_seconds = self._parse_duration(args.duration)
             if duration_seconds is None:
                 self.error(f"Format de durée invalide: '{args.duration}'")
-                self.info(
-                    "Formats valides: 10m, 1h30m, 2h, 90s, '1 minute', '2 heures', '1 heure 30 minutes'"
-                )
+                self.info("Formats valides: 10m, 1h30m, 2h, 90s, '1 minute', '2 heures', '1 heure 30 minutes'")
                 return False
 
             if duration_seconds <= 0:
@@ -145,9 +143,7 @@ class TimersCommands(TimeSubCommand):
             if args.all:
                 self.info(f"🗑️  Annulation de tous les minuteurs de '{args.device}'...")
 
-                result = self.call_with_breaker(
-                    ctx.timer_mgr.cancel_all_timers, serial, device_type
-                )
+                result = self.call_with_breaker(ctx.timer_mgr.cancel_all_timers, serial, device_type)
 
                 if result:
                     count = result.get("cancelled_count", 0)
@@ -156,9 +152,7 @@ class TimersCommands(TimeSubCommand):
             else:
                 self.info(f"🗑️  Annulation minuteur {args.id} sur '{args.device}'...")
 
-                result = self.call_with_breaker(
-                    ctx.timer_mgr.cancel_timer, serial, device_type, args.id
-                )
+                result = self.call_with_breaker(ctx.timer_mgr.cancel_timer, serial, device_type, args.id)
 
                 if result:
                     self.success("✅ Minuteur annulé")
@@ -186,9 +180,7 @@ class TimersCommands(TimeSubCommand):
                 return False
 
             device_type = self._get_device_type(args.device)
-            result = self.call_with_breaker(
-                ctx.timer_mgr.pause_timer, serial, device_type, args.id
-            )
+            result = self.call_with_breaker(ctx.timer_mgr.pause_timer, serial, device_type, args.id)
 
             if result:
                 self.success("✅ Minuteur mis en pause")
@@ -216,9 +208,7 @@ class TimersCommands(TimeSubCommand):
                 return False
 
             device_type = self._get_device_type(args.device)
-            result = self.call_with_breaker(
-                ctx.timer_mgr.resume_timer, serial, device_type, args.id
-            )
+            result = self.call_with_breaker(ctx.timer_mgr.resume_timer, serial, device_type, args.id)
 
             if result:
                 self.success("✅ Minuteur repris")
@@ -297,9 +287,7 @@ class TimersCommands(TimeSubCommand):
                 "CANCELLED": "❌",
             }.get(status, "❓")
 
-            remaining_text = (
-                self._format_duration(remaining_seconds) if remaining_seconds > 0 else "Terminé"
-            )
+            remaining_text = self._format_duration(remaining_seconds) if remaining_seconds > 0 else "Terminé"
 
             print(f"  {status_emoji} {label}")
             print(f"     ID: {timer_id}")
@@ -353,9 +341,7 @@ class TimersCommands(TimeSubCommand):
             metavar="DURATION",
             help="Durée du minuteur (ex: 10m, 1h30m, 2h, 90s, '1 minute', '2 heures')",
         )
-        create_parser.add_argument(
-            "--label", type=str, metavar="LABEL", help="Étiquette du minuteur (optionnel)"
-        )
+        create_parser.add_argument("--label", type=str, metavar="LABEL", help="Étiquette du minuteur (optionnel)")
 
         # Action: list
         list_parser = timer_subparsers.add_parser(
@@ -371,9 +357,7 @@ class TimersCommands(TimeSubCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil (optionnel, liste tous les appareils si non spécifié)",
         )
-        list_parser.add_argument(
-            "--active-only", action="store_true", help="Afficher uniquement les minuteurs actifs"
-        )
+        list_parser.add_argument("--active-only", action="store_true", help="Afficher uniquement les minuteurs actifs")
 
         # Action: cancel
         cancel_parser = timer_subparsers.add_parser(
@@ -391,9 +375,7 @@ class TimersCommands(TimeSubCommand):
             help="Nom de l'appareil",
         )
         cancel_group = cancel_parser.add_mutually_exclusive_group(required=True)
-        cancel_group.add_argument(
-            "--id", type=str, metavar="TIMER_ID", help="ID du minuteur à annuler"
-        )
+        cancel_group.add_argument("--id", type=str, metavar="TIMER_ID", help="ID du minuteur à annuler")
         cancel_group.add_argument("--all", action="store_true", help="Annuler tous les minuteurs")
 
         # Action: pause
@@ -411,9 +393,7 @@ class TimersCommands(TimeSubCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil",
         )
-        pause_parser.add_argument(
-            "--id", type=str, required=True, metavar="TIMER_ID", help="ID du minuteur"
-        )
+        pause_parser.add_argument("--id", type=str, required=True, metavar="TIMER_ID", help="ID du minuteur")
 
         # Action: resume
         resume_parser = timer_subparsers.add_parser(
@@ -430,6 +410,4 @@ class TimersCommands(TimeSubCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil",
         )
-        resume_parser.add_argument(
-            "--id", type=str, required=True, metavar="TIMER_ID", help="ID du minuteur"
-        )
+        resume_parser.add_argument("--id", type=str, required=True, metavar="TIMER_ID", help="ID du minuteur")

@@ -22,11 +22,15 @@ class ActivityManager:
         self.state_machine: AlexaStateMachine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
         logger.info("ActivityManager initialisé")
 
-    def get_customer_history_records(
-        self, limit: int = 50, start_time: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+    def get_customer_history_records(self, limit: int = 50, start_time: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Récupère l'historique vocal complet via l'API Privacy ou cache local.
 
@@ -85,10 +89,10 @@ class ActivityManager:
 
         # Appel à l'API Privacy avec le Circuit Breaker
         response = self.breaker.call(
-            self.auth.session.post,
+            self.http_client.post,
             privacy_url,
             params=params,
-            headers=headers,
+            headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
             json=body,
             timeout=15,
         )
@@ -124,9 +128,7 @@ class ActivityManager:
         except Exception as e:
             logger.debug(f"Erreur sauvegarde cache activités: {e}")
 
-    def _get_activities_from_cache(
-        self, limit: int, start_time: Optional[int]
-    ) -> List[Dict[str, Any]]:
+    def _get_activities_from_cache(self, limit: int, start_time: Optional[int]) -> List[Dict[str, Any]]:
         """Récupère les activités depuis le cache local."""
         try:
             cache_data = self._load_from_local_cache("activities")
@@ -268,9 +270,7 @@ class ActivityManager:
             # Essayer d'abord d'utiliser le token CSRF standard des cookies
             # L'API Privacy pourrait accepter le même token que les autres APIs
             if self.auth.csrf:
-                logger.debug(
-                    f"Utilisation du token CSRF standard des cookies: {self.auth.csrf[:20]}..."
-                )
+                logger.debug(f"Utilisation du token CSRF standard des cookies: {self.auth.csrf[:20]}...")
                 return self.auth.csrf
 
             # Fallback: essayer d'extraire depuis la page HTML (peut ne plus fonctionner)
@@ -282,7 +282,7 @@ class ActivityManager:
                 logger.debug("Tentative d'extraction du token CSRF depuis la page HTML...")
 
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     privacy_url,
                     timeout=10,
                 )
@@ -361,9 +361,7 @@ class ActivityManager:
         logger.debug("Aucun token CSRF trouvé dans le HTML")
         return None
 
-    def get_activities(
-        self, limit: int = 50, start_time: Optional[datetime] = None
-    ) -> List[Dict[str, Any]]:
+    def get_activities(self, limit: int = 50, start_time: Optional[datetime] = None) -> List[Dict[str, Any]]:
         """
         Récupère l'historique des activités via l'API Privacy.
 
@@ -407,9 +405,7 @@ class ActivityManager:
                 logger.error(f"Erreur récupération activités: {e}")
                 return []
 
-    def _convert_privacy_record_to_activity(
-        self, record: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _convert_privacy_record_to_activity(self, record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Convertit un enregistrement Privacy au format d'activité standard.
 
@@ -429,9 +425,7 @@ class ActivityManager:
             # Créer l'activité de base
             activity = {
                 "id": record_key,
-                "timestamp": datetime.fromtimestamp(timestamp / 1000).isoformat()
-                if timestamp
-                else None,
+                "timestamp": datetime.fromtimestamp(timestamp / 1000).isoformat() if timestamp else None,
                 "deviceSerialNumber": device.get("serialNumber"),
                 "deviceName": device.get("deviceName"),
                 "activityStatus": record.get("activityStatus", "UNKNOWN"),
@@ -442,9 +436,7 @@ class ActivityManager:
             if activity.get("deviceSerialNumber"):
                 device_info = self._get_device_info_from_cache(activity["deviceSerialNumber"])
                 if device_info:
-                    activity["deviceName"] = device_info.get(
-                        "accountName", activity.get("deviceName", "N/A")
-                    )
+                    activity["deviceName"] = device_info.get("accountName", activity.get("deviceName", "N/A"))
 
             # Déterminer le type d'activité et enrichir les données
             if voice_items:
@@ -560,9 +552,7 @@ class ActivityManager:
         logger.warning("Suppression d'activité individuelle non supportée par l'API Privacy")
         return False
 
-    def delete_activities_range(
-        self, start_time: datetime, end_time: Optional[datetime] = None
-    ) -> bool:
+    def delete_activities_range(self, start_time: datetime, end_time: Optional[datetime] = None) -> bool:
         """
         Supprime une plage d'activités.
 
@@ -653,9 +643,7 @@ class ActivityManager:
                 return activity
         return None
 
-    def add_mock_activity(
-        self, utterance: str, alexa_response: str, device_name: str = "Salon Echo"
-    ) -> bool:
+    def add_mock_activity(self, utterance: str, alexa_response: str, device_name: str = "Salon Echo") -> bool:
         """
         Ajoute une activité simulée au cache local.
 
@@ -692,9 +680,7 @@ class ActivityManager:
             }
 
             # Ajouter la nouvelle activité
-            cache_data["records"].insert(
-                0, mock_activity
-            )  # Au début pour qu'elle soit la plus récente
+            cache_data["records"].insert(0, mock_activity)  # Au début pour qu'elle soit la plus récente
             cache_data["last_updated"] = datetime.now().isoformat()
 
             # Limiter à 100 activités maximum

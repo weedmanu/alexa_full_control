@@ -239,8 +239,6 @@ def format_device_info(device: Dict[str, Any]) -> Dict[str, Any]:
 
     # Formater les capacités si présentes
     if "capabilities" in device:
-        formatted["capabilitiesDisplay"] = [
-            get_capability_description(cap) for cap in device["capabilities"]
-        ]
+        formatted["capabilitiesDisplay"] = [get_capability_description(cap) for cap in device["capabilities"]]
 
     return formatted

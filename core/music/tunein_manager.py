@@ -14,8 +14,19 @@ from ..state_machine import AlexaStateMachine
 class TuneInManager:
     """Gestionnaire thread-safe pour TuneIn (radio)."""
 
-    def __init__(self, auth, config, state_machine=None):
-        self.auth = auth
+    def __init__(self, auth_or_http, config, state_machine=None):
+        # Normalize to http_client wrapper when possible
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = (
+                create_http_client_from_auth(auth_or_http) if hasattr(auth_or_http, "session") else auth_or_http
+            )
+        except Exception:
+            self.http_client = getattr(auth_or_http, "session", auth_or_http)
+
+        # Keep auth reference for backward compatibility
+        self.auth = getattr(auth_or_http, "auth", auth_or_http)
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
@@ -29,10 +40,10 @@ class TuneInManager:
                 return []
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/tunein/search",
-                    params={"query": query, "mediaOwnerCustomerId": self.auth.customer_id},
-                    headers={"csrf": self.auth.csrf},
+                    params={"query": query, "mediaOwnerCustomerId": getattr(self.auth, "customer_id", None)},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -55,10 +66,10 @@ class TuneInManager:
                     "contentType": "station",
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/tunein/queue-and-play",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -75,9 +86,9 @@ class TuneInManager:
                 return []
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/tunein/favorites",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -93,10 +104,10 @@ class TuneInManager:
                 return False
             try:
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/tunein/favorites",
                     json={"guideId": station_id},
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()

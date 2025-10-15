@@ -225,9 +225,7 @@ class AuthCommand(BaseCommand):
         print()
 
         # Colorer l'état en vert si authentifié
-        state_display = (
-            "\033[32mAUTHENTICATED\033[0m" if state_name == "AUTHENTICATED" else state_name
-        )
+        state_display = "\033[32mAUTHENTICATED\033[0m" if state_name == "AUTHENTICATED" else state_name
         cmd_status = "\033[32mOui\033[0m" if can_execute else "\033[31mNon\033[0m"
         print(f"\033[1;30m  État\033[0m                         {state_display}")
         print(f"\033[1;30m  Peut exécuter commandes\033[0m      {cmd_status}")
@@ -238,15 +236,11 @@ class AuthCommand(BaseCommand):
         cookie_json = auth_data_dir / "cookie-resultat.json"
 
         cookie_txt_exists = cookie_file.exists()
-        cookie_txt_status = (
-            "\033[32mPrésent\033[0m" if cookie_txt_exists else "\033[31mManquant\033[0m"
-        )
+        cookie_txt_status = "\033[32mPrésent\033[0m" if cookie_txt_exists else "\033[31mManquant\033[0m"
         print(f"\033[1;30m  Fichier cookie.txt\033[0m           {cookie_txt_status}")
 
         cookie_json_exists = cookie_json.exists()
-        cookie_json_status = (
-            "\033[32mPrésent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
-        )
+        cookie_json_status = "\033[32mPrésent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
         print(f"\033[1;30m  Fichier cookie-resultat.json\033[0m {cookie_json_status}")
 
         # Afficher les infos du cookie même sans --verbose
@@ -417,9 +411,7 @@ class AuthCommand(BaseCommand):
         import sys
 
         # Vérifier si on est dans un venv
-        in_venv = hasattr(sys, "real_prefix") or (
-            hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
-        )
+        in_venv = hasattr(sys, "real_prefix") or (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)
 
         if not in_venv:
             return False

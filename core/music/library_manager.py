@@ -76,9 +76,7 @@ class LibraryManager:
                 }
             ]
 
-    def play_track(
-        self, device_serial: str, device_type: str, track_id: str, provider: str = "AMAZON_MUSIC"
-    ) -> bool:
+    def play_track(self, device_serial: str, device_type: str, track_id: str, provider: str = "AMAZON_MUSIC") -> bool:
         """
         Joue une piste en utilisant VoiceCommandService.
 
@@ -134,9 +132,7 @@ class LibraryManager:
             logger.debug(f"Récupération playlists {provider} (vide)")
             return []
 
-    def play_playlist(
-        self, device_serial: str, device_type: str, playlist_id: str, shuffle: bool = False
-    ) -> bool:
+    def play_playlist(self, device_serial: str, device_type: str, playlist_id: str, shuffle: bool = False) -> bool:
         """
         Joue une playlist (non supporté).
 

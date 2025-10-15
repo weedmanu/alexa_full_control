@@ -2,29 +2,32 @@
 Contrôleur pour thermostats connectés - Thread-safe.
 """
 
-import threading
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from core.base_manager import BaseManager
 from services.cache_service import CacheService
 
 from ..circuit_breaker import CircuitBreaker
 from ..state_machine import AlexaStateMachine
 
 
-class ThermostatController:
-    """Contrôleur thread-safe pour thermostats connectés."""
+class ThermostatController(BaseManager[Dict[str, Any]]):
+    """Contrôleur thread-safe pour thermostats connectés.
+
+    Hérite de `BaseManager` pour réutiliser le cache et le client HTTP.
+    """
 
     def __init__(
-        self, auth, config, state_machine=None, cache_service: Optional[CacheService] = None
-    ):
-        self.auth = auth
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
+        self,
+        http_client: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        cache_service: Optional[CacheService] = None,
+    ) -> None:
+        super().__init__(http_client, config, state_machine or AlexaStateMachine(), cache_service)
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
-        self._lock = threading.RLock()
-        self.cache_service = cache_service or CacheService()
         self._thermostats_cache: Optional[List[Dict[str, Any]]] = None
         logger.info("ThermostatController initialisé")
 
@@ -64,7 +67,7 @@ class ThermostatController:
     def set_temperature(self, entity_id: str, target_celsius: float) -> bool:
         """Définit la température cible en Celsius."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             if not 10.0 <= target_celsius <= 35.0:
                 logger.error(f"Température invalide: {target_celsius}°C (10-35)")
@@ -79,16 +82,14 @@ class ThermostatController:
                             "payloadVersion": "3",
                         },
                         "endpoint": {"endpointId": entity_id},
-                        "payload": {
-                            "targetSetpoint": {"value": target_celsius, "scale": "CELSIUS"}
-                        },
+                        "payload": {"targetSetpoint": {"value": target_celsius, "scale": "CELSIUS"}},
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -101,7 +102,7 @@ class ThermostatController:
     def set_mode(self, entity_id: str, mode: str) -> bool:
         """Définit le mode (HEAT, COOL, AUTO, ECO, OFF)."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
 
             valid_modes = ["HEAT", "COOL", "AUTO", "ECO", "OFF"]
@@ -124,10 +125,10 @@ class ThermostatController:
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -140,7 +141,7 @@ class ThermostatController:
     def adjust_temperature(self, entity_id: str, delta_celsius: float) -> bool:
         """Ajuste la température (+/- delta en Celsius)."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             try:
                 directive = {
@@ -152,16 +153,14 @@ class ThermostatController:
                             "payloadVersion": "3",
                         },
                         "endpoint": {"endpointId": entity_id},
-                        "payload": {
-                            "targetSetpointDelta": {"value": delta_celsius, "scale": "CELSIUS"}
-                        },
+                        "payload": {"targetSetpointDelta": {"value": delta_celsius, "scale": "CELSIUS"}},
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()

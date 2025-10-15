@@ -76,12 +76,8 @@ class Config:
 
         # === Volumes spécifiques par appareil ===
         self.device_volume_names: List[str] = os.getenv("DEVICEVOLNAME", "").split()
-        self.device_volumes_speak = self._parse_int_list(
-            os.getenv("DEVICEVOLSPEAK", ""), min_val=0, max_val=100
-        )
-        self.device_volumes_normal = self._parse_int_list(
-            os.getenv("DEVICEVOLNORMAL", ""), min_val=0, max_val=100
-        )
+        self.device_volumes_speak = self._parse_int_list(os.getenv("DEVICEVOLSPEAK", ""), min_val=0, max_val=100)
+        self.device_volumes_normal = self._parse_int_list(os.getenv("DEVICEVOLNORMAL", ""), min_val=0, max_val=100)
 
         # === Configuration API ===
         self.api_timeout_seconds = 30
@@ -115,13 +111,13 @@ class Config:
             # For non-Windows platforms prefer the conventional '/tmp'.
             # Tests may patch sys.platform to 'linux' and expect '/tmp'.
             try:
-                tmp_path = Path('/tmp')
+                tmp_path = Path("/tmp")
             except Exception:
                 # Fallback to system tempdir or current working directory
                 try:
                     tmp_path = Path(tempfile.gettempdir())
                 except Exception:
-                    tmp_path = Path('.')
+                    tmp_path = Path(".")
 
         # Vérifier que le répertoire existe et est accessible
         if not tmp_path.exists():
@@ -161,9 +157,7 @@ class Config:
         try:
             value = int(value_str)
         except ValueError as e:
-            raise ConfigurationError(
-                f"Variable {env_var}='{value_str}' n'est pas un entier valide"
-            ) from e
+            raise ConfigurationError(f"Variable {env_var}='{value_str}' n'est pas un entier valide") from e
 
         if min_val is not None and value < min_val:
             raise ConfigurationError(f"Variable {env_var}={value} < minimum {min_val}")
@@ -216,15 +210,11 @@ class Config:
         """
         # Le fichier token peut ne pas exister au premier lancement
         if not self.token_file.exists():
-            logger.warning(
-                f"⚠️ Fichier token absent: {self.token_file} (sera créé lors de l'authentification)"
-            )
+            logger.warning(f"⚠️ Fichier token absent: {self.token_file} (sera créé lors de l'authentification)")
 
         # Le script de refresh doit exister
         if not self.refresh_script.exists():
-            raise ConfigurationError(
-                f"Script de refresh manquant: {self.refresh_script}. Veuillez exécuter install.py"
-            )
+            raise ConfigurationError(f"Script de refresh manquant: {self.refresh_script}. Veuillez exécuter install.py")
 
     def _log_config(self) -> None:
         """Log la configuration actuelle (sans données sensibles)."""

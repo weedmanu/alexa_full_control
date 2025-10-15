@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from loguru import logger
 
 from services.cache_service import CacheService
+from core.base_manager import create_http_client_from_auth
 
 if TYPE_CHECKING:
     from alexa_auth.alexa_auth import AlexaAuth
@@ -77,6 +78,12 @@ class DeviceManager:
 
         self.auth: AlexaAuth = auth
         self.state_machine: AlexaStateMachine = state_machine
+        # Normalize http client (wrap legacy auth.session if needed)
+        try:
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            # Fallback: keep auth object as-is (duck-typed)
+            self.http_client = self.auth
         self._cache_ttl = cache_ttl
         self._cache_service = cache_service or CacheService()
 
@@ -122,9 +129,7 @@ class DeviceManager:
             if not force_refresh:
                 disk_cache = self._cache_service.get("devices", ignore_ttl=True)
                 if disk_cache and "devices" in disk_cache:
-                    logger.debug(
-                        f"💾 Cache disque: {len(disk_cache['devices'])} appareils (fallback)"
-                    )
+                    logger.debug(f"💾 Cache disque: {len(disk_cache['devices'])} appareils (fallback)")
                     self._devices_cache = disk_cache["devices"]
                     self._cache_timestamp = time.time()
                     return self._devices_cache
@@ -162,9 +167,9 @@ class DeviceManager:
         try:
             logger.debug("🌐 Récupération de la liste des appareils depuis l'API")
 
-            # Appel API pour récupérer les appareils (type: ignore pour auth qui est Any)
-            response = self.auth.get(  # type: ignore[attr-defined]
-                f"https://alexa.{self.auth.amazon_domain}/api/devices-v2/device",  # type: ignore[attr-defined]
+            # Appel API pour récupérer les appareils via http_client
+            response = self.http_client.get(
+                f"https://alexa.{self.auth.amazon_domain}/api/devices-v2/device",
                 params={"cached": "false"},
             )
 

@@ -226,9 +226,7 @@ class CalendarCommand(BaseCommand):
 
             self.info("🔍 Test des endpoints Privacy API pour le calendrier...")
 
-            results = self.call_with_breaker(
-                ctx.calendar_manager.test_privacy_api_endpoints
-            )
+            results = self.call_with_breaker(ctx.calendar_manager.test_privacy_api_endpoints)
 
             if not results:
                 self.error("Aucun résultat")
@@ -301,9 +299,7 @@ class CalendarCommand(BaseCommand):
                                         if "error" not in data and data.get("status") == 200:
                                             self.success(f"    ✅ {endpoint}: {data['status']}")
                                         elif "error" not in data:
-                                            self.warning(
-                                                f"    ⚠️ {endpoint}: {data.get('status', '?')}"
-                                            )
+                                            self.warning(f"    ⚠️ {endpoint}: {data.get('status', '?')}")
                         else:
                             self.warning("    ⚠️ Aucun port HTTP/HTTPS ouvert")
             else:
@@ -465,9 +461,7 @@ class CalendarCommand(BaseCommand):
 
             self.info(f"🗑️ Suppression de l'événement {args.id}...")
 
-            success = self.call_with_breaker(
-                ctx.calendar_manager.delete_event, event_id=args.id
-            )
+            success = self.call_with_breaker(ctx.calendar_manager.delete_event, event_id=args.id)
 
             if success:
                 self.success("✅ Événement supprimé avec succès!")
@@ -499,9 +493,7 @@ class CalendarCommand(BaseCommand):
 
             self.info(f"ℹ️ Récupération de l'événement {args.id}...")
 
-            event = self.call_with_breaker(
-                ctx.calendar_manager.get_event_details, event_id=args.id
-            )
+            event = self.call_with_breaker(ctx.calendar_manager.get_event_details, event_id=args.id)
 
             if not event:
                 self.error("Événement non trouvé")

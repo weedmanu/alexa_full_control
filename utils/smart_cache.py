@@ -1,16 +1,10 @@
-"""
-Smart Cache - Système de cache intelligent avec invalidation ciblée.
+"""Smart Cache - Système de cache intelligent avec invalidation ciblée.
 
 Ce module implémente un système de cache avancé avec:
     - Tags pour catégoriser les entrées
     - Invalidation ciblée par tag ou pattern
     - Dépendances entre caches
     - TTL personnalisable par tag
-
-Gains de performance:
-    - Conservation des données valides lors d'invalidation
-    - Réduction du nombre de requêtes API (2x)
-    - Gestion fine de la fraîcheur des données
 
 Usage:
     from utils.smart_cache import SmartCache
@@ -20,13 +14,17 @@ Usage:
     cache.invalidate_by_tag('devices')  # Invalide uniquement les devices
 """
 
+from __future__ import annotations
+
+import fnmatch
 import gzip
 import json
 import logging
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Set, cast
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +45,10 @@ class CacheEntry:
 
     key: str
     value: Any
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=lambda: cast(Set[str], set()))
     created_at: datetime = field(default_factory=datetime.now)
-    expires_at: Optional[datetime] = None
-    dependencies: Set[str] = field(default_factory=set)
+    expires_at: datetime | None = None
+    dependencies: set[str] = field(default_factory=lambda: cast(Set[str], set()))
 
     def is_expired(self) -> bool:
         """Vérifie si l'entrée est expirée."""
@@ -87,7 +85,7 @@ class SmartCache:
     """
 
     # TTL par défaut par tag (en secondes)
-    DEFAULT_TAG_TTL: Dict[str, int] = {
+    DEFAULT_TAG_TTL: dict[str, int] = {
         "devices": 300,  # 5 minutes
         "routines": 600,  # 10 minutes
         "music": 180,  # 3 minutes
@@ -101,6 +99,7 @@ class SmartCache:
     def __init__(
         self,
         cache_dir: str | Path = "data/cache",
+        *,
         use_compression: bool = True,
         default_ttl: int = 300,
     ):
@@ -119,13 +118,13 @@ class SmartCache:
         self.default_ttl = default_ttl
 
         # Index: tag → set of keys
-        self._tag_index: Dict[str, Set[str]] = {}
+        self._tag_index: dict[str, set[str]] = {}
 
         # Index: key → CacheEntry
-        self._entries: Dict[str, CacheEntry] = {}
+        self._entries: dict[str, CacheEntry] = {}
 
         # Statistiques
-        self._stats = {
+        self._stats: dict[str, int] = {
             "hits": 0,
             "misses": 0,
             "invalidations": 0,
@@ -136,9 +135,9 @@ class SmartCache:
         self,
         key: str,
         value: Any,
-        tags: Optional[List[str]] = None,
-        ttl: Optional[int] = None,
-        dependencies: Optional[List[str]] = None,
+        tags: list[str] | None = None,
+        ttl: int | None = None,
+        dependencies: list[str] | None = None,
     ) -> bool:
         """
         Stocke une valeur dans le cache.
@@ -192,11 +191,10 @@ class SmartCache:
             # Persister sur disque
             self._persist_entry(entry)
 
-            logger.debug(f"Cache SET: {key} (tags: {tags}, ttl: {ttl}s)")
+            logger.debug("Cache SET: %s (tags: %s, ttl: %ss)", key, tags, ttl)
             return True
-
-        except Exception as e:
-            logger.error(f"Erreur lors du stockage de '{key}': {e}")
+        except (OSError, TypeError, ValueError, json.JSONDecodeError) as e:
+            logger.exception("Erreur lors du stockage de '%s': %s", key, e)
             return False
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -223,7 +221,6 @@ class SmartCache:
 
             self._stats["hits"] += 1
             return entry.value
-
         # Charger depuis disque
         loaded_entry = self._load_entry(key)
         if loaded_entry is not None:
@@ -263,9 +260,10 @@ class SmartCache:
         # Supprimer du disque
         file_path = self._get_cache_file_path(key)
         if file_path.exists():
-            file_path.unlink()
+            with suppress(OSError):
+                file_path.unlink()
             self._stats["invalidations"] += 1
-            logger.debug(f"Cache INVALIDATE: {key}")
+            logger.debug("Cache INVALIDATE: %s", key)
             return True
 
         return False
@@ -282,7 +280,6 @@ class SmartCache:
         """
         if tag not in self._tag_index:
             return 0
-
         # Copier les clés (car on modifie pendant l'itération)
         keys_to_invalidate = list(self._tag_index[tag])
 
@@ -291,7 +288,7 @@ class SmartCache:
             if self.invalidate(key):
                 count += 1
 
-        logger.info(f"Cache INVALIDATE_TAG: {tag} ({count} entrées)")
+        logger.info("Cache INVALIDATE_TAG: %s (%d entrées)", tag, count)
         return count
 
     def invalidate_by_pattern(self, pattern: str) -> int:
@@ -304,8 +301,6 @@ class SmartCache:
         Returns:
             Nombre d'entrées invalidées
         """
-        import fnmatch
-
         keys_to_invalidate = [key for key in self._entries if fnmatch.fnmatch(key, pattern)]
 
         count = 0
@@ -313,7 +308,7 @@ class SmartCache:
             if self.invalidate(key):
                 count += 1
 
-        logger.info(f"Cache INVALIDATE_PATTERN: {pattern} ({count} entrées)")
+        logger.info("Cache INVALIDATE_PATTERN: %s (%d entrées)", pattern, count)
         return count
 
     def invalidate_dependencies(self, key: str) -> int:
@@ -333,7 +328,7 @@ class SmartCache:
             if self.invalidate(dep_key):
                 count += 1
 
-        logger.info(f"Cache INVALIDATE_DEPS: {key} ({count} dépendances)")
+        logger.info("Cache INVALIDATE_DEPS: %s (%d dépendances)", key, count)
         return count
 
     def clear_all(self) -> int:
@@ -353,15 +348,13 @@ class SmartCache:
         patterns = ["*.json", "*.json.gz"]
         for pattern in patterns:
             for file_path in self.cache_dir.glob(pattern):
-                try:
+                with suppress(OSError):
                     file_path.unlink()
-                except Exception as e:
-                    logger.warning(f"Erreur suppression {file_path}: {e}")
 
-        logger.info(f"Cache CLEAR_ALL: {count} entrées supprimées")
+        logger.info("Cache CLEAR_ALL: %d entrées supprimées", count)
         return count
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Retourne les statistiques du cache.
 
@@ -391,7 +384,7 @@ class SmartCache:
         """Persiste une entrée sur disque."""
         file_path = self._get_cache_file_path(entry.key)
 
-        data = {
+        data: dict[str, Any] = {
             "key": entry.key,
             "value": entry.value,
             "tags": list(entry.tags),
@@ -408,7 +401,7 @@ class SmartCache:
         else:
             file_path.write_text(json_data, encoding="utf-8")
 
-    def _load_entry(self, key: str) -> Optional[CacheEntry]:
+    def _load_entry(self, key: str) -> CacheEntry | None:
         """Charge une entrée depuis le disque."""
         file_path = self._get_cache_file_path(key)
 
@@ -421,25 +414,22 @@ class SmartCache:
             file_path = alt_path
 
         try:
+            data: dict[str, Any]
             if file_path.suffix == ".gz":
                 with gzip.open(file_path, "rt", encoding="utf-8") as f:
                     data = json.load(f)
             else:
                 data = json.loads(file_path.read_text(encoding="utf-8"))
 
-            entry = CacheEntry(
+            return CacheEntry(
                 key=data["key"],
                 value=data["value"],
                 tags=set(data.get("tags", [])),
                 created_at=datetime.fromisoformat(data["created_at"]),
-                expires_at=(
-                    datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None
-                ),
+                expires_at=(datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None),
                 dependencies=set(data.get("dependencies", [])),
             )
 
-            return entry
-
-        except Exception as e:
-            logger.error(f"Erreur chargement cache '{key}': {e}")
+        except (json.JSONDecodeError, OSError) as e:
+            logger.exception("Erreur chargement cache '%s': %s", key, e)
             return None

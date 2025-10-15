@@ -45,6 +45,7 @@ import contextlib  # noqa: E402
 
 # Import du logger utilitaire (doit être en haut pour Ruff E402)
 from utils.logger import SharedIcons, setup_loguru_logger  # noqa: E402
+from utils.term import Colors  # noqa: E402
 
 
 def ensure_utf8_console() -> None:
@@ -95,13 +96,9 @@ def ensure_utf8_console() -> None:
                 stdout_buffer = getattr(sys.stdout, "buffer", None)
                 stderr_buffer = getattr(sys.stderr, "buffer", None)
                 if stdout_buffer is not None:
-                    sys.stdout = io.TextIOWrapper(
-                        stdout_buffer, encoding="utf-8", line_buffering=True
-                    )
+                    sys.stdout = io.TextIOWrapper(stdout_buffer, encoding="utf-8", line_buffering=True)
                 if stderr_buffer is not None:
-                    sys.stderr = io.TextIOWrapper(
-                        stderr_buffer, encoding="utf-8", line_buffering=True
-                    )
+                    sys.stderr = io.TextIOWrapper(stderr_buffer, encoding="utf-8", line_buffering=True)
             except Exception:
                 pass
     except Exception:
@@ -135,9 +132,6 @@ class CLIError(Exception):
         super().__init__(message)
         self.code = code
         self.message = message
-
-
-from utils.term import Colors
 
 
 class Logger:
@@ -268,10 +262,7 @@ class Logger:
         # (likely an emoji), strip it to avoid double emojis like "✅ 🎉 ...".
         if text and not text.lstrip()[0].isalnum():
             text = text.lstrip(
-                "".join(
-                    set(text)
-                    - set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ")
-                )
+                "".join(set(text) - set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "))
             )
 
             def _strip_edge_emojis(s: str) -> str:
@@ -407,9 +398,7 @@ class PackageInstaller:
         self.venv_path = install_dir / ".venv"
         self.dry_run = dry_run
 
-    def run_command(
-        self, cmd: List[str], cwd: Optional[Path] = None, capture_output: bool = False
-    ) -> Any:
+    def run_command(self, cmd: List[str], cwd: Optional[Path] = None, capture_output: bool = False) -> Any:
         """Exécute une commande avec gestion d'erreurs.
 
         Si `self.dry_run` est True, la commande n'est pas exécutée — on logue
@@ -527,9 +516,7 @@ class PackageInstaller:
         else:
             Logger.info("requirements.txt non trouvé, installation manuelle")
             if LOGURU_AVAILABLE and logger:
-                logger.warning(
-                    "requirements.txt non trouvé, installation manuelle des packages essentiels"
-                )
+                logger.warning("requirements.txt non trouvé, installation manuelle des packages essentiels")
                 logger.info(f"Installation de {len(REQUIRED_PACKAGES)} packages essentiels")
 
             # Installation des packages essentiels
@@ -688,9 +675,7 @@ class PackageInstaller:
         try:
             if LOGURU_AVAILABLE and logger:
                 logger.info("Test de l'environnement Node.js")
-            self.run_command(
-                [str(node_path), "-e", "console.log('Node.js OK')"], capture_output=True
-            )
+            self.run_command([str(node_path), "-e", "console.log('Node.js OK')"], capture_output=True)
             Logger.success("Test Node.js réussi")
             if LOGURU_AVAILABLE and logger:
                 logger.success("Test Node.js réussi")
@@ -738,9 +723,7 @@ class InstallationManager:
 
         if not self.force:
             if not self.non_interactive:
-                response = (
-                    input("Voulez-vous nettoyer l'installation précédente? (o/N): ").strip().lower()
-                )
+                response = input("Voulez-vous nettoyer l'installation précédente? (o/N): ").strip().lower()
                 if response not in ["o", "oui", "yes", "y"]:
                     Logger.info("Installation annulée par l'utilisateur")
                     if LOGURU_AVAILABLE and logger:
@@ -816,9 +799,7 @@ class InstallationManager:
                             logger.success(f"Cookie supprimé: {cookie_file}")
                     except Exception as e:
                         if LOGURU_AVAILABLE and logger:
-                            logger.error(
-                                f"Erreur lors de la suppression du cookie {cookie_file}: {e}"
-                            )
+                            logger.error(f"Erreur lors de la suppression du cookie {cookie_file}: {e}")
 
         # Suppression des fichiers cache
         cache_dir = self.install_dir / "data" / "cache"
@@ -837,9 +818,7 @@ class InstallationManager:
                                 logger.debug(f"Fichier cache supprimé: {cache_file.name}")
                         except Exception as e:
                             if LOGURU_AVAILABLE and logger:
-                                logger.error(
-                                    f"Erreur lors de la suppression du cache {cache_file.name}: {e}"
-                                )
+                                logger.error(f"Erreur lors de la suppression du cache {cache_file.name}: {e}")
                 Logger.success(f"✓ {len(cache_files)} fichier(s) cache supprimé(s)")
                 if LOGURU_AVAILABLE and logger:
                     logger.success(f"{len(cache_files)} fichiers cache supprimés")
@@ -869,9 +848,7 @@ class InstallationManager:
             print("  Test-Path .\\.venv  # PowerShell (doit retourner False)")
             print()
             print("Vérifier suppression nodeenv:")
-            print(
-                "  Test-Path .\\alexa_auth\\nodejs\\.nodeenv  # PowerShell (doit retourner False)"
-            )
+            print("  Test-Path .\\alexa_auth\\nodejs\\.nodeenv  # PowerShell (doit retourner False)")
         else:
             print("Vérifier suppression .venv:")
             print("  [ -d .venv ] && echo 'existe' || echo 'supprimé'  # Bash")
@@ -1012,9 +989,7 @@ def running_in_project_venv(current_executable: Optional[str], install_dir: Path
         return False  # pragma: no cover - defensive fallback for pathological Path.resolve failures
 
 
-def core_main(
-    args: argparse.Namespace, install_dir: Path, running_in_project_venv_fn: Callable[[], bool]
-) -> None:
+def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_venv_fn: Callable[[], bool]) -> None:
     """Logique principale de l'installateur (testable).
 
     Lève `CLIError` pour signaler des terminaisons voulues au wrapper CLI.
@@ -1049,9 +1024,7 @@ def core_main(
                 non_interactive=args.yes,
             )
         except TypeError:
-            manager = InstallationManager(
-                install_dir, args.force, args.skip_tests, dry_run=args.dry_run
-            )
+            manager = InstallationManager(install_dir, args.force, args.skip_tests, dry_run=args.dry_run)
 
         # If running within the project venv, block dangerous operations
         if running_in_project_venv_fn() and (args.uninstall or not args.dry_run):
@@ -1059,26 +1032,18 @@ def core_main(
             Logger.error("Le script est exécuté depuis le .venv du projet.")
 
             if platform.system() == "Windows":
-                Logger.info(
-                    "Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:"
-                )
+                Logger.info("Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:")
                 Logger.info("  PowerShell: deactivate")
                 Logger.info("  CMD: deactivate")
-                Logger.info(
-                    "Ensuite relancez la commande depuis votre shell utilisateur, par exemple:"
-                )
+                Logger.info("Ensuite relancez la commande depuis votre shell utilisateur, par exemple:")
                 if args.uninstall:
                     Logger.info("  python scripts/install.py --uninstall")
                 else:
                     Logger.info("  python scripts/install.py")
             else:
-                Logger.info(
-                    "Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:"
-                )
+                Logger.info("Vous êtes dans l'environnement virtuel du projet (.venv). Pour sortir:")
                 Logger.info("  Bash / Zsh: deactivate")
-                Logger.info(
-                    "Ensuite relancez la commande depuis votre shell utilisateur, par exemple:"
-                )
+                Logger.info("Ensuite relancez la commande depuis votre shell utilisateur, par exemple:")
                 if args.uninstall:
                     Logger.info("  python3 scripts/install.py --uninstall")
                 else:
@@ -1188,9 +1153,7 @@ Exemples:
         help="Force la réinstallation (supprime l'installation existante)",
     )
 
-    parser.add_argument(
-        "--skip-tests", action="store_true", help="Saute les tests de configuration finale"
-    )
+    parser.add_argument("--skip-tests", action="store_true", help="Saute les tests de configuration finale")
 
     parser.add_argument(
         "--uninstall",

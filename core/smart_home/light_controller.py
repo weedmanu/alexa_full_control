@@ -2,12 +2,12 @@
 Contrôleur pour lumières connectées - Thread-safe.
 """
 
-import threading
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from loguru import logger
 
+from core.base_manager import BaseManager
 from services.cache_service import CacheService
 from services.voice_command_service import VoiceCommandService
 
@@ -27,33 +27,61 @@ COLOR_PRESETS = {
 }
 
 
-class LightController:
-    """Contrôleur thread-safe pour lumières connectées."""
+class LightController(BaseManager[Dict[str, Any]]):
+    """Contrôleur thread-safe pour lumières connectées.
+
+    Hérite de BaseManager pour bénéficier du cache mémoire/disque,
+    du verrou thread-safe et du client HTTP unifié `self.http_client`.
+    """
 
     def __init__(
-        self, auth, config, state_machine=None, cache_service: Optional[CacheService] = None
-    ):
-        self.auth = auth
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
+        self,
+        http_client: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        cache_service: Optional[CacheService] = None,
+    ) -> None:
+        # Initialise BaseManager avec un TTL mémoire local de 300s
+        super().__init__(http_client, config, state_machine or AlexaStateMachine(), cache_service, cache_ttl=300)
+
+        # Circuit breaker spécifique au controller
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
-        self._lock = threading.RLock()
 
-        # Cache multi-niveaux
-        self._cache_service = cache_service or CacheService()
-        self._lights_cache: Optional[List[Dict]] = None
-        self._cache_timestamp = 0.0
-        self._cache_ttl = 300  # 5 minutes (mémoire)
+        # Cache local pour lights (mémoire)
+        self._lights_cache: Optional[List[Dict[str, Any]]] = None
+        # timestamp et ttl pour le cache en mémoire
+        self._cache_timestamp: float = 0.0
+        self._cache_ttl: int = 300
 
-        # Voice Command Service pour contrôles
-        self._voice_service = VoiceCommandService(auth, config, state_machine)
+        # Assurer la présence du http_client pour la migration (compatibilité)
+        try:
+            from core.base_manager import create_http_client_from_auth
 
-        logger.log("SUCCESS", "LightController (Voice Commands)")
+            # create_http_client_from_auth accepte soit un auth legacy, soit un http client
+            self.http_client = create_http_client_from_auth(http_client)
+        except Exception:
+            # Fallback conservateur
+            self.http_client = http_client
+
+        # Voice Command Service: si un auth legacy est présent dans http_client,
+        # on l'utilise pour conserver le comportement existant.
+        raw_auth = (
+            getattr(self.http_client, "_session", None)
+            or getattr(self.http_client, "auth", None)
+            or self.http_client
+        )
+        try:
+            self._voice_service = VoiceCommandService(raw_auth, config, self.state_machine)
+        except Exception:
+            # Fallback safe
+            self._voice_service = VoiceCommandService(self.http_client, config, self.state_machine)
+
+        logger.info("LightController initialisé")
 
     def set_brightness(self, entity_id: str, brightness: int) -> bool:
         """Définit la luminosité (0-100)."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             if not 0 <= brightness <= 100:
                 logger.error(f"Luminosité invalide: {brightness} (0-100)")
@@ -72,10 +100,10 @@ class LightController:
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -88,7 +116,7 @@ class LightController:
     def set_color(self, entity_id: str, hue: float, saturation: float, brightness: float) -> bool:
         """Définit la couleur HSB (Hue 0-360, Saturation 0-1, Brightness 0-1)."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             try:
                 directive = {
@@ -110,10 +138,10 @@ class LightController:
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -126,7 +154,7 @@ class LightController:
     def set_color_temperature(self, entity_id: str, kelvin: int) -> bool:
         """Définit la température de couleur (2200-7000 Kelvin)."""
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             if not 2200 <= kelvin <= 7000:
                 logger.error(f"Température invalide: {kelvin}K (2200-7000)")
@@ -145,10 +173,10 @@ class LightController:
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -195,10 +223,10 @@ class LightController:
                     }
                 }
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/phoenix",
                     json=directive,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -231,8 +259,10 @@ class LightController:
         with self._lock:
             # Vérifier cache mémoire
             current_time = time.time()
-            if not force_refresh and self._lights_cache is not None and (
-                current_time - self._cache_timestamp < self._cache_ttl
+            if (
+                not force_refresh
+                and self._lights_cache is not None
+                and (current_time - self._cache_timestamp < self._cache_ttl)
             ):
                 logger.debug("📦 Lumières depuis cache mémoire")
                 return self._lights_cache
@@ -242,12 +272,12 @@ class LightController:
 
     def _refresh_lights_cache(self) -> List[Dict]:
         """Rafraîchit le cache des lumières depuis l'API."""
-        if not self.state_machine.can_execute_commands:
+        if not self._check_connection():
             return []
 
         # D'abord essayer de récupérer depuis le cache smart_home_all
         # (synchronisé au login par SyncService)
-        cached_all = self._cache_service.get("smart_home_all")
+        cached_all = self.cache_service.get("smart_home_all")
         if cached_all is not None:
             all_devices = cached_all.get("devices", [])
             logger.debug(f"📦 Utilisation cache smart_home_all ({len(all_devices)} devices)")
@@ -256,13 +286,13 @@ class LightController:
             try:
                 logger.debug("🌐 Récupération smart devices depuis API (fallback)")
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
                         "Origin": f"https://alexa.{self.config.amazon_domain}",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", "")),
                     },
                     timeout=10,
                 )
@@ -374,9 +404,7 @@ class LightController:
         """
         color_name_lower = color_name.lower()
         if color_name_lower not in COLOR_PRESETS:
-            logger.error(
-                f"Couleur inconnue: {color_name}. Disponibles: {', '.join(COLOR_PRESETS.keys())}"
-            )
+            logger.error(f"Couleur inconnue: {color_name}. Disponibles: {', '.join(COLOR_PRESETS.keys())}")
             return False
 
         hue, saturation, brightness = COLOR_PRESETS[color_name_lower]
@@ -394,14 +422,14 @@ class LightController:
             True si succès, False sinon
         """
         with self._lock:
-            if not self.state_machine.can_execute_commands:
+            if not self._check_connection():
                 return False
             try:
                 # Récupérer l'état actuel
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/phoenix/state",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.config, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()

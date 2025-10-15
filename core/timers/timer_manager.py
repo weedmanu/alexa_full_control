@@ -12,10 +12,10 @@ from typing import Any, Dict, List, Optional
 import requests
 from loguru import logger
 
+from core.base_manager import BaseManager
 from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine, ConnectionState
 from services.cache_service import CacheService
-from core.base_manager import BaseManager
 
 
 class TimerManager(BaseManager[Dict[str, Any]]):
@@ -53,30 +53,18 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             state_machine: Machine à états optionnelle (créée si None)
             cache_service: Service de cache optionnel (créé si None)
         """
-        # compatibility: wrap legacy auth.session into http_client if needed
-        if hasattr(auth, "session"):
-            class _ClientWrapper:
-                def __init__(self, session, csrf_val):
-                    self.session = session
-                    self.csrf = csrf_val
+        # Use central factory to obtain an http_client from legacy auth or return auth
+        from core.base_manager import create_http_client_from_auth
 
-                def get(self, url: str, **kwargs):
-                    return self.session.get(url, **kwargs)
+        http_client = create_http_client_from_auth(auth)
 
-                def post(self, url: str, **kwargs):
-                    return self.session.post(url, **kwargs)
-
-                def put(self, url: str, **kwargs):
-                    return self.session.put(url, **kwargs)
-
-                def delete(self, url: str, **kwargs):
-                    return self.session.delete(url, **kwargs)
-
-            http_client = _ClientWrapper(auth.session, getattr(auth, "csrf", None))
-        else:
-            http_client = auth
-
-        super().__init__(http_client=http_client, config=config, state_machine=state_machine or AlexaStateMachine(), cache_service=cache_service, cache_ttl=60)
+        super().__init__(
+            http_client=http_client,
+            config=config,
+            state_machine=state_machine or AlexaStateMachine(),
+            cache_service=cache_service,
+            cache_ttl=60,
+        )
 
         self.auth = auth
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
@@ -115,9 +103,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             True si connecté, False sinon
         """
         if not self.state_machine.can_execute_commands:
-            logger.error(
-                f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}"
-            )
+            logger.error(f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}")
             return False
         return True
 
@@ -184,9 +170,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 logger.error(f"Erreur inattendue lors de la création du timer: {e}")
                 return None
 
-    def list_timers(
-        self, device_serial: Optional[str] = None, force_refresh: bool = False
-    ) -> List[Dict[str, Any]]:
+    def list_timers(self, device_serial: Optional[str] = None, force_refresh: bool = False) -> List[Dict[str, Any]]:
         """
         Liste tous les timers actifs avec système de cache multi-niveaux.
 
@@ -281,9 +265,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             # Mise à jour cache disque (Niveau 2) - TTL 5min
             self.cache_service.set("timers", {"timers": timers}, ttl_seconds=300)
 
-            logger.info(
-                f"✅ {len(timers)} timer(s) actif(s) récupéré(s) et mis en cache (mémoire + disque)"
-            )
+            logger.info(f"✅ {len(timers)} timer(s) actif(s) récupéré(s) et mis en cache (mémoire + disque)")
             return timers
 
         except ValueError as e:
@@ -329,9 +311,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                     if timer_id and self.cancel_timer(timer_id):
                         success_count += 1
 
-                logger.success(
-                    f"{success_count}/{len(timers)} timer(s) annulé(s) pour {device_serial}"
-                )
+                logger.success(f"{success_count}/{len(timers)} timer(s) annulé(s) pour {device_serial}")
                 return success_count > 0
             except Exception as e:
                 logger.error(f"Erreur annulation timers: {e}")

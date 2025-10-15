@@ -82,9 +82,7 @@ class RoutineCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        list_parser.add_argument(
-            "--only-active", action="store_true", help="Afficher uniquement les routines activées"
-        )
+        list_parser.add_argument("--only-active", action="store_true", help="Afficher uniquement les routines activées")
 
         # Action: info
         info_parser = subparsers.add_parser(
@@ -94,9 +92,7 @@ class RoutineCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        info_parser.add_argument(
-            "--name", type=str, required=True, metavar="ROUTINE_NAME", help="Nom de la routine"
-        )
+        info_parser.add_argument("--name", type=str, required=True, metavar="ROUTINE_NAME", help="Nom de la routine")
         info_parser.add_argument(
             "--device",
             type=str,
@@ -303,9 +299,7 @@ class RoutineCommand(BaseCommand):
                             break
 
                     if not device_serial:
-                        self.logger.warning(
-                            f"Device '{args.device}' introuvable, exécution sans device cible"
-                        )
+                        self.logger.warning(f"Device '{args.device}' introuvable, exécution sans device cible")
 
             result = self.call_with_breaker(
                 routine_mgr.execute_routine,

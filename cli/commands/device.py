@@ -79,12 +79,8 @@ class DeviceCommand(BaseCommand):
         list_parser.add_argument(
             "--online-only", action="store_true", help="Afficher uniquement les appareils en ligne"
         )
-        list_parser.add_argument(
-            "--refresh", action="store_true", help="Forcer la resynchronisation avant d'afficher"
-        )
-        list_parser.add_argument(
-            "--json", action="store_true", help="Afficher les données au format JSON"
-        )
+        list_parser.add_argument("--refresh", action="store_true", help="Forcer la resynchronisation avant d'afficher")
+        list_parser.add_argument("--json", action="store_true", help="Afficher les données au format JSON")
 
         # Action: info
         info_parser = subparsers.add_parser(
@@ -102,9 +98,7 @@ class DeviceCommand(BaseCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil",
         )
-        info_parser.add_argument(
-            "--json", action="store_true", help="Afficher les données au format JSON"
-        )
+        info_parser.add_argument("--json", action="store_true", help="Afficher les données au format JSON")
 
         # Action: volume
         volume_parser = subparsers.add_parser(
@@ -221,9 +215,7 @@ class DeviceCommand(BaseCommand):
 
             # Filtrage
             if args.filter:
-                devices = [
-                    d for d in devices if args.filter.lower() in d.get("accountName", "").lower()
-                ]
+                devices = [d for d in devices if args.filter.lower() in d.get("accountName", "").lower()]
 
             if args.online_only:
                 devices = [d for d in devices if d.get("online", False)]
@@ -403,9 +395,7 @@ class DeviceCommand(BaseCommand):
                 self.error("SettingsManager non disponible")
                 return False
 
-            volume = self.call_with_breaker(
-                ctx.settings_mgr.get_volume, serial, device_type
-            )
+            volume = self.call_with_breaker(ctx.settings_mgr.get_volume, serial, device_type)
 
             if volume is not None:
                 self.success(f"✅ Volume actuel: {volume}%")
@@ -448,9 +438,7 @@ class DeviceCommand(BaseCommand):
                 self.error("SettingsManager non disponible")
                 return False
 
-            result = self.call_with_breaker(
-                ctx.settings_mgr.set_volume, serial, device_type, args.level
-            )
+            result = self.call_with_breaker(ctx.settings_mgr.set_volume, serial, device_type, args.level)
 
             if result:
                 self.success(f"✅ Volume défini à {args.level}%")

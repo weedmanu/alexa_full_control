@@ -113,4 +113,3 @@ class ContextProtocol(Protocol):
 
     # Fallback generic attribute access
     def __getattr__(self, name: str) -> Any: ...
-

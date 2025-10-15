@@ -41,6 +41,13 @@ class PlaybackManager:
         from services.voice_command_service import VoiceCommandService
 
         self.voice_service = VoiceCommandService(auth, config, state_machine)
+        # Normalize http_client for migration compatibility
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
 
         logger.info("PlaybackManager initialisé avec VoiceCommandService")
 
@@ -61,11 +68,11 @@ class PlaybackManager:
             }
 
             response = self.breaker.call(
-                self.auth.session.post,
+                self.http_client.post,
                 f"https://{self.config.alexa_domain}/api/np/command",
                 params={"deviceSerialNumber": device_serial, "deviceType": device_type},
                 json=command_data,
-                headers=headers,
+                headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )
             response.raise_for_status()
@@ -79,9 +86,7 @@ class PlaybackManager:
                 logger.info(f"⚠️  Commande {command_type} non supportée dans ce contexte (normal)")
                 return False
             else:
-                logger.warning(
-                    f"Échec commande NP {command_data}: {e} - fallback vers VoiceCommand"
-                )
+                logger.warning(f"Échec commande NP {command_data}: {e} - fallback vers VoiceCommand")
                 return False
 
     def set_shuffle(self, device_serial: str, device_type: str, enabled: bool) -> bool:
@@ -178,10 +183,10 @@ class PlaybackManager:
                     "mediaPosition": position_ms,
                 }
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/np/command",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -198,10 +203,10 @@ class PlaybackManager:
                 return []
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/media/history",
                     params={"size": limit},
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -272,10 +277,10 @@ class PlaybackManager:
                 # 1. État du player (comme show_queue() du shell)
                 logger.debug(f"Récupération état player pour {device_serial}")
                 player_response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/np/player",
                     params=params,
-                    headers=headers,
+                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 player_response.raise_for_status()
@@ -285,10 +290,10 @@ class PlaybackManager:
                 logger.debug(f"Récupération état média pour {device_serial}")
                 media_params = {"deviceSerialNumber": device_serial, "deviceType": device_type}
                 media_response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/media/state",
                     params=media_params,
-                    headers=headers,
+                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 media_response.raise_for_status()
@@ -297,10 +302,10 @@ class PlaybackManager:
                 # 3. Queue complète
                 logger.debug(f"Récupération queue pour {device_serial}")
                 queue_response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/np/queue",
                     params=media_params,
-                    headers=headers,
+                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 queue_response.raise_for_status()

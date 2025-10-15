@@ -171,9 +171,7 @@ class Context:
         if self._alarm_mgr is None and self.auth:
             from core.alarms import AlarmManager
 
-            self._alarm_mgr = AlarmManager(
-                self.auth, self.config, self.state_machine, self.cache_service
-            )
+            self._alarm_mgr = AlarmManager(self.auth, self.config, self.state_machine, self.cache_service)
             logger.debug("AlarmManager chargé")
         return self._alarm_mgr
 
@@ -183,9 +181,7 @@ class Context:
         if self._reminder_mgr is None and self.auth:
             from core.reminders import ReminderManager
 
-            self._reminder_mgr = ReminderManager(
-                self.auth, self.config, self.state_machine, self.cache_service
-            )
+            self._reminder_mgr = ReminderManager(self.auth, self.config, self.state_machine, self.cache_service)
             logger.debug("ReminderManager chargé")
         return self._reminder_mgr
 
@@ -250,9 +246,7 @@ class Context:
         if self._library_mgr is None and self.auth:
             from core.music import LibraryManager
 
-            self._library_mgr = LibraryManager(
-                self.auth, self.config, self.state_machine, self.voice_service
-            )
+            self._library_mgr = LibraryManager(self.auth, self.config, self.state_machine, self.voice_service)
             logger.debug("LibraryManager chargé")
         return self._library_mgr
 
@@ -335,9 +329,7 @@ class Context:
         if self._routine_mgr is None and self.auth:
             from core.routines import RoutineManager
 
-            self._routine_mgr = RoutineManager(
-                self.auth, self.config, self.state_machine, self.cache_service
-            )
+            self._routine_mgr = RoutineManager(self.auth, self.config, self.state_machine, self.cache_service)
             logger.debug("RoutineManager chargé")
         return self._routine_mgr
 
@@ -377,9 +369,7 @@ class Context:
         if self._device_settings_mgr is None and self.auth:
             from core.settings import DeviceSettingsManager
 
-            self._device_settings_mgr = DeviceSettingsManager(
-                self.auth, self.config, self.state_machine
-            )
+            self._device_settings_mgr = DeviceSettingsManager(self.auth, self.config, self.state_machine)
             logger.debug("DeviceSettingsManager chargé")
         return self._device_settings_mgr
 

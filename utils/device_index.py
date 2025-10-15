@@ -233,9 +233,7 @@ class DeviceIndex:
             "offline": len(self.get_offline_devices()),
             "types": len(self._by_type),
             "families": len(self._by_family),
-            "families_detail": {
-                family: len(devices) for family, devices in self._by_family.items()
-            },
+            "families_detail": {family: len(devices) for family, devices in self._by_family.items()},
             "index_built": self._index_built,
         }
 
@@ -292,10 +290,7 @@ class SmartDeviceIndex:
                 self._by_type[device_type] = []
             self._by_type[device_type].append(device)
 
-        logger.info(
-            f"SmartDeviceIndex construit: {len(self._all_devices)} devices, "
-            f"{len(self._by_type)} types"
-        )
+        logger.info(f"SmartDeviceIndex construit: {len(self._all_devices)} devices, {len(self._by_type)} types")
 
     def get_by_id(self, device_id: str) -> Optional[dict]:
         """Recherche par ID (O(1))."""
@@ -335,7 +330,5 @@ class SmartDeviceIndex:
         return {
             "total": len(self._all_devices),
             "types": len(self._by_type),
-            "types_detail": {
-                device_type: len(devices) for device_type, devices in self._by_type.items()
-            },
+            "types_detail": {device_type: len(devices) for device_type, devices in self._by_type.items()},
         }

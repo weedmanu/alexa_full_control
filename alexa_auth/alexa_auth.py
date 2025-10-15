@@ -165,9 +165,7 @@ class AlexaAuth:
             amazon_page = donnees_completes.get("amazonPage", "amazon.fr")
             self.amazon_domain = amazon_page
 
-            logger.debug(
-                f"Cookies JSON chargés: {len(self.session.cookies)} cookies, domain={self.amazon_domain}"
-            )
+            logger.debug(f"Cookies JSON chargés: {len(self.session.cookies)} cookies, domain={self.amazon_domain}")
             return len(self.session.cookies) > 0
 
         except Exception as e:
@@ -221,9 +219,7 @@ class AlexaAuth:
                 if name == "csrf":
                     self.csrf = value
 
-            logger.debug(
-                f"Cookies TXT chargés: {len(self.session.cookies)} cookies, domain={self.amazon_domain}"
-            )
+            logger.debug(f"Cookies TXT chargés: {len(self.session.cookies)} cookies, domain={self.amazon_domain}")
             return len(self.session.cookies) > 0
 
         except Exception as e:

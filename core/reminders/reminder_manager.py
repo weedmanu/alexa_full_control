@@ -13,11 +13,10 @@ from typing import Any, Dict, List, Optional
 import requests
 from loguru import logger
 
+from core.base_manager import BaseManager
 from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine, ConnectionState
 from services.cache_service import CacheService
-from core.base_manager import BaseManager
-from typing import Any, Dict, List, Optional
 
 
 class ReminderManager(BaseManager[Dict[str, Any]]):
@@ -55,30 +54,18 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             state_machine: Machine à états optionnelle (créée si None)
             cache_service: Service de cache optionnel (créé si None)
         """
-        # compatibility: wrap legacy auth.session into http_client if needed
-        if hasattr(auth, "session"):
-            class _ClientWrapper:
-                def __init__(self, session, csrf_val):
-                    self.session = session
-                    self.csrf = csrf_val
+        # Use central factory to obtain an http_client from legacy auth or return auth
+        from core.base_manager import create_http_client_from_auth
 
-                def get(self, url: str, **kwargs):
-                    return self.session.get(url, **kwargs)
+        http_client = create_http_client_from_auth(auth)
 
-                def post(self, url: str, **kwargs):
-                    return self.session.post(url, **kwargs)
-
-                def put(self, url: str, **kwargs):
-                    return self.session.put(url, **kwargs)
-
-                def delete(self, url: str, **kwargs):
-                    return self.session.delete(url, **kwargs)
-
-            http_client = _ClientWrapper(auth.session, getattr(auth, "csrf", None))
-        else:
-            http_client = auth
-
-        super().__init__(http_client=http_client, config=config, state_machine=state_machine or AlexaStateMachine(), cache_service=cache_service, cache_ttl=60)
+        super().__init__(
+            http_client=http_client,
+            config=config,
+            state_machine=state_machine or AlexaStateMachine(),
+            cache_service=cache_service,
+            cache_ttl=60,
+        )
 
         self.auth = auth
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
@@ -117,9 +104,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             True si connecté, False sinon
         """
         if not self.state_machine.can_execute_commands:
-            logger.error(
-                f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}"
-            )
+            logger.error(f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}")
             return False
         return True
 
@@ -218,12 +203,12 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 logger.debug(f"Création rappel récurrent: {payload}")
 
                 response = self.breaker.call(
-                        self.http_client.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/notifications",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                            "csrf": getattr(self.http_client, "csrf", None),
+                        "csrf": getattr(self.http_client, "csrf", None),
                     },
                     json=payload,
                     timeout=10,
@@ -285,9 +270,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
             # Filtrer par appareil si spécifié
             if device_serial:
-                reminders = [
-                    r for r in cached_reminders if r.get("deviceSerialNumber") == device_serial
-                ]
+                reminders = [r for r in cached_reminders if r.get("deviceSerialNumber") == device_serial]
             else:
                 reminders = cached_reminders
 
@@ -327,11 +310,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 notifications = data.get("notifications", [])
 
                 # Filtrer pour ne garder que les rappels (type="Reminder")
-                reminders = [
-                    notification
-                    for notification in notifications
-                    if notification.get("type") == "Reminder"
-                ]
+                reminders = [notification for notification in notifications if notification.get("type") == "Reminder"]
 
             # Mise à jour cache mémoire (Niveau 1)
             self._reminders_cache = reminders
@@ -340,9 +319,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             # Mise à jour cache disque (Niveau 2) - TTL 5min
             self.cache_service.set("reminders", {"reminders": reminders}, ttl_seconds=300)
 
-            logger.info(
-                f"✅ {len(reminders)} rappel(s) récupéré(s) et mis en cache (mémoire + disque)"
-            )
+            logger.info(f"✅ {len(reminders)} rappel(s) récupéré(s) et mis en cache (mémoire + disque)")
             return reminders
 
         except ValueError as e:

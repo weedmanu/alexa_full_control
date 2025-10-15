@@ -67,11 +67,7 @@ class NodeEnvironment:
 
     def is_installed(self) -> bool:
         """Vérifie si nodeenv est installé et configuré"""
-        return (
-            self.node_env_dir.exists()
-            and self.node_executable.exists()
-            and self.npm_executable.exists()
-        )
+        return self.node_env_dir.exists() and self.node_executable.exists() and self.npm_executable.exists()
 
     def get_node_version(self) -> Optional[str]:
         """Récupère la version de Node.js installée"""

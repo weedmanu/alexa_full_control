@@ -12,10 +12,10 @@ from typing import Any, Dict, List, Optional
 import requests
 from loguru import logger
 
+from core.base_manager import BaseManager
 from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine, ConnectionState
 from services.cache_service import CacheService
-from core.base_manager import BaseManager
 
 
 class AlarmManager(BaseManager[Dict[str, Any]]):
@@ -43,6 +43,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
         config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
+        http_client: Optional[Any] = None,
     ) -> None:
         """
         Initialise le gestionnaire d'alarmes.
@@ -53,32 +54,19 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
             state_machine: Machine à états optionnelle (créée si None)
             cache_service: Service de cache optionnel (créé si None)
         """
-        # Backwards-compatible: if auth has a `session` attribute, wrap it
-        # into a minimal http_client that exposes get/post/put/delete and csrf.
-        if hasattr(auth, "session"):
-            class _ClientWrapper:  # minimal wrapper for legacy auth.session
-                def __init__(self, session, csrf_val):
-                    self.session = session
-                    self.csrf = csrf_val
+        # Resolve http_client: prefer explicit param, otherwise derive from legacy auth
+        from core.base_manager import create_http_client_from_auth
 
-                def get(self, url: str, **kwargs):
-                    return self.session.get(url, **kwargs)
-
-                def post(self, url: str, **kwargs):
-                    return self.session.post(url, **kwargs)
-
-                def put(self, url: str, **kwargs):
-                    return self.session.put(url, **kwargs)
-
-                def delete(self, url: str, **kwargs):
-                    return self.session.delete(url, **kwargs)
-
-            http_client = _ClientWrapper(auth.session, getattr(auth, "csrf", None))
-        else:
-            http_client = auth
+        resolved_http_client = http_client or create_http_client_from_auth(auth)
 
         # Initialize BaseManager with the resolved http_client
-        super().__init__(http_client=http_client, config=config, state_machine=state_machine or AlexaStateMachine(), cache_service=cache_service, cache_ttl=60)
+        super().__init__(
+            http_client=resolved_http_client,
+            config=config,
+            state_machine=state_machine or AlexaStateMachine(),
+            cache_service=cache_service,
+            cache_ttl=60,
+        )
 
         # Keep legacy attribute for compatibility
         self.auth = auth
@@ -118,9 +106,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
             True si connecté, False sinon
         """
         if not self.state_machine.can_execute_commands:
-            logger.error(
-                f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}"
-            )
+            logger.error(f"Impossible d'exécuter la commande - État: {self.state_machine.state.name}")
             return False
         return True
 
@@ -153,9 +139,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
 
             try:
                 # Construire explicitement le pattern pour que mypy infère bien le type
-                pattern: List[Dict[str, Any]] = [
-                    {"type": "alarm", "time": alarm_time, "recurrence": repeat}
-                ]
+                pattern: List[Dict[str, Any]] = [{"type": "alarm", "time": alarm_time, "recurrence": repeat}]
 
                 if label:
                     pattern[0]["label"] = label
@@ -278,11 +262,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
                 notifications = data.get("notifications", [])
 
                 # Filtrer pour ne garder que les alarmes (type="Alarm")
-                alarms = [
-                    notification
-                    for notification in notifications
-                    if notification.get("type") == "Alarm"
-                ]
+                alarms = [notification for notification in notifications if notification.get("type") == "Alarm"]
 
             # Mise à jour cache mémoire (Niveau 1)
             self._alarms_cache = alarms
@@ -291,9 +271,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
             # Mise à jour cache disque (Niveau 2) - TTL 5min
             self.cache_service.set("alarms", {"alarms": alarms}, ttl_seconds=300)
 
-            logger.info(
-                f"✅ {len(alarms)} alarme(s) récupérée(s) et mise(s) en cache (mémoire + disque)"
-            )
+            logger.info(f"✅ {len(alarms)} alarme(s) récupérée(s) et mise(s) en cache (mémoire + disque)")
             return alarms
 
         except ValueError as e:
@@ -416,9 +394,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
                 logger.error(f"Erreur inattendue lors de la modification de l'alarme: {e}")
                 return False
 
-    def set_alarm_enabled(
-        self, device_serial: str, device_type: str, alarm_id: str, enabled: bool
-    ) -> bool:
+    def set_alarm_enabled(self, device_serial: str, device_type: str, alarm_id: str, enabled: bool) -> bool:
         """
         Active ou désactive une alarme.
 
@@ -465,7 +441,5 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
                     self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
                 return False
             except Exception as e:
-                logger.error(
-                    f"Erreur inattendue lors de l'activation/désactivation de l'alarme: {e}"
-                )
+                logger.error(f"Erreur inattendue lors de l'activation/désactivation de l'alarme: {e}")
                 return False

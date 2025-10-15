@@ -147,10 +147,7 @@ class BaseCommand(ABC):
 
         if not self.state_machine.can_execute_commands:
             self.logger.warning("Tentative d'excution sans connexion tablie")
-            self.error(
-                "Authentification non initialisée. "
-                "Utilisez 'alexa auth create' pour vous connecter."
-            )
+            self.error("Authentification non initialisée. Utilisez 'alexa auth create' pour vous connecter.")
             return False
 
         return True

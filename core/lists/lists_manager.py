@@ -22,6 +22,12 @@ class ListsManager:
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
         self._voice_service = voice_service
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
         logger.info("ListManager initialisé (mode commandes vocales)")
 
     @property
@@ -59,9 +65,9 @@ class ListsManager:
                 try:
                     logger.debug(f"🔍 Test endpoint: {endpoint}")
                     response = self.breaker.call(
-                        self.auth.session.get,
+                        self.http_client.get,
                         f"https://{self.config.alexa_domain}{endpoint}",
-                        headers={"csrf": self.auth.csrf},
+                        headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                         timeout=10,
                     )
                     response.raise_for_status()
@@ -251,9 +257,7 @@ class ListsManager:
                 logger.error(f"Erreur marquage item: {e}")
                 return False
 
-    def clear_list(
-        self, list_name: str, completed_only: bool = False, device_serial: Optional[str] = None
-    ) -> bool:
+    def clear_list(self, list_name: str, completed_only: bool = False, device_serial: Optional[str] = None) -> bool:
         """
         Vide une liste via commande vocale.
 

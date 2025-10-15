@@ -20,6 +20,12 @@ class DNDManager:
         self.state_machine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
         logger.info("DNDManager initialisé")
 
     def get_dnd_status(self, device_serial: str) -> Optional[Dict]:
@@ -29,9 +35,9 @@ class DNDManager:
                 return None
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/dnd/status",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -64,10 +70,10 @@ class DNDManager:
                     "enabled": enabled,
                 }
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/dnd/status",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -103,10 +109,10 @@ class DNDManager:
                     ],
                 }
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/dnd/device-status-list",
                     json=schedule,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()

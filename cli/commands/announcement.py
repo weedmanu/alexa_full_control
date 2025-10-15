@@ -84,12 +84,8 @@ class AnnouncementCommand(BaseCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil cible",
         )
-        send_parser.add_argument(
-            "--message", type=str, required=True, metavar="TEXT", help="Message de l'annonce"
-        )
-        send_parser.add_argument(
-            "--title", type=str, metavar="TITLE", help="Titre de l'annonce (optionnel)"
-        )
+        send_parser.add_argument("--message", type=str, required=True, metavar="TEXT", help="Message de l'annonce")
+        send_parser.add_argument("--title", type=str, metavar="TITLE", help="Titre de l'annonce (optionnel)")
 
         # Action: list
         list_parser = subparsers.add_parser(
@@ -106,9 +102,7 @@ class AnnouncementCommand(BaseCommand):
             default=50,
             help="Nombre maximum d'annonces (défaut: 50)",
         )
-        list_parser.add_argument(
-            "--device", type=str, metavar="DEVICE_NAME", help="Filtrer par appareil"
-        )
+        list_parser.add_argument("--device", type=str, metavar="DEVICE_NAME", help="Filtrer par appareil")
 
         # Action: clear
         clear_parser = subparsers.add_parser(
@@ -118,12 +112,8 @@ class AnnouncementCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        clear_parser.add_argument(
-            "--device", type=str, required=True, metavar="DEVICE_NAME", help="Nom de l'appareil"
-        )
-        clear_parser.add_argument(
-            "--all", action="store_true", help="Supprimer toutes les annonces"
-        )
+        clear_parser.add_argument("--device", type=str, required=True, metavar="DEVICE_NAME", help="Nom de l'appareil")
+        clear_parser.add_argument("--all", action="store_true", help="Supprimer toutes les annonces")
 
         # Action: read
         read_parser = subparsers.add_parser(
@@ -133,9 +123,7 @@ class AnnouncementCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        read_parser.add_argument(
-            "--id", type=str, required=True, metavar="ANNOUNCEMENT_ID", help="ID de l'annonce"
-        )
+        read_parser.add_argument("--id", type=str, required=True, metavar="ANNOUNCEMENT_ID", help="ID de l'annonce")
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
@@ -180,9 +168,7 @@ class AnnouncementCommand(BaseCommand):
                 self.error("Gestionnaire d'annonces non disponible")
                 return False
 
-            result = self.call_with_breaker(
-                ctx.notification_mgr.send_notification, serial, args.message, title
-            )
+            result = self.call_with_breaker(ctx.notification_mgr.send_notification, serial, args.message, title)
 
             if result:
                 self.success(f"✅ Annonce envoyée à '{args.device}'")
@@ -206,17 +192,13 @@ class AnnouncementCommand(BaseCommand):
                 return False
 
             # Récupérer toutes les annonces
-            announcements = self.call_with_breaker(
-                ctx.notification_mgr.list_notifications, args.limit
-            )
+            announcements = self.call_with_breaker(ctx.notification_mgr.list_notifications, args.limit)
 
             # Filtrer par appareil si spécifié
             if hasattr(args, "device") and args.device:
                 device_serial = self.get_device_serial(args.device)
                 if device_serial and announcements:
-                    announcements = [
-                        n for n in announcements if n.get("deviceSerialNumber") == device_serial
-                    ]
+                    announcements = [n for n in announcements if n.get("deviceSerialNumber") == device_serial]
 
             if announcements:
                 if hasattr(args, "json_output") and args.json_output:
@@ -249,9 +231,7 @@ class AnnouncementCommand(BaseCommand):
                 self.error("Gestionnaire d'annonces non disponible")
                 return False
 
-            result = self.call_with_breaker(
-                ctx.notification_mgr.clear_notifications, serial
-            )
+            result = self.call_with_breaker(ctx.notification_mgr.clear_notifications, serial)
 
             if result:
                 self.success(f"✅ Annonces supprimées de '{args.device}'")

@@ -25,7 +25,8 @@ setup_loguru_logger()
 # Common header values to avoid long repeated literals (helps ruff E501)
 _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0"
 
-def _make_headers(auth, config, referer_path="spa/index.html"):
+
+def _make_headers(auth: Any, config: Config, referer_path: str = "spa/index.html") -> dict[str, str]:
     return {
         "User-Agent": _USER_AGENT,
         "DNT": "1",
@@ -33,7 +34,7 @@ def _make_headers(auth, config, referer_path="spa/index.html"):
         "Content-Type": "application/json; charset=UTF-8",
         "Referer": f"https://alexa.{config.amazon_domain}/{referer_path}",
         "Origin": f"https://alexa.{config.amazon_domain}",
-        "csrf": auth.csrf,
+        "csrf": getattr(auth, "csrf", ""),
     }
 
 
@@ -59,6 +60,16 @@ class MusicLibraryService:
         self.breaker = breaker or CircuitBreaker(fail_max=3, reset_timeout=60)
         self._lock = RLock()
 
+        # Legacy compatibility: expose http_client-like wrapper
+        # Declare attribute as Any for mypy compatibility with legacy AuthClient
+        self.http_client: Any
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
+
         logger.info(f"{SharedIcons.MUSIC} Service bibliothèque musicale initialisé")
 
     def play_tunein_radio(self, device_serial: str, device_type: str, station_id: str) -> bool:
@@ -79,16 +90,14 @@ class MusicLibraryService:
                 prefix = '["music/tuneIn/stationId","'
                 suffix = '"]|{"previousPageId":"TuneIn_SEARCH"}'
                 content_data = prefix + station_id + suffix
-                content_token = base64.b64encode(
-                    base64.b64encode(content_data.encode()).decode().encode()
-                ).decode()
+                content_token = base64.b64encode(base64.b64encode(content_data.encode()).decode().encode()).decode()
 
-                payload = {"contentToken": f"music:{content_token}"}
+                payload: dict[str, Any] = {"contentToken": f"music:{content_token}"}
 
                 headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/entertainment/v1/player/queue",
                     params={
                         "deviceSerialNumber": device_serial,
@@ -100,9 +109,7 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                logger.success(
-                    f"{SharedIcons.MUSIC} Station TuneIn {station_id} lancée sur {device_serial}"
-                )
+                logger.success(f"{SharedIcons.MUSIC} Station TuneIn {station_id} lancée sur {device_serial}")
                 return True
 
             except Exception as e:
@@ -138,7 +145,7 @@ class MusicLibraryService:
             try:
                 # Payload différent selon track_id ou album
                 if track_id:
-                    payload = {"trackId": track_id, "playQueuePrime": True}
+                    payload: dict[str, Any] = {"trackId": track_id, "playQueuePrime": True}
                 elif artist and album:
                     payload = {"albumArtistName": artist, "albumName": album}
                 else:
@@ -148,7 +155,7 @@ class MusicLibraryService:
                 headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/cloudplayer/queue-and-play",
                     params={
                         "deviceSerialNumber": device_serial,
@@ -193,12 +200,12 @@ class MusicLibraryService:
         """
         with self._lock:
             try:
-                payload = {"playlistId": playlist_id, "playQueuePrime": True}
+                payload: dict[str, Any] = {"playlistId": playlist_id, "playQueuePrime": True}
 
                 headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/cloudplayer/queue-and-play",
                     params={
                         "deviceSerialNumber": device_serial,
@@ -212,18 +219,14 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                logger.success(
-                    f"{SharedIcons.MUSIC} Playlist {playlist_id} lancée sur {device_serial}"
-                )
+                logger.success(f"{SharedIcons.MUSIC} Playlist {playlist_id} lancée sur {device_serial}")
                 return True
 
             except Exception as e:
                 logger.error(f"{SharedIcons.ERROR} Erreur lecture playlist {playlist_id}: {e}")
                 return False
 
-    def play_prime_playlist(
-        self, device_serial: str, device_type: str, media_owner_id: str, asin: str
-    ) -> bool:
+    def play_prime_playlist(self, device_serial: str, device_type: str, media_owner_id: str, asin: str) -> bool:
         """
         Joue une playlist Prime Music (ASIN).
 
@@ -243,7 +246,7 @@ class MusicLibraryService:
                 headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/prime/prime-playlist-queue-and-play",
                     params={
                         "deviceSerialNumber": device_serial,
@@ -263,9 +266,7 @@ class MusicLibraryService:
                 logger.error(f"Erreur lecture Prime playlist: {e}")
                 return False
 
-    def play_prime_station(
-        self, device_serial: str, device_type: str, media_owner_id: str, seed_id: str
-    ) -> bool:
+    def play_prime_station(self, device_serial: str, device_type: str, media_owner_id: str, seed_id: str) -> bool:
         """
         Joue une station Prime Music (seedID).
 
@@ -291,7 +292,7 @@ class MusicLibraryService:
                 headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/gotham/queue-and-play",
                     params={
                         "deviceSerialNumber": device_serial,
@@ -344,7 +345,7 @@ class MusicLibraryService:
                 headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
-                    self.auth.session.post,
+                    self.http_client.post,
                     f"https://{self.config.alexa_domain}/api/media/play-historical-queue",
                     json=payload,
                     headers=headers,
@@ -380,7 +381,7 @@ class MusicLibraryService:
         """
         with self._lock:
             try:
-                all_tracks = []
+                all_tracks: list[dict[str, Any]] = []
                 offset = 0
                 size = 50
 
@@ -388,7 +389,7 @@ class MusicLibraryService:
 
                 while True:
                     response = self.breaker.call(
-                        self.auth.session.get,
+                        self.http_client.get,
                         f"https://{self.config.alexa_domain}/api/cloudplayer/playlists/{playlist_type}-V0-OBJECTID",
                         params={
                             "deviceSerialNumber": device_serial,
@@ -420,24 +421,16 @@ class MusicLibraryService:
                     offset = next_token
 
                 count = len(all_tracks)
-                msg = (
-                    f"{SharedIcons.MUSIC} {count} entrées bibliothèque récupérées "
-                    f"pour {device_serial}"
-                )
+                msg = f"{SharedIcons.MUSIC} {count} entrées bibliothèque récupérées pour {device_serial}"
                 logger.success(msg)
                 return all_tracks
 
             except Exception as e:
-                msg = (
-                    f"{SharedIcons.ERROR} Erreur récupération bibliothèque pour "
-                    f"{device_serial}: {e}"
-                )
+                msg = f"{SharedIcons.ERROR} Erreur récupération bibliothèque pour {device_serial}: {e}"
                 logger.error(msg)
                 return []
 
-    def get_prime_playlists(
-        self, device_serial: str, device_type: str, media_owner_id: str
-    ) -> List[Dict[str, Any]]:
+    def get_prime_playlists(self, device_serial: str, device_type: str, media_owner_id: str) -> List[Dict[str, Any]]:
         """
         Récupère les playlists Prime Music.
 
@@ -455,21 +448,21 @@ class MusicLibraryService:
 
                 # Récupérer les browse nodes
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/prime/prime-playlist-browse-nodes",
                     params={
                         "deviceSerialNumber": device_serial,
                         "deviceType": device_type,
                         "mediaOwnerCustomerId": media_owner_id,
                     },
-                    headers=headers,
+                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=15,
                 )
 
                 response.raise_for_status()
                 data = response.json()
 
-                all_playlists = []
+                all_playlists: list[dict[str, Any]] = []
 
                 # Pour chaque browse node, récupérer les playlists
                 for browse_node in data.get("primePlaylistBrowseNodeList", []):
@@ -479,7 +472,7 @@ class MusicLibraryService:
                             continue
 
                         pl_response = self.breaker.call(
-                            self.auth.session.get,
+                            self.http_client.get,
                             f"https://{self.config.alexa_domain}/api/prime/prime-playlists-by-browse-node",
                             params={
                                 "browseNodeId": node_id,
@@ -487,7 +480,10 @@ class MusicLibraryService:
                                 "deviceType": device_type,
                                 "mediaOwnerCustomerId": media_owner_id,
                             },
-                            headers=headers,
+                            headers={
+                                **headers,
+                                "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
+                            },
                             timeout=15,
                         )
 
@@ -496,24 +492,16 @@ class MusicLibraryService:
                         all_playlists.extend(pl_data.get("playlists", []))
 
                 count = len(all_playlists)
-                msg = (
-                    f"{SharedIcons.MUSIC} {count} playlists Prime récupérées "
-                    f"pour {device_serial}"
-                )
+                msg = f"{SharedIcons.MUSIC} {count} playlists Prime récupérées pour {device_serial}"
                 logger.success(msg)
                 return all_playlists
 
             except Exception as e:
-                msg = (
-                    f"{SharedIcons.ERROR} Erreur récupération Prime playlists "
-                    f"pour {device_serial}: {e}"
-                )
+                msg = f"{SharedIcons.ERROR} Erreur récupération Prime playlists pour {device_serial}: {e}"
                 logger.error(msg)
                 return []
 
-    def get_prime_stations(
-        self, device_serial: str, device_type: str, media_owner_id: str
-    ) -> List[Dict[str, Any]]:
+    def get_prime_stations(self, device_serial: str, device_type: str, media_owner_id: str) -> List[Dict[str, Any]]:
         """
         Récupère les stations Prime Music.
 
@@ -530,29 +518,24 @@ class MusicLibraryService:
                 headers = _make_headers(self.auth, self.config)
 
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/prime/prime-sections",
                     params={
                         "deviceSerialNumber": device_serial,
                         "deviceType": device_type,
                         "mediaOwnerCustomerId": media_owner_id,
                     },
-                    headers=headers,
+                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=15,
                 )
 
                 response.raise_for_status()
                 data = response.json()
 
-                logger.success(
-                    f"{SharedIcons.MUSIC} Stations Prime récupérées pour {device_serial}"
-                )
+                logger.success(f"{SharedIcons.MUSIC} Stations Prime récupérées pour {device_serial}")
                 return data.get("primeMusicSections", [])
 
             except Exception as e:
-                msg = (
-                    f"{SharedIcons.ERROR} Erreur récupération Prime stations "
-                    f"pour {device_serial}: {e}"
-                )
+                msg = f"{SharedIcons.ERROR} Erreur récupération Prime stations pour {device_serial}: {e}"
                 logger.error(msg)
                 return []

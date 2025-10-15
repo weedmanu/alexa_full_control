@@ -22,6 +22,14 @@ class NotificationManager:
         self._lock = threading.RLock()
         logger.info("NotificationManager initialisé")
 
+        # Compatibility: provide http_client wrapper for legacy auth
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            self.http_client = self.auth
+
     def list_notifications(self, limit: int = 50) -> List[Dict]:
         """Liste les notifications."""
         with self._lock:
@@ -29,10 +37,10 @@ class NotificationManager:
                 return []
             try:
                 response = self.breaker.call(
-                    self.auth.session.get,
+                    self.http_client.get,
                     f"https://{self.config.alexa_domain}/api/notifications",
                     params={"size": limit},
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -48,9 +56,9 @@ class NotificationManager:
                 return False
             try:
                 response = self.breaker.call(
-                    self.auth.session.delete,
+                    self.http_client.delete,
                     f"https://{self.config.alexa_domain}/api/notifications/{notification_id}",
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -67,10 +75,10 @@ class NotificationManager:
                 return False
             try:
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/notifications/{notification_id}",
                     json={"status": "READ"},
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -79,9 +87,7 @@ class NotificationManager:
                 logger.error(f"Erreur marquage notification: {e}")
                 return False
 
-    def send_notification(
-        self, device_serial: str, message: str, title: Optional[str] = None
-    ) -> bool:
+    def send_notification(self, device_serial: str, message: str, title: Optional[str] = None) -> bool:
         """
         Envoie une notification à un appareil.
 
@@ -105,10 +111,10 @@ class NotificationManager:
                     payload["title"] = title
 
                 response = self.breaker.call(
-                    self.auth.session.put,
+                    self.http_client.put,
                     f"https://{self.config.alexa_domain}/api/notifications/createReminder",
                     json=payload,
-                    headers={"csrf": self.auth.csrf},
+                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -134,9 +140,7 @@ class NotificationManager:
             try:
                 # Récupérer toutes les notifications de l'appareil
                 notifications = self.list_notifications(limit=100)
-                device_notifications = [
-                    n for n in notifications if n.get("deviceSerialNumber") == device_serial
-                ]
+                device_notifications = [n for n in notifications if n.get("deviceSerialNumber") == device_serial]
 
                 if not device_notifications:
                     logger.info(f"Aucune notification pour {device_serial}")

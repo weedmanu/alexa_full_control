@@ -393,9 +393,7 @@ class ActivityCommand(BaseCommand):
                 self.error("ActivityManager non disponible")
                 return False
 
-            last_command = self.call_with_breaker(
-                ctx.activity_mgr.get_last_command, device_filter
-            )
+            last_command = self.call_with_breaker(ctx.activity_mgr.get_last_command, device_filter)
 
             if last_command:
                 if device_filter:
@@ -430,15 +428,11 @@ class ActivityCommand(BaseCommand):
                 self.error("ActivityManager non disponible")
                 return False
 
-            last_response = self.call_with_breaker(
-                ctx.activity_mgr.get_last_response, device_filter
-            )
+            last_response = self.call_with_breaker(ctx.activity_mgr.get_last_response, device_filter)
 
             if last_response:
                 if device_filter:
-                    print(
-                        f"\n🗣️  Dernière réponse Alexa sur '{device_filter}' : \"{last_response}\""
-                    )
+                    print(f"\n🗣️  Dernière réponse Alexa sur '{device_filter}' : \"{last_response}\"")
                 else:
                     print(f'\n🗣️  Dernière réponse Alexa : "{last_response}"')
                 return True

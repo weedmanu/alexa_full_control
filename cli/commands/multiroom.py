@@ -118,9 +118,7 @@ class MultiroomCommand(BaseCommand):
             metavar="GROUP_NAME",
             help="Nom du groupe à supprimer",
         )
-        delete_parser.add_argument(
-            "--force", action="store_true", help="Supprimer sans confirmation"
-        )
+        delete_parser.add_argument("--force", action="store_true", help="Supprimer sans confirmation")
 
         # Action: info
         info_parser = subparsers.add_parser(
@@ -130,9 +128,7 @@ class MultiroomCommand(BaseCommand):
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
-        info_parser.add_argument(
-            "--name", type=str, required=True, metavar="GROUP_NAME", help="Nom du groupe"
-        )
+        info_parser.add_argument("--name", type=str, required=True, metavar="GROUP_NAME", help="Nom du groupe")
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
@@ -204,9 +200,7 @@ class MultiroomCommand(BaseCommand):
                 self.info(f"Appareil principal: {primary_device} (par défaut)")
 
             if primary_device not in devices:
-                self.error(
-                    f"L'appareil principal '{primary_device}' doit être dans la liste des appareils"
-                )
+                self.error(f"L'appareil principal '{primary_device}' doit être dans la liste des appareils")
                 return False
 
             self.info(f"🔊 Création groupe '{args.name}' avec {len(devices)} appareil(s)...")
@@ -228,9 +222,7 @@ class MultiroomCommand(BaseCommand):
             # Serial de l'appareil principal
             primary_serial = self.get_device_serial(primary_device)
 
-            result = self.call_with_breaker(
-                ctx.multiroom_mgr.create_group, args.name, device_serials, primary_serial
-            )
+            result = self.call_with_breaker(ctx.multiroom_mgr.create_group, args.name, device_serials, primary_serial)
 
             if result:
                 self.success(f"✅ Groupe '{args.name}' créé avec succès")

@@ -77,11 +77,19 @@ class VoiceCommandService:
         self._lock: threading.RLock = threading.RLock()
         self._customer_id: Optional[str] = None
 
+        # Compatibilité legacy: exposer un http_client minimal via BaseManager wrapper
+        try:
+            from core.base_manager import create_http_client_from_auth
+
+            # Normalize http client: wrap legacy auth.session or accept modern http client
+            self.http_client = create_http_client_from_auth(self.auth)
+        except Exception:
+            # Fallback conservative: keep existing auth object as http client
+            self.http_client = self.auth
+
         logger.info(f"{SharedIcons.GEAR} VoiceCommandService initialisé")
 
-    def speak(
-        self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
-    ) -> bool:
+    def speak(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:
         """
         Fait parler Alexa et exécute la commande vocale.
 
@@ -148,33 +156,37 @@ class VoiceCommandService:
                         return False
                     dsn = default_device["serial"]
                     dtype = default_device["type"]
-                    logger.debug(
-                        f"🔊 Device: {default_device['name']} (serial={dsn}, type={dtype})"
-                    )
+                    logger.debug(f"🔊 Device: {default_device['name']} (serial={dsn}, type={dtype})")
 
                 # Construire le payload - FORMAT DEV EXACT
-                sequence_json_content = cast(Dict[str, Any], {
-                    "@type": "com.amazon.alexa.behaviors.model.Sequence",
-                    "startNode": {
-                        "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
-                        "type": "Alexa.TextCommand",  # ← TextCommand pour EXÉCUTER
-                        "skillId": "amzn1.ask.1p.tellalexa",  # ← ESSENTIEL !
-                        "operationPayload": {
-                            "deviceType": dtype,
-                            "deviceSerialNumber": dsn,
-                            "locale": "fr-FR",
-                            "customerId": self._customer_id,
-                            "text": text_clean,
+                sequence_json_content = cast(
+                    Dict[str, Any],
+                    {
+                        "@type": "com.amazon.alexa.behaviors.model.Sequence",
+                        "startNode": {
+                            "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
+                            "type": "Alexa.TextCommand",  # ← TextCommand pour EXÉCUTER
+                            "skillId": "amzn1.ask.1p.tellalexa",  # ← ESSENTIEL !
+                            "operationPayload": {
+                                "deviceType": dtype,
+                                "deviceSerialNumber": dsn,
+                                "locale": "fr-FR",
+                                "customerId": self._customer_id,
+                                "text": text_clean,
+                            },
                         },
                     },
-                })
+                )
 
                 # ← IMPORTANT : sequenceJson doit être une STRING (json.dumps) !
-                payload = cast(Dict[str, Any], {
-                    "behaviorId": "PREVIEW",
-                    "sequenceJson": json.dumps(sequence_json_content),
-                    "status": "ENABLED",
-                })
+                payload = cast(
+                    Dict[str, Any],
+                    {
+                        "behaviorId": "PREVIEW",
+                        "sequenceJson": json.dumps(sequence_json_content),
+                        "status": "ENABLED",
+                    },
+                )
 
                 logger.debug(f"📤 Envoi commande vocale: '{text_clean}'")
                 logger.debug(f"📦 Device: {dtype} / {dsn}")
@@ -182,13 +194,13 @@ class VoiceCommandService:
                 logger.debug(f"📋 Payload text: '{text_clean}'")
 
                 # Appel direct
-                response = self.auth.session.post(
+                response = self.http_client.post(
                     "https://alexa.amazon.fr/api/behaviors/preview",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": "https://alexa.amazon.fr/spa/index.html",
                         "Origin": "https://alexa.amazon.fr",
-                        "csrf": getattr(self.auth, "csrf", ""),
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     json=payload,
                 )
@@ -214,9 +226,7 @@ class VoiceCommandService:
                 logger.error(f"❌ Erreur commande vocale: {e}")
                 return False
 
-    def speak_as_voice(
-        self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
-    ) -> bool:
+    def speak_as_voice(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:
         """
         Simule une commande vocale avec Alexa.Speak (comme si on parlait au micro).
 
@@ -268,9 +278,7 @@ class VoiceCommandService:
                     if not dtype:
                         logger.error(f"❌ Device {device_serial} introuvable dans le cache")
                         return False
-                    logger.debug(
-                        f"🔊 Device: {device_name} (serial={device_serial}, deviceType={dtype})"
-                    )
+                    logger.debug(f"🔊 Device: {device_name} (serial={device_serial}, deviceType={dtype})")
                 else:
                     default_device = self._get_default_echo_device()
                     if not default_device:
@@ -278,9 +286,7 @@ class VoiceCommandService:
                         return False
                     device_serial = default_device["serial"]
                     dtype = default_device["type"]
-                    logger.debug(
-                        f"🔊 Device: {default_device['name']} (serial={device_serial}, type={dtype})"
-                    )
+                    logger.debug(f"🔊 Device: {default_device['name']} (serial={device_serial}, type={dtype})")
 
                 # Construire le payload avec Alexa.Speak au lieu de TextCommand
                 # Cela simule une VRAIE commande vocale (comme si on parlait au micro)
@@ -308,13 +314,13 @@ class VoiceCommandService:
                 logger.debug(f"📤 Envoi commande vocale simulée: 'Alexa, {text_clean}'")
                 logger.debug(f"📦 Device: {dtype} / {device_serial}")
 
-                response = self.auth.session.post(
+                response = self.http_client.post(
                     "https://alexa.amazon.fr/api/behaviors/preview",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": "https://alexa.amazon.fr/spa/index.html",
                         "Origin": "https://alexa.amazon.fr",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", "")),
                     },
                     json=payload,
                 )
@@ -354,9 +360,7 @@ class VoiceCommandService:
                 return None
 
             # ← FIX: devices_data contient déjà {"devices": [...]}
-            devices = (
-                devices_data.get("devices", []) if isinstance(devices_data, dict) else devices_data
-            )
+            devices = devices_data.get("devices", []) if isinstance(devices_data, dict) else devices_data
 
             # Chercher un Echo (priorité: Salon Echo, sinon premier Echo disponible)
             echo_devices: List[Dict[str, Any]] = []
@@ -368,9 +372,7 @@ class VoiceCommandService:
                         {
                             "name": device.get("accountName", "Unknown"),
                             "serial": device.get("serialNumber", ""),
-                            "type": device.get(
-                                "deviceType"
-                            ),  # ← IMPORTANT: deviceType, PAS deviceFamily !
+                            "type": device.get("deviceType"),  # ← IMPORTANT: deviceType, PAS deviceFamily !
                         }
                     )
 
@@ -400,9 +402,9 @@ class VoiceCommandService:
         try:
             url = f"https://{self.config.alexa_domain}/api/bootstrap?version=0"
             response = self.breaker.call(
-                self.auth.session.get,
+                self.http_client.get,
                 url,
-                headers={"csrf": self.auth.csrf},
+                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )
             response.raise_for_status()
@@ -446,9 +448,7 @@ class VoiceCommandService:
         """
         return self.speak(f"éteins {light_name}", device_serial)
 
-    def set_brightness(
-        self, light_name: str, brightness: int, device_serial: Optional[str] = None
-    ) -> bool:
+    def set_brightness(self, light_name: str, brightness: int, device_serial: Optional[str] = None) -> bool:
         """
         Définit la luminosité.
 
@@ -545,9 +545,7 @@ class VoiceCommandService:
                 activities = activity_mgr.get_activities(limit=20, start_time=timestamp_before)
 
                 if not activities:
-                    logger.warning(
-                        "⚠️ Aucune nouvelle activité trouvée après l'envoi de la commande"
-                    )
+                    logger.warning("⚠️ Aucune nouvelle activité trouvée après l'envoi de la commande")
                     logger.info("💡 Cela peut signifier que:")
                     logger.info("   - La commande n'a pas été exécutée par Alexa")
                     logger.info("   - Le délai d'attente est trop court")
@@ -575,9 +573,7 @@ class VoiceCommandService:
                         try:
                             if isinstance(timestamp_str, str) and timestamp_str:
                                 # Le timestamp est au format ISO, le convertir en timestamp Unix
-                                dt = _datetime.datetime.fromisoformat(
-                                    timestamp_str.replace("Z", "+00:00")
-                                )
+                                dt = _datetime.datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
                                 timestamp = dt.timestamp() * 1000
                             else:
                                 timestamp = float(timestamp_str) if timestamp_str else 0
@@ -595,18 +591,10 @@ class VoiceCommandService:
                         logger.info(f"\n🔍 Activité #{idx + 1} (depuis {timestamp_str}):")
                         logger.info(f"   Appareil: {device_name}")
                         logger.info(
-
-                                "   Votre commande: "
-                                + (
-                                    customer_transcript
-                                    if customer_transcript
-                                    else "(TextCommand - non enregistré)"
-                                )
-
+                            "   Votre commande: "
+                            + (customer_transcript if customer_transcript else "(TextCommand - non enregistré)")
                         )
-                        logger.info(
-                            f"   Réponse Alexa: {alexa_response[:150] if alexa_response else 'Aucune'}..."
-                        )
+                        logger.info(f"   Réponse Alexa: {alexa_response[:150] if alexa_response else 'Aucune'}...")
 
                         # Collecter les réponses qui semblent liées aux listes
                         if alexa_response:
@@ -642,16 +630,12 @@ class VoiceCommandService:
                             # Si la réponse contient des mots-clés liés aux listes, la garder
                             if any(keyword in response_lower for keyword in list_keywords):
                                 list_related_responses.append((activity, alexa_response))
-                                logger.debug(
-                                    "   📋 Réponse potentiellement liée à une liste détectée"
-                                )
+                                logger.debug("   📋 Réponse potentiellement liée à une liste détectée")
 
                 # Si on a trouvé des réponses liées aux listes, prendre la plus récente
                 if list_related_responses:
                     # Trier par timestamp (le plus récent en premier)
-                    list_related_responses.sort(
-                        key=lambda x: x[0].get("timestamp", ""), reverse=True
-                    )
+                    list_related_responses.sort(key=lambda x: x[0].get("timestamp", ""), reverse=True)
                     _, best_response = list_related_responses[0]
                     logger.success("✅ Réponse Alexa liée à une liste trouvée")
                     return best_response
@@ -664,9 +648,7 @@ class VoiceCommandService:
                         timestamp_str = activity.get("timestamp", "")
                         try:
                             if isinstance(timestamp_str, str) and timestamp_str:
-                                dt = _datetime.datetime.fromisoformat(
-                                    timestamp_str.replace("Z", "+00:00")
-                                )
+                                dt = _datetime.datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
                                 timestamp = dt.timestamp() * 1000
                             else:
                                 timestamp = float(timestamp_str) if timestamp_str else 0
@@ -680,14 +662,10 @@ class VoiceCommandService:
                     # Trier par timestamp et prendre la plus récente
                     recent_responses.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
                     best_recent = recent_responses[0]
-                    logger.success(
-                        "✅ Réponse Alexa récente trouvée (possible réponse à notre commande)"
-                    )
+                    logger.success("✅ Réponse Alexa récente trouvée (possible réponse à notre commande)")
                     return best_recent.get("alexaResponse")
 
-                logger.warning(
-                    f"⚠️ Aucune réponse récente trouvée dans les {len(activities)} activités"
-                )
+                logger.warning(f"⚠️ Aucune réponse récente trouvée dans les {len(activities)} activités")
                 return None
 
             except Exception as e:

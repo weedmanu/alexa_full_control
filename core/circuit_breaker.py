@@ -74,9 +74,7 @@ class CircuitBreaker:
 
         self._lock = threading.RLock()
 
-        logger.info(
-            f"🔧 Circuit Breaker initialisé: threshold={failure_threshold}, timeout={timeout}s"
-        )
+        logger.info(f"🔧 Circuit Breaker initialisé: threshold={failure_threshold}, timeout={timeout}s")
 
     @property
     def state(self) -> CircuitState:
@@ -189,10 +187,7 @@ class CircuitBreaker:
 
     def __str__(self) -> str:
         """Représentation textuelle."""
-        return (
-            f"CircuitBreaker(state={self.state.name}, "
-            f"failures={self._failure_count}/{self._failure_threshold})"
-        )
+        return f"CircuitBreaker(state={self.state.name}, failures={self._failure_count}/{self._failure_threshold})"
 
     def __repr__(self) -> str:
         """Représentation détaillée."""

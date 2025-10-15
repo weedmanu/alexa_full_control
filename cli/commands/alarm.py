@@ -115,9 +115,7 @@ class AlarmCommand(BaseCommand):
             metavar="HH:MM",
             help="Heure de l'alarme (format 24h: 07:30, 18:45)",
         )
-        create_parser.add_argument(
-            "--label", type=str, metavar="LABEL", help="Étiquette de l'alarme (optionnel)"
-        )
+        create_parser.add_argument("--label", type=str, metavar="LABEL", help="Étiquette de l'alarme (optionnel)")
         create_parser.add_argument(
             "--repeat",
             type=str,
@@ -145,9 +143,7 @@ class AlarmCommand(BaseCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil (optionnel, tous les appareils si non spécifié)",
         )
-        list_parser.add_argument(
-            "--active-only", action="store_true", help="Afficher uniquement les alarmes activées"
-        )
+        list_parser.add_argument("--active-only", action="store_true", help="Afficher uniquement les alarmes activées")
 
         # Action: delete
         delete_parser = subparsers.add_parser(
@@ -188,12 +184,8 @@ class AlarmCommand(BaseCommand):
         update_parser.add_argument(
             "--id", type=str, required=True, metavar="ALARM_ID", help="ID de l'alarme à modifier"
         )
-        update_parser.add_argument(
-            "--time", type=str, metavar="HH:MM", help="Nouvelle heure (optionnel)"
-        )
-        update_parser.add_argument(
-            "--label", type=str, metavar="LABEL", help="Nouvelle étiquette (optionnel)"
-        )
+        update_parser.add_argument("--time", type=str, metavar="HH:MM", help="Nouvelle heure (optionnel)")
+        update_parser.add_argument("--label", type=str, metavar="LABEL", help="Nouvelle étiquette (optionnel)")
         update_parser.add_argument(
             "--repeat",
             type=str,
@@ -201,9 +193,7 @@ class AlarmCommand(BaseCommand):
             metavar="PATTERN",
             help="Nouveau pattern de répétition (optionnel)",
         )
-        update_parser.add_argument(
-            "--sound", type=str, metavar="SOUND_ID", help="Nouveau son d'alarme (optionnel)"
-        )
+        update_parser.add_argument("--sound", type=str, metavar="SOUND_ID", help="Nouveau son d'alarme (optionnel)")
 
         # Action: enable
         enable_parser = subparsers.add_parser(
@@ -221,9 +211,7 @@ class AlarmCommand(BaseCommand):
             metavar="DEVICE_NAME",
             help="Nom de l'appareil",
         )
-        enable_parser.add_argument(
-            "--id", type=str, required=True, metavar="ALARM_ID", help="ID de l'alarme à activer"
-        )
+        enable_parser.add_argument("--id", type=str, required=True, metavar="ALARM_ID", help="ID de l'alarme à activer")
 
         # Action: disable
         disable_parser = subparsers.add_parser(
@@ -292,9 +280,7 @@ class AlarmCommand(BaseCommand):
             label_text = f" '{args.label}'" if args.label else ""
             repeat_text = self.REPEAT_PATTERNS.get(args.repeat, args.repeat)
 
-            self.info(
-                f"⏰ Création alarme{label_text} à {args.time} ({repeat_text}) sur '{args.device}'..."
-            )
+            self.info(f"⏰ Création alarme{label_text} à {args.time} ({repeat_text}) sur '{args.device}'...")
 
             ctx = self.require_context()
             if not ctx.alarm_mgr:
@@ -386,9 +372,7 @@ class AlarmCommand(BaseCommand):
                 return False
 
             device_type = self._get_device_type(args.device)
-            result = self.call_with_breaker(
-                ctx.alarm_mgr.delete_alarm, serial, device_type, args.id
-            )
+            result = self.call_with_breaker(ctx.alarm_mgr.delete_alarm, serial, device_type, args.id)
 
             if result:
                 self.success("✅ Alarme supprimée")
@@ -440,9 +424,7 @@ class AlarmCommand(BaseCommand):
                 return False
 
             device_type = self._get_device_type(args.device)
-            result = self.call_with_breaker(
-                ctx.alarm_mgr.update_alarm, serial, device_type, args.id, **updates
-            )
+            result = self.call_with_breaker(ctx.alarm_mgr.update_alarm, serial, device_type, args.id, **updates)
 
             if result:
                 self.success("✅ Alarme modifiée")
@@ -470,9 +452,7 @@ class AlarmCommand(BaseCommand):
                 return False
 
             device_type = self._get_device_type(args.device)
-            result = self.call_with_breaker(
-                ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, True
-            )
+            result = self.call_with_breaker(ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, True)
 
             if result:
                 self.success("✅ Alarme activée")
@@ -500,9 +480,7 @@ class AlarmCommand(BaseCommand):
                 return False
 
             device_type = self._get_device_type(args.device)
-            result = self.call_with_breaker(
-                ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, False
-            )
+            result = self.call_with_breaker(ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, False)
 
             if result:
                 self.success("✅ Alarme désactivée")
@@ -599,7 +577,5 @@ class AlarmCommand(BaseCommand):
             )
 
         # Afficher le tableau
-        table = self.format_table(
-            table_data, ["Heure", "Nom", "Appareil", "Statut", "Répétition", "Date", "ID"]
-        )
+        table = self.format_table(table_data, ["Heure", "Nom", "Appareil", "Statut", "Répétition", "Date", "ID"])
         print(table)
