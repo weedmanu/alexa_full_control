@@ -626,11 +626,13 @@ class CommandParser:
                 # Afficher directement l'aide complète de la catégorie
                 print(file=sys.stderr)  # Ligne vide pour séparer l'erreur de l'aide
                 # Récupérer le parser de la catégorie et afficher son aide
-                for action in self.parser._subparsers._actions:
-                    if isinstance(action, argparse._SubParsersAction):
-                        if category in action.choices:
-                            action.choices[category].print_help(sys.stderr)
-                            break
+                subparsers_action = self.parser._subparsers
+                if subparsers_action:
+                    for action in subparsers_action._actions:
+                        if isinstance(action, argparse._SubParsersAction):
+                            if category in action.choices:
+                                action.choices[category].print_help(sys.stderr)
+                                break
             else:
                 # Pas de catégorie valide, afficher l'aide générale
                 print("\n💡 Pour voir toutes les catégories disponibles:", file=sys.stderr)

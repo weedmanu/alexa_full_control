@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from core.notification_manager import NotificationManager
     from core.dnd_manager import DNDManager
     from core.activity_manager import ActivityManager
-    from core.communication import AnnouncementManager
+    # from core.communication import AnnouncementManager  # DEPRECATED - module vide
     from core.calendar import CalendarManager
     from core.routines import RoutineManager
     from core.lists.lists_manager import ListsManager
@@ -127,7 +127,8 @@ class Context:
         self._notification_mgr: Optional["NotificationManager"] = None
         self._dnd_mgr: Optional["DNDManager"] = None
         self._activity_mgr: Optional["ActivityManager"] = None
-        self._announcement_mgr: Optional["AnnouncementManager"] = None
+        # AnnouncementManager is DEPRECATED - core.communication is empty
+        # self._announcement_mgr: Optional["AnnouncementManager"] = None
         self._calendar_mgr: Optional["CalendarManager"] = None
         self._routine_mgr: Optional["RoutineManager"] = None
         self._list_mgr: Optional["ListsManager"] = None
@@ -305,15 +306,11 @@ class Context:
             logger.debug("ActivityManager chargé")
         return self._activity_mgr
 
-    @property
-    def announcement_mgr(self) -> Optional["AnnouncementManager"]:
-        """Gestionnaire d'annonces (lazy-loaded)."""
-        if self._announcement_mgr is None and self.auth:
-            from core.communication import AnnouncementManager
-
-            self._announcement_mgr = AnnouncementManager(self.auth, self.config, self.state_machine)
-            logger.debug("AnnouncementManager chargé")
-        return self._announcement_mgr
+    # DEPRECATED: AnnouncementManager removed (core.communication is empty)
+    # @property
+    # def announcement_mgr(self) -> Optional["AnnouncementManager"]:
+    #     """Gestionnaire d'annonces (lazy-loaded) - DEPRECATED."""
+    #     return None
 
     @property
     def calendar_manager(self) -> Optional["CalendarManager"]:

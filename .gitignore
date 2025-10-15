@@ -220,6 +220,7 @@ Thumbs.db
 *.swo
 *~
 Dev/
+ .python_tools/
 
 # Benchmarks et profiling
 .benchmarks/
