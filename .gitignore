@@ -219,6 +219,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+Dev/
 
 # Benchmarks et profiling
 .benchmarks/

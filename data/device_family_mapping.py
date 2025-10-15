@@ -11,7 +11,7 @@ Date: 8 octobre 2025
 from typing import Any, Dict
 
 # Mapping des codes de type Amazon vers les noms de produits réels
-DEVICE_TYPE_MAPPING = {
+DEVICE_TYPE_MAPPING: Dict[str, str] = {
     # Echo Show Series
     "A2UONLFQW0PADH": "Echo Show 8 (Gen3)",
     "A15996VY63BQ2D": "Echo Show 8 (Gen2)",
@@ -113,7 +113,7 @@ DEVICE_TYPE_MAPPING = {
 }
 
 # Mapping des familles d'appareils Amazon
-DEVICE_FAMILY_MAPPING = {
+DEVICE_FAMILY_MAPPING: Dict[str, str] = {
     "KNIGHT": "Echo Standard",
     "ROOK": "Echo Show",
     "WHA": "Whole Home Audio (Multi-room)",
@@ -125,7 +125,7 @@ DEVICE_FAMILY_MAPPING = {
 }
 
 # Mapping des capacités vers descriptions lisibles
-CAPABILITY_DESCRIPTIONS = {
+CAPABILITY_DESCRIPTIONS: Dict[str, str] = {
     "AUDIO_PLAYER": "Lecteur audio",
     "VOLUME_SETTING": "Contrôle volume",
     "MICROPHONE": "Microphone",
