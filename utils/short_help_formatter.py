@@ -143,10 +143,9 @@ class ShortHelpFormatter:
         # Hint pour aide web
         if web_help_hint:
             lines.append(ShortHelpFormatter._separator())
-            lines.append(
-                f"{ShortHelpFormatter.COLOR_HEADER}📚 Documentation complète : "
-                f"{ShortHelpFormatter.COLOR_USAGE}alexa {category} --help-web{ShortHelpFormatter.RESET}"
-            )
+            doc_header = f"{ShortHelpFormatter.COLOR_HEADER}📚 Documentation complète : "
+            doc_link = f"{ShortHelpFormatter.COLOR_USAGE}alexa {category} --help-web{ShortHelpFormatter.RESET}"
+            lines.append(doc_header + doc_link)
             lines.append(ShortHelpFormatter._separator())
 
         return "\n".join(lines)

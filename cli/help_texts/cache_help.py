@@ -25,7 +25,7 @@
 """
 
 # Description courte utilisée par le parser
-CACHE_DESCRIPTION = "Aide pour la catégorie 'cache' — inspection et gestion du cache local." 
+CACHE_DESCRIPTION = "Aide pour la catégorie 'cache' — inspection et gestion du cache local."
 
 # Placeholders pour compatibilité avec le code existant
 CLEAR_HELP = "Voir aide principale: alexa cache -h"

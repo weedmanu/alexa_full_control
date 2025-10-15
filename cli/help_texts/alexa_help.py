@@ -20,6 +20,7 @@ from typing import Optional
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from utils.help_formatter import (
+    create_category_help,
     format_actions,
     format_categories,
     format_examples,
@@ -30,7 +31,6 @@ from utils.help_formatter import (
     format_prerequisites,
     format_subcategories,
     format_usage,
-    create_category_help,
 )
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

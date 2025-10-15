@@ -220,7 +220,10 @@ class CookieRetriever:
         # Vérifier que l'exécutable node est trouvable
         import shutil
 
-        node_cmd = shutil.which("node") or (str(self.nodejs_dir / "node") if (self.nodejs_dir / "node").exists() else None)
+        # Chercher le binaire node via PATH, puis fallbacks locaux
+        node_in_path = shutil.which("node")
+        local_node = str(self.nodejs_dir / "node") if (self.nodejs_dir / "node").exists() else None
+        node_cmd = node_in_path or local_node
         if not node_cmd:
             print_error("Node.js introuvable pour rafraîchir le cookie")
             sys.exit(1)
@@ -256,13 +259,20 @@ class CookieRetriever:
         # Vérifier que node existe avant d'appeler
         import shutil
 
-        node_cmd = shutil.which(str(node_executable)) or shutil.which("node") or (str(node_executable) if node_executable.exists() else None)
+        # Construire la commande node avec plusieurs fallbacks
+        node_cmd = shutil.which(str(node_executable))
+        if not node_cmd:
+            node_cmd = shutil.which("node")
+        if not node_cmd and node_executable.exists():
+            node_cmd = str(node_executable)
+
         if not node_cmd:
             print_error("Node.js introuvable pour l'authentification initiale")
             sys.exit(1)
 
         try:
-            subprocess.run([node_cmd, str(setup_script), "--email", email, "--password", password], cwd=self.nodejs_dir, check=True)
+            cmd = [node_cmd, str(setup_script), "--email", email, "--password", password]
+            subprocess.run(cmd, cwd=self.nodejs_dir, check=True)
         except subprocess.CalledProcessError as e:
             print_error(f"Échec de l'authentification initiale: {e}")
             sys.exit(1)

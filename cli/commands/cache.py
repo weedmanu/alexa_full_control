@@ -141,9 +141,9 @@ class CacheCommand(BaseCommand):
                 print("\n💾 Détail des entrées:\n")
                 for entry in stats["entries"]:
                     status = "✅ Valide" if not entry["expired"] else "❌ Expiré"
-                    print(
-                        f"  {entry['key']:15} {entry['size_bytes']:>8} octets  {entry['expires_in_seconds']:>6}s  {status}"
-                    )
+                    key_part = f"  {entry['key']:15} {entry['size_bytes']:>8} octets"
+                    time_part = f"  {entry['expires_in_seconds']:>6}s  {status}"
+                    print(key_part + time_part)
 
             # Statistiques de synchronisation si disponibles
             sync_stats_file = Path("data/cache/sync_stats.json")

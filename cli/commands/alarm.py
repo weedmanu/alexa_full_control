@@ -578,10 +578,7 @@ class AlarmCommand(BaseCommand):
             status_emoji = "✅ Activée" if enabled else "❌ Désactivée"
 
             # Formater l'heure
-            if original_time != "N/A" and len(original_time) >= 8:
-                time_display = original_time[:5]  # HH:MM
-            else:
-                time_display = "N/A"
+            time_display = original_time[:5] if original_time != "N/A" and len(original_time) >= 8 else "N/A"
 
             # Récurrence
             repeat_text = "Récurrente" if recurrence_eligible else "Une seule fois"

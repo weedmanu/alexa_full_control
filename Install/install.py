@@ -23,7 +23,7 @@ import sys
 
 # textwrap is imported locally where needed to avoid global dependency at import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Ajouter le répertoire parent au PYTHONPATH pour les imports
 _SCRIPT_DIR = Path(__file__).parent
@@ -41,9 +41,10 @@ except ImportError:
     logger = None  # type: ignore
 
 # Import de la fonction setup_loguru_logger depuis utils/logger.py
-import contextlib
+import contextlib  # noqa: E402
 
-from utils.logger import SharedIcons, setup_loguru_logger
+# Import du logger utilitaire (doit être en haut pour Ruff E402)
+from utils.logger import SharedIcons, setup_loguru_logger  # noqa: E402
 
 
 def ensure_utf8_console() -> None:
@@ -304,50 +305,50 @@ class Logger:
                 )
             )
 
-        def _strip_edge_emojis(s: str) -> str:
-            """Remove known emoji prefixes and suffixes from a string ends.
+            def _strip_edge_emojis(s: str) -> str:
+                """Remove known emoji prefixes and suffixes from a string ends.
 
-            This ensures messages won't contain an emoji immediately after the
-            Logger-provided emoji prefix (avoids sequences like "✅ 🎉 ...").
-            """
-            s2 = s.strip()
-            EMOJI_PREFIXES = [
-                SharedIcons.CELEBRATION,
-                SharedIcons.ROCKET,
-                SharedIcons.SUCCESS,
-                SharedIcons.INFO,
-                SharedIcons.WARNING,
-                SharedIcons.GEAR,
-                SharedIcons.CRITICAL,
-                SharedIcons.INSTALL,
-                SharedIcons.STEP,
-                SharedIcons.SEARCH,
-                SharedIcons.PYTHON,
-                SharedIcons.PACKAGE,
-                SharedIcons.NODEJS,
-                SharedIcons.DOCUMENT,
-                SharedIcons.TRASH,
-            ]
-            changed = True
-            while changed:
-                changed = False
-                for e in EMOJI_PREFIXES:
-                    # Leading emoji removal: this branch is defensive and often
-                    # won't be hit because previous lstrip usually removes leading
-                    # non-alphanumeric characters. Keep for parity with various
-                    # emoji sequences but mark as no-cover for testing.
-                    if s2.startswith(e):  # pragma: no cover - defensive
-                        s2 = s2[len(e) :].lstrip()
-                        changed = True
-                        break
-                if changed:  # pragma: no cover - defensive continue when leading emojis removed
-                    continue
-                for e in EMOJI_PREFIXES:
-                    if s2.endswith(e):
-                        s2 = s2[: -len(e)].rstrip()
-                        changed = True
-                        break
-            return s2
+                This ensures messages won't contain an emoji immediately after the
+                Logger-provided emoji prefix (avoids sequences like "✅ 🎉 ...").
+                """
+                s2 = s.strip()
+                emoji_prefixes = [
+                    SharedIcons.CELEBRATION,
+                    SharedIcons.ROCKET,
+                    SharedIcons.SUCCESS,
+                    SharedIcons.INFO,
+                    SharedIcons.WARNING,
+                    SharedIcons.GEAR,
+                    SharedIcons.CRITICAL,
+                    SharedIcons.INSTALL,
+                    SharedIcons.STEP,
+                    SharedIcons.SEARCH,
+                    SharedIcons.PYTHON,
+                    SharedIcons.PACKAGE,
+                    SharedIcons.NODEJS,
+                    SharedIcons.DOCUMENT,
+                    SharedIcons.TRASH,
+                ]
+                changed = True
+                while changed:
+                    changed = False
+                    for e in emoji_prefixes:
+                        # Leading emoji removal: this branch is defensive and often
+                        # won't be hit because previous lstrip usually removes leading
+                        # non-alphanumeric characters. Keep for parity with various
+                        # emoji sequences but mark as no-cover for testing.
+                        if s2.startswith(e):  # pragma: no cover - defensive
+                            s2 = s2[len(e) :].lstrip()
+                            changed = True
+                            break
+                    if changed:  # pragma: no cover - defensive continue when leading emojis removed
+                        continue
+                    for e in emoji_prefixes:
+                        if s2.endswith(e):
+                            s2 = s2[: -len(e)].rstrip()
+                            changed = True
+                            break
+                return s2
 
         text = _strip_edge_emojis(text)
         # Compute available width after emoji and two spaces
@@ -409,10 +410,7 @@ class SystemChecker:
             # Typical output: 'pip 25.2 from C:\...\site-packages\pip (python 3.13)'
             # We extract the first two tokens to display only the name and version.
             parts = out.split()
-            if len(parts) >= 2:
-                version_short = f"{parts[0]} {parts[1]}"
-            else:
-                version_short = out or "version inconnue"
+            version_short = f"{parts[0]} {parts[1]}" if len(parts) >= 2 else out or "version inconnue"
             return True, f"pip disponible ({version_short})"
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False, "pip n'est pas disponible"
@@ -482,7 +480,7 @@ class PackageInstaller:
                 logger.error(f"Commande échouée: {cmd_display}")
                 logger.error(f"Code de sortie: {e.returncode}")
                 logger.debug(f"Stderr: {e.stderr}")
-            raise RuntimeError(f"Commande échouée: {cmd_display}\n{e.stderr}")
+            raise RuntimeError(f"Commande échouée: {cmd_display}\n{e.stderr}") from None
 
     def create_venv(self) -> None:
         """Crée l'environnement virtuel Python (.venv)."""
@@ -662,7 +660,7 @@ class PackageInstaller:
         except RuntimeError as e:
             if LOGURU_AVAILABLE and logger:
                 logger.error(f"Node.js non fonctionnel: {e}")
-            raise RuntimeError("Node.js n'est pas fonctionnel")
+            raise RuntimeError("Node.js n'est pas fonctionnel") from None
 
         # Installation des packages dans le dossier nodejs
         packages = ["alexa-cookie2", "yargs"]
@@ -1045,7 +1043,9 @@ def running_in_project_venv(current_executable: Optional[str], install_dir: Path
         return False  # pragma: no cover - defensive fallback for pathological Path.resolve failures
 
 
-def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_venv_fn) -> None:
+def core_main(
+    args: argparse.Namespace, install_dir: Path, running_in_project_venv_fn: Callable[[], bool]
+) -> None:
     """Logique principale de l'installateur (testable).
 
     Lève `CLIError` pour signaler des terminaisons voulues au wrapper CLI.

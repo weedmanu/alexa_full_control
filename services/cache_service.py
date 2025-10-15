@@ -175,7 +175,10 @@ class CacheService:
                     if old_file.exists():
                         old_file.unlink()
 
-                    log_msg = f"{SharedIcons.SAVE} Cache saved (compressed): {key} (TTL: {ttl_seconds}s, {original_size}→{compressed_size} bytes, -{compression_ratio:.1f}%)"
+                    log_msg_prefix = f"{SharedIcons.SAVE} Cache saved (compressed): {key}"
+                    log_msg_details_part1 = f" (TTL: {ttl_seconds}s, {original_size}→{compressed_size} bytes,"
+                    log_msg_details_part2 = f" -{compression_ratio:.1f}%)"
+                    log_msg = log_msg_prefix + log_msg_details_part1 + log_msg_details_part2
                 else:
                     # Sauvegarder version non compressée (avec indentation pour lisibilité)
                     cache_file = self.cache_dir / f"{key}.json"
@@ -190,7 +193,10 @@ class CacheService:
                     if old_file.exists():
                         old_file.unlink()
 
-                    log_msg = f"{SharedIcons.SAVE} Cache saved: {key} (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
+                    log_msg = (
+                        f"{SharedIcons.SAVE} Cache saved: {key}"
+                        f" (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
+                    )
 
                 # Sauvegarder aussi une copie JSON lisible si demandé
                 if self.save_json_copy and self.use_compression:

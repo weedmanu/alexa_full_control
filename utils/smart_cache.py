@@ -175,10 +175,7 @@ class SmartCache:
             # Calculer TTL
             if ttl is None:
                 # Utiliser TTL du premier tag si disponible
-                if tags and tags[0] in self.DEFAULT_TAG_TTL:
-                    ttl = self.DEFAULT_TAG_TTL[tags[0]]
-                else:
-                    ttl = self.default_ttl
+                ttl = self.DEFAULT_TAG_TTL[tags[0]] if tags and tags[0] in self.DEFAULT_TAG_TTL else self.default_ttl
 
             # Définir expiration
             if ttl > 0:

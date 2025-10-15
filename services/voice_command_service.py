@@ -50,11 +50,16 @@ class VoiceCommandService:
 
         # Try runtime imports to avoid import cycles; fall back to TYPE_CHECKING names
         try:
-            from core.circuit_breaker import CircuitBreaker as CB
-            from core.state_machine import AlexaStateMachine as ASM
+            from core.circuit_breaker import CircuitBreaker
+            from core.state_machine import AlexaStateMachine
 
-            self.state_machine = state_machine or ASM()
-            self.breaker = CB(failure_threshold=3, timeout=30)
+            # Use lowercase local names for runtime creation while keeping
+            # the imported names CamelCase to satisfy linters.
+            cb = CircuitBreaker
+            asm = AlexaStateMachine
+
+            self.state_machine = state_machine or asm()
+            self.breaker = cb(failure_threshold=3, timeout=30)
         except Exception:
             # If imports fail (import cycle), try to use names defined under TYPE_CHECKING
             # They may be None at runtime; guard their use accordingly.
@@ -122,7 +127,7 @@ class VoiceCommandService:
 
                     cache = CacheService()
                     devices_data = cache.get("devices") or {}
-                    devices: List[Dict[str, Any]] = devices_data.get("devices", []) if isinstance(devices_data, dict) else []
+                    devices = devices_data.get("devices", []) if isinstance(devices_data, dict) else []
                     dtype = None
                     device_name = None
                     for dev in devices:
@@ -193,10 +198,14 @@ class VoiceCommandService:
                 # Log de la réponse COMPLÈTE (si JSON)
                 try:
                     response_data = response.json()
-                    logger.debug(f"📥 Réponse API complète: status={getattr(response, 'status_code', 'unknown')}")
-                    logger.debug(f"📥 Body: {json.dumps(response_data, indent=2)}")
+                    status_val = getattr(response, "status_code", "unknown")
+                    body_str = json.dumps(response_data, indent=2)
+                    logger.debug(f"📥 Réponse API complète: status={status_val}")
+                    logger.debug(f"📥 Body: {body_str}")
                 except Exception as e:
-                    logger.debug(f"📥 Réponse API: status={getattr(response, 'status_code', 'unknown')}, no JSON body: {e}")
+                    status_val = getattr(response, "status_code", "unknown")
+                    err_str = str(e)
+                    logger.debug(f"📥 Réponse API: status={status_val}, no JSON body: {err_str}")
 
                 logger.success(f"✅ Commande vocale envoyée: '{text_clean}'")
                 return True
@@ -586,7 +595,14 @@ class VoiceCommandService:
                         logger.info(f"\n🔍 Activité #{idx + 1} (depuis {timestamp_str}):")
                         logger.info(f"   Appareil: {device_name}")
                         logger.info(
-                            f"   Votre commande: {customer_transcript if customer_transcript else '(TextCommand - non enregistré)'}"
+
+                                "   Votre commande: "
+                                + (
+                                    customer_transcript
+                                    if customer_transcript
+                                    else "(TextCommand - non enregistré)"
+                                )
+
                         )
                         logger.info(
                             f"   Réponse Alexa: {alexa_response[:150] if alexa_response else 'Aucune'}..."

@@ -336,14 +336,14 @@ class SyncService:
 
                 # Mise à jour des préchargés avec types explicites
                 preloaded_raw = stats.get("preloaded", {})
-                preloaded: Dict[str, int] = cast(Dict[str, int], preloaded_raw) if isinstance(preloaded_raw, dict) else {}
+                preloaded = cast(Dict[str, int], preloaded_raw) if isinstance(preloaded_raw, dict) else {}
                 preloaded[category] = len(data)
                 stats["preloaded"] = preloaded
                 logger.debug(f"✅ {len(data)} {category} préchargés")
             except Exception as e:
                 logger.error(f"❌ Erreur préchargement {category}: {e}")
                 failed_raw = stats.get("failed", [])
-                failed_list: List[Dict[str, str]] = cast(List[Dict[str, str]], failed_raw) if isinstance(failed_raw, list) else []
+                failed_list = cast(List[Dict[str, str]], failed_raw) if isinstance(failed_raw, list) else []
                 failed_list.append({"category": category, "error": str(e)})
                 stats["failed"] = failed_list
 

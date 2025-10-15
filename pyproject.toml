@@ -2,7 +2,7 @@
 # BLACK - Formatage du code
 # ============================================================================
 [tool.black]
-line-length = 100
+line-length = 120
 target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 exclude = '''
@@ -38,7 +38,7 @@ exclude = '''
 # ============================================================================
 [tool.isort]
 profile = "black"
-line_length = 100
+line_length = 120
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
@@ -98,7 +98,7 @@ disable = [
 ]
 
 [tool.pylint.format]
-max-line-length = 100
+max-line-length = 120
 max-module-lines = 1000
 
 [tool.pylint.design]
@@ -112,7 +112,7 @@ max-statements = 60
 # RUFF - Linter moderne
 # ============================================================================
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py38"
 exclude = [
     "scripts",
@@ -133,7 +133,7 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "N", "UP", "B", "C4", "SIM"]
-ignore = ["E501"]
+# Activer E501 pour que Ruff applique la limite de 120 caractères
 
 # ============================================================================
 # COVERAGE - Couverture de code
@@ -158,7 +158,7 @@ exclude_lines = [
 # FLAKE8 - Align flake8 with Black's formatting decisions
 # ============================================================================
 [tool.flake8]
-max-line-length = 100
+max-line-length = 120
 extend-ignore = ["E203", "W503"]
 exclude = [
     ".git",

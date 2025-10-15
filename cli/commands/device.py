@@ -168,9 +168,9 @@ class DeviceCommand(BaseCommand):
             True si succès, False sinon
         """
         # Validation connexion (sauf pour certaines actions)
-        if args.action not in ["list"]:  # list peut fonctionner en cache
-            if not self.validate_connection():
-                return False
+        # 'list' peut fonctionner en cache — combiner les conditions pour plus de clarté
+        if args.action not in ["list"] and not self.validate_connection():
+            return False
 
         if args.action == "list":
             return self._list_devices(args)

@@ -124,7 +124,8 @@ class Context:
         self._playback_mgr: Optional[PlaybackManager] = None
         self._tunein_mgr: Optional[TuneInManager] = None
         self._library_mgr: Optional[LibraryManager] = None
-        self._music_library: Optional[MusicLibraryService] = None  # Service MusicLibrary (nouveau - shell script parity)
+        # Service MusicLibrary (nouveau - shell script parity)
+        self._music_library: Optional[MusicLibraryService] = None
         self._notification_mgr: Optional[NotificationManager] = None
         self._dnd_mgr: Optional[DNDManager] = None
         self._activity_mgr: Optional[ActivityManager] = None

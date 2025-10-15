@@ -14,6 +14,7 @@ Date: 7 octobre 2025
 """
 
 import argparse
+import contextlib
 import sys
 from typing import Any, Dict, Iterable, List, Optional, Type
 
@@ -629,10 +630,13 @@ class CommandParser:
                 subparsers_action = self.parser._subparsers
                 if subparsers_action:
                     for action in subparsers_action._actions:
-                        if isinstance(action, argparse._SubParsersAction):
-                            if category in action.choices:
-                                action.choices[category].print_help(sys.stderr)
-                                break
+                        # Combine the nested conditions: vérifier que l'action est un
+                        # _SubParsersAction ET que la catégorie est présente dans ses choices.
+                        if isinstance(action, argparse._SubParsersAction) and (
+                            category in getattr(action, "choices", {})
+                        ):
+                            action.choices[category].print_help(sys.stderr)
+                            break
             else:
                 # Pas de catégorie valide, afficher l'aide générale
                 print("\n💡 Pour voir toutes les catégories disponibles:", file=sys.stderr)
@@ -677,16 +681,13 @@ class CommandParser:
             if category in self.subcategory_commands:
                 # Pour les commandes avec sous-catégories, afficher l'aide de la catégorie
                 # qui montrera les sous-catégories disponibles
-                try:
+                # --help provoque un SystemExit; le supprimer proprement
+                with contextlib.suppress(SystemExit):
                     self.parser.parse_args([category, "--help"])
-                except SystemExit:
-                    pass  # --help fait un sys.exit(), c'est normal
             else:
                 # Pour les commandes normales, afficher l'aide de la catégorie
-                try:
+                with contextlib.suppress(SystemExit):
                     self.parser.parse_args([category, "--help"])
-                except SystemExit:
-                    pass  # --help fait un sys.exit(), c'est normal
         else:
             logger.error(f"Catgorie '{category}' inconnue")
             self.print_help()

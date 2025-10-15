@@ -48,10 +48,12 @@ class AuthCommand(BaseCommand):
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
 
-        # Description réorganisée dans l'ordre demandé : Titre → Usage → Options → Actions → Options d'action → Exemples
+        # Description réorganisée dans l'ordre demandé :
+        # Titre → Usage → Options → Actions → Options d'action → Exemples
         parser.description = AUTH_DESCRIPTION
 
-        # Supprimer l'usage automatique d'argparse (on a notre propre section Usage dans la description)
+        # Supprimer l'usage automatique d'argparse
+        # (la section Usage est fournie dans la description)
         parser.usage = argparse.SUPPRESS
 
         subparsers = parser.add_subparsers(
@@ -423,13 +425,14 @@ class AuthCommand(BaseCommand):
             return False
 
         # Vérifier que les packages requis sont installés
-        try:
-            import nodeenv
-            import requests
-        except ImportError:
-            return False
+        # Tester la disponibilité des modules sans importer des symboles inutilisés
+        import importlib.util
 
-        return True
+        nodeenv_spec = importlib.util.find_spec("nodeenv")
+        requests_spec = importlib.util.find_spec("requests")
+
+        # Retourner directement l'existence conjointe des modules
+        return nodeenv_spec is not None and requests_spec is not None
 
     def _check_nodejs(self) -> bool:
         """Vérifie si Node.js est installé via nodeenv"""

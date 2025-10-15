@@ -338,9 +338,9 @@ class ListsCommand(BaseCommand):
                     sys.stdout.flush()
                     time.sleep(4.0)
 
-                    self.logger.info(
-                        f"🔍 Voice service check: hasattr={hasattr(ctx, 'voice_service')}, value={getattr(ctx, 'voice_service', None)}"
-                    )
+                    has_voice = hasattr(ctx, "voice_service")
+                    voice_val = getattr(ctx, "voice_service", None)
+                    self.logger.info(f"🔍 Voice service check: hasattr={has_voice}, value={voice_val}")
                     if hasattr(ctx, "voice_service") and ctx.voice_service:
                         # Puisque la liste n'est pas vide, on s'attend à une confirmation
                         # Répondre automatiquement "oui" après un délai raisonnable

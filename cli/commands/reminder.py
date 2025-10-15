@@ -385,10 +385,8 @@ class ReminderCommand(BaseCommand):
 
             # Formater la date/heure
             if original_date != "N/A" and original_time != "N/A":
-                if len(original_time) >= 8:
-                    time_display = original_time[:5]  # HH:MM
-                else:
-                    time_display = original_time
+                # Utiliser un ternaire pour conserver une expression concise
+                time_display = original_time[:5] if len(original_time) >= 8 else original_time
                 datetime_display = f"{original_date} {time_display}"
             elif alarm_time_ms > 0:
                 # Convertir timestamp en datetime

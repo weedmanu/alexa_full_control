@@ -181,10 +181,11 @@ def _get_format_record():
         # Afficher la localisation seulement pour les erreurs ou en mode debug
         show_location = level_name in ["ERROR", "CRITICAL"] or level_no <= 10  # DEBUG level
 
-        if show_location:
-            location_part = " | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan>"
-        else:
-            location_part = ""
+        location_part = (
+            " | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan>"
+            if show_location
+            else ""
+        )
 
         return (
             "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "

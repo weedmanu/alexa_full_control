@@ -138,9 +138,8 @@ class StatusCommands(MusicSubCommand):
                 progress_min = media_progress // 60000
                 progress_sec = (media_progress % 60000) // 1000
 
-                print(
-                    f"⏱️  Position   : {progress_min:02d}:{progress_sec:02d} / {duration_min:02d}:{duration_sec:02d}"
-                )
+                pos_str = f"{progress_min:02d}:{progress_sec:02d} / {duration_min:02d}:{duration_sec:02d}"
+                print(f"⏱️  Position   : {pos_str}")
 
         # Provider et qualité
         provider = state.get("playerInfo", {}).get("provider", {}).get("providerName", "")
