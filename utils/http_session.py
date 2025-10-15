@@ -12,7 +12,7 @@ Date: 7 octobre 2025
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any, Union
 
 import requests
 import requests_cache
@@ -85,6 +85,11 @@ class OptimizedHTTPSession:
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Session avec ou sans cache
+        # Utiliser Any pour la session: requests-cache et requests partagent
+        # des méthodes mais diffèrent sur certains paramètres (expire_after).
+        # Déclarer comme Any évite des erreurs mypy sur les appels polymorphes.
+        self.session: Any
+
         if cache_enabled:
             # Cache SQLite avec expire_after dynamique
             self.session = requests_cache.CachedSession(
@@ -210,6 +215,9 @@ class OptimizedHTTPSession:
             if "/api/phoenix" in url:
                 ttl = 30  # Cache court pour smart home states
                 with self.session.cache_disabled():
+                    # requests-cache expose `.settings` qui peut être typé
+                    # strictement; utiliser un cast vers Any pour l'affectation
+                    # indexée afin d'éviter l'erreur de typage statique.
                     self.session.settings["expire_after"] = ttl
                     return self.session.post(url, **kwargs)
             else:

@@ -70,21 +70,35 @@ def ensure_utf8_console() -> None:
                 # best-effort, ignore failures
                 pass
 
-        # Try to reconfigure TextIO encoding (Python 3.7+)
+        # Try to reconfigure TextIO encoding (Python 3.7+).
+        # Use getattr/callable checks so static type checkers (mypy) don't
+        # complain about missing `reconfigure` on TextIO.
         try:
-            sys.stdout.reconfigure(encoding="utf-8")
-            sys.stderr.reconfigure(encoding="utf-8")
+            stdout_reconf = getattr(sys.stdout, "reconfigure", None)
+            stderr_reconf = getattr(sys.stderr, "reconfigure", None)
+            if callable(stdout_reconf) and callable(stderr_reconf):
+                stdout_reconf(encoding="utf-8")
+                stderr_reconf(encoding="utf-8")
+            else:
+                # Trigger fallback behavior below
+                raise AttributeError("reconfigure not available")
         except Exception:
-            # Fallback: wrap streams
+            # Fallback: wrap streams. Guard access to `.buffer` which may not
+            # exist on some stream objects to avoid AttributeError at runtime
+            # and to keep mypy satisfied.
             try:
                 import io
 
-                sys.stdout = io.TextIOWrapper(
-                    sys.stdout.buffer, encoding="utf-8", line_buffering=True
-                )
-                sys.stderr = io.TextIOWrapper(
-                    sys.stderr.buffer, encoding="utf-8", line_buffering=True
-                )
+                stdout_buffer = getattr(sys.stdout, "buffer", None)
+                stderr_buffer = getattr(sys.stderr, "buffer", None)
+                if stdout_buffer is not None:
+                    sys.stdout = io.TextIOWrapper(
+                        stdout_buffer, encoding="utf-8", line_buffering=True
+                    )
+                if stderr_buffer is not None:
+                    sys.stderr = io.TextIOWrapper(
+                        stderr_buffer, encoding="utf-8", line_buffering=True
+                    )
             except Exception:
                 pass
     except Exception:
