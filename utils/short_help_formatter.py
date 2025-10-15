@@ -1,4 +1,4 @@
-"""
+﻿"""
 Formateur d'aide courte pour les commandes CLI.
 
 Ce module génère des aides courtes et colorées pour le flag -h/--help.
@@ -7,6 +7,7 @@ Format concis avec sections : Usage, Actions possibles, Exemples.
 
 import argparse
 from typing import List, Dict, Optional
+from utils.logger import SharedIcons
 
 
 class ShortHelpFormatter:
@@ -72,7 +73,7 @@ class ShortHelpFormatter:
         lines.append("")
         
         # Section Usage
-        lines.append(ShortHelpFormatter._header("📖", "Usage:"))
+        lines.append(ShortHelpFormatter._header(SharedIcons.DOCUMENT, "Usage:"))
         lines.append(ShortHelpFormatter._separator())
         lines.append("")
         lines.append("Champs possible :")

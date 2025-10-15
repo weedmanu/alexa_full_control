@@ -13,6 +13,7 @@ from threading import RLock
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
+from utils.logger import SharedIcons
 
 
 class CacheService:
@@ -166,7 +167,7 @@ class CacheService:
                     if old_file.exists():
                         old_file.unlink()
 
-                    log_msg = f"💾 Cache saved (compressed): {key} (TTL: {ttl_seconds}s, {original_size}→{compressed_size} bytes, -{compression_ratio:.1f}%)"
+                    log_msg = f"{SharedIcons.SAVE} Cache saved (compressed): {key} (TTL: {ttl_seconds}s, {original_size}→{compressed_size} bytes, -{compression_ratio:.1f}%)"
                 else:
                     # Sauvegarder version non compressée (avec indentation pour lisibilité)
                     cache_file = self.cache_dir / f"{key}.json"
@@ -181,7 +182,7 @@ class CacheService:
                     if old_file.exists():
                         old_file.unlink()
 
-                    log_msg = f"💾 Cache saved: {key} (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
+                    log_msg = f"{SharedIcons.SAVE} Cache saved: {key} (TTL: {ttl_seconds}s, Size: {compressed_size} bytes)"
 
                 # Sauvegarder aussi une copie JSON lisible si demandé
                 if self.save_json_copy and self.use_compression:
@@ -190,7 +191,7 @@ class CacheService:
                         json_file.write_text(
                             json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
                         )
-                        logger.debug(f"📄 Copie JSON sauvegardée: {key}.json")
+                        logger.debug(f"{SharedIcons.FILE} Copie JSON sauvegardée: {key}.json")
                     except OSError as e:
                         logger.warning(f"Impossible de sauvegarder copie JSON {key}: {e}")
 

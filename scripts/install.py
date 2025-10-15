@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Script d'installation cross-platform pour Alexa Advanced Control.
 
@@ -24,6 +24,66 @@ import sys
 # textwrap is imported locally where needed to avoid global dependency at import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+# Ajouter le répertoire parent au PYTHONPATH pour les imports
+_SCRIPT_DIR = Path(__file__).parent
+_PROJECT_ROOT = _SCRIPT_DIR.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+# Tentative d'import de Loguru pour logging avancé
+try:
+    from loguru import logger
+    LOGURU_AVAILABLE = True
+except ImportError:
+    LOGURU_AVAILABLE = False
+    logger = None  # type: ignore
+
+# Import de la fonction setup_loguru_logger depuis utils/logger.py
+from utils.logger import setup_loguru_logger, SharedIcons
+
+
+def ensure_utf8_console() -> None:
+    """Force UTF-8 for console output on Windows and configures Python I/O.
+
+    This attempts multiple fallbacks:
+    - call Win32 API to set console code page to UTF-8 (65001)
+    - set PYTHONIOENCODING environment variable if not set
+    - reconfigure sys.stdout/stderr to use utf-8
+    - wrap stdout/stderr with TextIOWrapper(encoding='utf-8') if reconfigure unavailable
+    """
+    try:
+        import os
+        if os.environ.get("PYTHONIOENCODING") is None:
+            os.environ["PYTHONIOENCODING"] = "utf-8"
+
+        if platform.system() == "Windows":
+            try:
+                import ctypes
+
+                # Set console input/output code page to UTF-8
+                ctypes.windll.kernel32.SetConsoleOutputCP(65001)
+                ctypes.windll.kernel32.SetConsoleCP(65001)
+            except Exception:
+                # best-effort, ignore failures
+                pass
+
+        # Try to reconfigure TextIO encoding (Python 3.7+)
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+        except Exception:
+            # Fallback: wrap streams
+            try:
+                import io
+
+                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
+                sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", line_buffering=True)
+            except Exception:
+                pass
+    except Exception:
+        # Defensive: never crash the installer because of console config
+        pass
 
 # Configuration
 PYTHON_MIN_VERSION = (3, 8)
@@ -136,7 +196,7 @@ class Logger:
         return "".join(out)
 
     @staticmethod
-    def header(msg: str, emoji: str = "🔧") -> None:
+    def header(msg: str, emoji: str = SharedIcons.INSTALL) -> None:
         """Affiche un en-tête stylisé."""
         # Utiliser la même logique que `step` pour garantir un rendu uniforme
         # Use a stable fixed width to avoid dynamic growth and wrapping artifacts
@@ -146,7 +206,7 @@ class Logger:
         # Prepare lines (support multi-line). Prepend emoji to the first line only.
         lines = str(msg).splitlines() or [""]
         if emoji:
-            if emoji in {"ℹ️", "⚠️", "⚙️"}:
+            if emoji in {SharedIcons.INFO, SharedIcons.WARNING, SharedIcons.GEAR}:
                 lines[0] = f"{emoji}  {lines[0]}"
             else:
                 lines[0] = f"{emoji} {lines[0]}"
@@ -168,7 +228,7 @@ class Logger:
         print()
 
     @staticmethod
-    def step(msg: str, emoji: str = "⚡") -> None:
+    def step(msg: str, emoji: str = SharedIcons.STEP) -> None:
         """Affiche une étape en cours."""
         # Reuse same rendering as header to keep consistent borders
         Logger.header(msg, emoji)
@@ -176,26 +236,26 @@ class Logger:
     @staticmethod
     def progress(msg: str) -> None:
         """Affiche une progression."""
-        Logger._internal_wrap_and_print("⏳", f"{msg}...", Colors.MAGENTA)
+        Logger._internal_wrap_and_print(SharedIcons.PROGRESS, f"{msg}...", Colors.MAGENTA)
 
     @staticmethod
-    def success(msg: str, emoji: str = "✅") -> None:
+    def success(msg: str, emoji: str = SharedIcons.SUCCESS) -> None:
         """Affiche un succès."""
         # Simple one-line success message
         Logger._internal_wrap_and_print(emoji, msg, Colors.GREEN)
 
     @staticmethod
-    def error(msg: str, emoji: str = "❌") -> None:
+    def error(msg: str, emoji: str = SharedIcons.ERROR) -> None:
         """Affiche une erreur."""
         Logger._wrap_and_print(emoji, msg, Colors.RED)
 
     @staticmethod
-    def warning(msg: str, emoji: str = "⚠️") -> None:
+    def warning(msg: str, emoji: str = SharedIcons.WARNING) -> None:
         """Affiche un avertissement."""
         Logger._internal_wrap_and_print(emoji, msg, Colors.YELLOW)
 
     @staticmethod
-    def info(msg: str, emoji: str = "ℹ️") -> None:
+    def info(msg: str, emoji: str = SharedIcons.INFO) -> None:
         """Affiche une information."""
         Logger._internal_wrap_and_print(emoji, msg, Colors.CYAN)
 
@@ -224,21 +284,21 @@ class Logger:
             """
             s2 = s.strip()
             EMOJI_PREFIXES = [
-                "🎉",
-                "🚀",
-                "✅",
-                "ℹ️",
-                "⚠️",
-                "⚙️",
-                "🆘",
-                "🔧",
-                "⚡",
-                "🔍",
-                "🐍",
-                "📦",
-                "🟢",
-                "📖",
-                "🗑️",
+                SharedIcons.CELEBRATION,
+                SharedIcons.ROCKET,
+                SharedIcons.SUCCESS,
+                SharedIcons.INFO,
+                SharedIcons.WARNING,
+                SharedIcons.GEAR,
+                SharedIcons.CRITICAL,
+                SharedIcons.INSTALL,
+                SharedIcons.STEP,
+                SharedIcons.SEARCH,
+                SharedIcons.PYTHON,
+                SharedIcons.PACKAGE,
+                SharedIcons.NODEJS,
+                SharedIcons.DOCUMENT,
+                SharedIcons.TRASH,
             ]
             changed = True
             while changed:
@@ -364,12 +424,18 @@ class PackageInstaller:
         cwd_display = str(cwd or self.install_dir)
         if self.dry_run:
             Logger.info(f"[dry-run] Commande simulée: {cmd_display} (cwd={cwd_display})")
+            if LOGURU_AVAILABLE and logger:
+                logger.debug(f"[dry-run] Commande: {cmd_display}, cwd: {cwd_display}")
 
             class _FakeResult:
                 stdout = ""
                 stderr = ""
 
             return _FakeResult()
+
+        if LOGURU_AVAILABLE and logger:
+            logger.info(f"Exécution de la commande: {cmd_display}")
+            logger.debug(f"Working directory: {cwd_display}")
 
         try:
             result = subprocess.run(
@@ -379,14 +445,33 @@ class PackageInstaller:
                 text=True,
                 check=True,
             )
+            if LOGURU_AVAILABLE and logger:
+                logger.debug(f"Commande réussie: {cmd_display}")
+                logger.success(f"Commande exécutée avec succès")
             return result
         except subprocess.CalledProcessError as e:
+            if LOGURU_AVAILABLE and logger:
+                logger.error(f"Commande échouée: {cmd_display}")
+                logger.error(f"Code de sortie: {e.returncode}")
+                logger.debug(f"Stderr: {e.stderr}")
             raise RuntimeError(f"Commande échouée: {cmd_display}\n{e.stderr}")
 
     def create_venv(self) -> None:
         """Crée l'environnement virtuel Python (.venv)."""
         Logger.step("Création de l'environnement virtuel")
-        self.run_command([sys.executable, "-m", "venv", str(self.venv_path)])
+        if LOGURU_AVAILABLE and logger:
+            logger.info("Création de l'environnement virtuel Python")
+            logger.debug(f"Chemin du venv: {self.venv_path}")
+        
+        try:
+            self.run_command([sys.executable, "-m", "venv", str(self.venv_path)])
+            if LOGURU_AVAILABLE and logger:
+                logger.success("Environnement virtuel créé avec succès")
+        except RuntimeError as e:
+            if LOGURU_AVAILABLE and logger:
+                logger.error(f"Échec de création du venv: {e}")
+            raise
+        
         Logger.success("Environnement virtuel créé")
 
     def get_venv_python(self) -> Path:
@@ -407,8 +492,20 @@ class PackageInstaller:
         """Met à jour pip dans le .venv."""
         Logger.step("Mise à jour de pip")
         venv_python = self.get_venv_python()
-        # Utiliser python -m pip pour éviter les problèmes de verrouillage
-        self.run_command([str(venv_python), "-m", "pip", "install", "--upgrade", "pip"])
+        if LOGURU_AVAILABLE and logger:
+            logger.info("Mise à jour de pip dans l'environnement virtuel")
+            logger.debug(f"Python du venv: {venv_python}")
+        
+        try:
+            # Utiliser python -m pip pour éviter les problèmes de verrouillage
+            self.run_command([str(venv_python), "-m", "pip", "install", "--upgrade", "pip"])
+            if LOGURU_AVAILABLE and logger:
+                logger.success("pip mis à jour avec succès")
+        except RuntimeError as e:
+            if LOGURU_AVAILABLE and logger:
+                logger.error(f"Échec de mise à jour de pip: {e}")
+            raise
+        
         Logger.success("pip mis à jour")
 
     def install_python_packages(self) -> None:
@@ -420,17 +517,39 @@ class PackageInstaller:
 
         if requirements_file.exists():
             Logger.info("Installation depuis requirements.txt")
-            self.run_command([str(venv_pip), "install", "-r", str(requirements_file)])
+            if LOGURU_AVAILABLE and logger:
+                logger.info("Installation des dépendances Python depuis requirements.txt")
+                logger.debug(f"Fichier requirements.txt: {requirements_file}")
+            
+            try:
+                self.run_command([str(venv_pip), "install", "-r", str(requirements_file)])
+                if LOGURU_AVAILABLE and logger:
+                    logger.success("Packages Python installés depuis requirements.txt")
+            except RuntimeError as e:
+                if LOGURU_AVAILABLE and logger:
+                    logger.error(f"Échec d'installation depuis requirements.txt: {e}")
+                raise
         else:
             Logger.info("requirements.txt non trouvé, installation manuelle")
+            if LOGURU_AVAILABLE and logger:
+                logger.warning("requirements.txt non trouvé, installation manuelle des packages essentiels")
+                logger.info(f"Installation de {len(REQUIRED_PACKAGES)} packages essentiels")
+            
             # Installation des packages essentiels
             for package in REQUIRED_PACKAGES:
                 try:
+                    if LOGURU_AVAILABLE and logger:
+                        logger.debug(f"Installation du package: {package}")
                     self.run_command([str(venv_pip), "install", package])
+                    if LOGURU_AVAILABLE and logger:
+                        logger.success(f"Package {package} installé")
                 except RuntimeError:
                     Logger.warning(f"Échec d'installation de {package}")
+                    if LOGURU_AVAILABLE and logger:
+                        logger.error(f"Échec d'installation: {package}")
 
-        Logger.success("Packages Python installés")
+        if LOGURU_AVAILABLE and logger:
+            logger.success("Tous les packages Python ont été installés")
 
     def install_nodejs(self) -> None:
         """Installe Node.js via nodeenv."""
@@ -441,11 +560,23 @@ class PackageInstaller:
 
         venv_python = self.get_venv_python()
 
-        # Installation via nodeenv
-        self.run_command(
-            [str(venv_python), "-m", "nodeenv", f"--node={NODE_VERSION}", "--prebuilt", ".nodeenv"],
-            cwd=nodejs_dir,
-        )
+        if LOGURU_AVAILABLE and logger:
+            logger.info(f"Installation de Node.js {NODE_VERSION} via nodeenv")
+            logger.debug(f"Répertoire Node.js: {nodejs_dir}")
+            logger.debug(f"Python du venv: {venv_python}")
+
+        try:
+            # Installation via nodeenv
+            self.run_command(
+                [str(venv_python), "-m", "nodeenv", f"--node={NODE_VERSION}", "--prebuilt", ".nodeenv"],
+                cwd=nodejs_dir,
+            )
+            if LOGURU_AVAILABLE and logger:
+                logger.success(f"Node.js v{NODE_VERSION} installé avec succès")
+        except RuntimeError as e:
+            if LOGURU_AVAILABLE and logger:
+                logger.error(f"Échec d'installation de Node.js: {e}")
+            raise
 
         Logger.success(f"Node.js v{NODE_VERSION} installé")
 
@@ -479,22 +610,39 @@ class PackageInstaller:
         nodejs_dir = self.install_dir / "alexa_auth" / "nodejs"
         node_path, npm_path = self.get_nodejs_paths()
 
+        if LOGURU_AVAILABLE and logger:
+            logger.info("Installation des packages npm pour Alexa")
+            logger.debug(f"Node.js path: {node_path}")
+            logger.debug(f"npm path: {npm_path}")
+
         # Vérification que Node.js fonctionne
         try:
             result = self.run_command([str(node_path), "--version"], capture_output=True)
-            Logger.success(f"Node.js {result.stdout.strip()} fonctionnel")
-        except RuntimeError:
+            version_str = result.stdout.strip()
+            Logger.success(f"Node.js {version_str} fonctionnel")
+            if LOGURU_AVAILABLE and logger:
+                logger.info(f"Node.js version détectée: {version_str}")
+        except RuntimeError as e:
+            if LOGURU_AVAILABLE and logger:
+                logger.error(f"Node.js non fonctionnel: {e}")
             raise RuntimeError("Node.js n'est pas fonctionnel")
 
         # Installation des packages dans le dossier nodejs
         packages = ["alexa-cookie2", "yargs"]
         for package in packages:
             Logger.progress(f"Installation de {package}")
+            if LOGURU_AVAILABLE and logger:
+                logger.info(f"Installation du package npm: {package}")
+            
             try:
                 self.run_command([str(npm_path), "install", package], cwd=nodejs_dir)
                 Logger.success(f"{package} installé")
+                if LOGURU_AVAILABLE and logger:
+                    logger.success(f"Package npm {package} installé avec succès")
             except RuntimeError:
                 Logger.warning(f"Échec d'installation de {package}")
+                if LOGURU_AVAILABLE and logger:
+                    logger.error(f"Échec d'installation du package npm: {package}")
 
     def create_data_directory(self) -> None:
         """Crée le dossier data si nécessaire."""
@@ -513,6 +661,8 @@ class PackageInstaller:
 
         # Test Python
         try:
+            if LOGURU_AVAILABLE and logger:
+                logger.info("Test de l'environnement Python")
             # Use `python -V` to get a compact version string (shorter than an inline -c command)
             result = self.run_command([str(venv_python), "-V"], capture_output=True)
             # Some Python versions print version to stderr; prefer stdout then stderr
@@ -523,17 +673,27 @@ class PackageInstaller:
                 out = result.stderr.strip()
             version = out or "version inconnue"
             Logger.success(f"Test Python réussi ({version})")
+            if LOGURU_AVAILABLE and logger:
+                logger.success(f"Test Python réussi: {version}")
         except RuntimeError:
             Logger.error("Test Python échoué")
+            if LOGURU_AVAILABLE and logger:
+                logger.error("Échec du test Python")
 
         # Test Node.js
         try:
+            if LOGURU_AVAILABLE and logger:
+                logger.info("Test de l'environnement Node.js")
             self.run_command(
                 [str(node_path), "-e", "console.log('Node.js OK')"], capture_output=True
             )
             Logger.success("Test Node.js réussi")
+            if LOGURU_AVAILABLE and logger:
+                logger.success("Test Node.js réussi")
         except RuntimeError:
             Logger.error("Test Node.js échoué")
+            if LOGURU_AVAILABLE and logger:
+                logger.error("Échec du test Node.js")
 
 
 class InstallationManager:
@@ -559,11 +719,19 @@ class InstallationManager:
         venv_exists = (self.install_dir / ".venv").exists()
         nodeenv_exists = (self.install_dir / "alexa_auth" / "nodejs" / ".nodeenv").exists()
 
+        if LOGURU_AVAILABLE and logger:
+            logger.debug(f"Vérification installation existante dans: {self.install_dir}")
+            logger.debug(f".venv existe: {venv_exists}")
+            logger.debug(f"nodeenv existe: {nodeenv_exists}")
+
         return venv_exists or nodeenv_exists
 
     def cleanup_existing_installation(self) -> None:
         """Nettoie l'installation existante."""
         Logger.warning("Installation existante détectée")
+        if LOGURU_AVAILABLE and logger:
+            logger.warning("Installation précédente détectée - nettoyage nécessaire")
+        
         if not self.force:
             if not self.non_interactive:
                 response = (
@@ -571,30 +739,58 @@ class InstallationManager:
                 )
                 if response not in ["o", "oui", "yes", "y"]:
                     Logger.info("Installation annulée par l'utilisateur")
+                    if LOGURU_AVAILABLE and logger:
+                        logger.info("Utilisateur a annulé le nettoyage")
                     sys.exit(0)
             else:
                 # non_interactive mode: assume yes
                 Logger.info("Non-interactive: suppression confirmée")
+                if LOGURU_AVAILABLE and logger:
+                    logger.info("Mode non-interactif: nettoyage automatique confirmé")
 
         Logger.progress("Nettoyage en cours")
+        if LOGURU_AVAILABLE and logger:
+            logger.info("Début du nettoyage des fichiers d'installation précédente")
 
         # Suppression du .venv
         venv_path = self.install_dir / ".venv"
         if venv_path.exists():
             if self.dry_run:
                 Logger.info(f"[dry-run] Suppression simulée: {venv_path}")
+                if LOGURU_AVAILABLE and logger:
+                    logger.debug(f"[dry-run] Simule suppression: {venv_path}")
             else:
-                shutil.rmtree(venv_path, ignore_errors=True)
-                Logger.success("✓ .venv supprimé")
+                if LOGURU_AVAILABLE and logger:
+                    logger.info("Suppression de l'environnement virtuel existant")
+                try:
+                    shutil.rmtree(venv_path, ignore_errors=True)
+                    Logger.success("✓ .venv supprimé")
+                    if LOGURU_AVAILABLE and logger:
+                        logger.success("Environnement virtuel supprimé")
+                except Exception as e:
+                    if LOGURU_AVAILABLE and logger:
+                        logger.error(f"Erreur lors de la suppression du venv: {e}")
+                    Logger.warning(f"Erreur lors de la suppression de {venv_path}")
 
         # Suppression de nodeenv
         nodeenv_path = self.install_dir / "alexa_auth" / "nodejs" / ".nodeenv"
         if nodeenv_path.exists():
             if self.dry_run:
                 Logger.info(f"[dry-run] Suppression simulée: {nodeenv_path}")
+                if LOGURU_AVAILABLE and logger:
+                    logger.debug(f"[dry-run] Simule suppression: {nodeenv_path}")
             else:
-                shutil.rmtree(nodeenv_path, ignore_errors=True)
-                Logger.success("✓ nodeenv supprimé")
+                if LOGURU_AVAILABLE and logger:
+                    logger.info("Suppression de l'environnement Node.js existant")
+                try:
+                    shutil.rmtree(nodeenv_path, ignore_errors=True)
+                    Logger.success("✓ nodeenv supprimé")
+                    if LOGURU_AVAILABLE and logger:
+                        logger.success("Environnement Node.js supprimé")
+                except Exception as e:
+                    if LOGURU_AVAILABLE and logger:
+                        logger.error(f"Erreur lors de la suppression de nodeenv: {e}")
+                    Logger.warning(f"Erreur lors de la suppression de {nodeenv_path}")
 
         # Suppression des cookies
         cookie_dir = self.install_dir / "alexa_auth" / "data"
@@ -604,21 +800,45 @@ class InstallationManager:
             if cookie_path.exists():
                 if self.dry_run:
                     Logger.info(f"[dry-run] Suppression simulée: {cookie_path}")
+                    if LOGURU_AVAILABLE and logger:
+                        logger.debug(f"[dry-run] Simule suppression: {cookie_path}")
                 else:
-                    cookie_path.unlink()
-                    Logger.success(f"✓ {cookie_file} supprimé")
+                    if LOGURU_AVAILABLE and logger:
+                        logger.debug(f"Suppression du cookie: {cookie_path}")
+                    try:
+                        cookie_path.unlink()
+                        Logger.success(f"✓ {cookie_file} supprimé")
+                        if LOGURU_AVAILABLE and logger:
+                            logger.success(f"Cookie supprimé: {cookie_file}")
+                    except Exception as e:
+                        if LOGURU_AVAILABLE and logger:
+                            logger.error(f"Erreur lors de la suppression du cookie {cookie_file}: {e}")
 
         # Suppression des fichiers cache
         cache_dir = self.install_dir / "data" / "cache"
         if cache_dir.exists():
             cache_files = list(cache_dir.glob("*.json")) + list(cache_dir.glob("*.json.gz"))
             if cache_files:
+                if LOGURU_AVAILABLE and logger:
+                    logger.info(f"Suppression de {len(cache_files)} fichiers cache")
                 for cache_file in cache_files:
                     if self.dry_run:
                         Logger.info(f"[dry-run] Suppression simulée: {cache_file}")
                     else:
-                        cache_file.unlink()
+                        try:
+                            cache_file.unlink()
+                            if LOGURU_AVAILABLE and logger:
+                                logger.debug(f"Fichier cache supprimé: {cache_file.name}")
+                        except Exception as e:
+                            if LOGURU_AVAILABLE and logger:
+                                logger.error(f"Erreur lors de la suppression du cache {cache_file.name}: {e}")
                 Logger.success(f"✓ {len(cache_files)} fichier(s) cache supprimé(s)")
+                if LOGURU_AVAILABLE and logger:
+                    logger.success(f"{len(cache_files)} fichiers cache supprimés")
+
+        Logger.success("Nettoyage terminé")
+        if LOGURU_AVAILABLE and logger:
+            logger.success("Nettoyage terminé avec succès")
 
         Logger.success("Nettoyage terminé")
 
@@ -626,7 +846,7 @@ class InstallationManager:
         """Affiche un petit résumé après la désinstallation."""
         # Note: referenced from tests; keep even if vulture thinks it's unused.
         # VULTURE_KEEP
-        Logger.header("DÉSINSTALLATION TERMINÉE", "🗑️")
+        Logger.header("DÉSINSTALLATION TERMINÉE", SharedIcons.TRASH)
         print()
         Logger.success("Éléments supprimés :")
         Logger.success("  ✓ .venv (environnement virtuel Python)")
@@ -634,7 +854,7 @@ class InstallationManager:
         Logger.success("  ✓ Fichiers cookies (cookie.txt, cookie-resultat.json)")
         Logger.success("  ✓ Fichiers cache (data/cache/*.json)")
         print()
-        Logger.header("VÉRIFICATION POST-DÉSINSTALLATION", "🔍")
+        Logger.header("VÉRIFICATION POST-DÉSINSTALLATION", SharedIcons.SEARCH)
         print()
         if platform.system() == "Windows":
             print("Vérifier suppression .venv:")
@@ -653,7 +873,7 @@ class InstallationManager:
 
     def run_system_checks(self) -> None:
         """Effectue les vérifications système."""
-        Logger.header("VÉRIFICATIONS SYSTÈME", "🔍")
+        Logger.header("VÉRIFICATIONS SYSTÈME", SharedIcons.SEARCH)
 
         # Informations système
         platform_info = SystemChecker.get_platform_info()
@@ -693,21 +913,21 @@ class InstallationManager:
             self.cleanup_existing_installation()
 
         # Environnement Python
-        Logger.header("ENVIRONNEMENT PYTHON", "🐍")
+        Logger.header("ENVIRONNEMENT PYTHON", SharedIcons.PYTHON)
         self.installer.create_venv()
         self.installer.upgrade_pip()
 
         # Dépendances Python
-        Logger.header("DÉPENDANCES PYTHON", "📦")
+        Logger.header("DÉPENDANCES PYTHON", SharedIcons.PACKAGE)
         self.installer.install_python_packages()
 
         # Environnement Node.js
-        Logger.header("ENVIRONNEMENT NODE.JS", "🟢")
+        Logger.header("ENVIRONNEMENT NODE.JS", SharedIcons.NODEJS)
         self.installer.install_nodejs()
         self.installer.install_npm_packages()
 
         # Configuration finale
-        Logger.header("CONFIGURATION FINALE", "⚙️")
+        Logger.header("CONFIGURATION FINALE", SharedIcons.GEAR)
         self.installer.create_data_directory()
 
         if not self.skip_tests:
@@ -715,7 +935,7 @@ class InstallationManager:
 
     def show_summary(self) -> None:
         """Affiche le résumé de l'installation."""
-        Logger.header("INSTALLATION TERMINÉE", "🎉")
+        Logger.header("INSTALLATION TERMINÉE", SharedIcons.CELEBRATION)
 
         print()
         Logger.success("Environnement Python (.venv) créé")
@@ -723,7 +943,7 @@ class InstallationManager:
         Logger.success(f"Node.js v{NODE_VERSION} installé via nodeenv")
         print()
 
-        Logger.header("INSTRUCTIONS", "📖")
+        Logger.header("INSTRUCTIONS", SharedIcons.DOCUMENT)
         print()
         # Afficher uniquement les commandes pertinentes pour activer le .venv
         activate_lines, _ = get_venv_instructions()
@@ -782,7 +1002,7 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
     Lève `CLIError` pour signaler des terminaisons voulues au wrapper CLI.
     """
     # Title demandé par l'utilisateur (emoji fourni séparément pour éviter la duplication)
-    Logger.header("INSTALLATION ALEXA ADVANCED CONTROL", "🚀")
+    Logger.header("INSTALLATION ALEXA ADVANCED CONTROL", SharedIcons.ROCKET)
 
     # Early detection: running inside project venv and requested uninstall
     if running_in_project_venv_fn() and args.uninstall:
@@ -845,7 +1065,7 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
                 raise CLIError(2)
 
         if args.uninstall:
-            Logger.header("DÉSINSTALLATION", "🗑️")
+            Logger.header("DÉSINSTALLATION", SharedIcons.TRASH)
             if manager.check_existing_installation():
                 manager.cleanup_existing_installation()
                 manager.show_uninstall_summary()
@@ -874,6 +1094,55 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
         Logger.error(f"Erreur lors de l'installation: {e}")
         Logger.info("Consultez les logs ci-dessus pour plus de détails")
         raise CLIError(1)
+
+
+def _setup_install_logging(args: argparse.Namespace, install_dir: Path) -> None:
+    """Configure le système de logging pour l'installation.
+
+    Utilise Loguru uniquement si --verbose ou --debug est spécifié.
+    Par défaut, garde le système Logger basique (headers/émojis sans logs détaillés).
+
+    Args:
+        args: Arguments de la ligne de commande
+        install_dir: Répertoire d'installation
+    """
+    # Déterminer si on doit activer Loguru
+    use_loguru = False
+    level = "INFO"
+    
+    if hasattr(args, 'debug') and args.debug:
+        use_loguru = True
+        level = "DEBUG"
+    elif args.verbose >= 2:
+        use_loguru = True
+        level = "DEBUG"
+    elif args.verbose >= 1:
+        use_loguru = True
+        level = "INFO"
+    
+    # Si pas de verbose/debug, on n'active pas Loguru
+    if not use_loguru:
+        return
+    
+    # Loguru demandé mais non disponible
+    if not LOGURU_AVAILABLE or logger is None:
+        print("⚠️  Loguru non disponible. Installation: pip install loguru")
+        return
+
+    # Fichier de log optionnel
+    log_file = None
+    if hasattr(args, 'log_file') and args.log_file:
+        log_file = Path(args.log_file)
+        if not log_file.is_absolute():
+            log_file = install_dir / log_file
+
+    # Utiliser la fonction centralisée de utils/logger.py
+    setup_loguru_logger(
+        log_file=log_file,
+        level=level,
+        custom_levels=["INSTALL"],
+        ensure_utf8=True,
+    )
 
 
 def main():
@@ -922,13 +1191,40 @@ Exemples:
         help="Assume yes for interactive prompts (non-interactive mode)",
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="count",
+        default=0,
+        help="Augmente la verbosité (peut être répété: -v INFO, -vv DEBUG)",
+    )
+
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Active le mode DEBUG (équivalent à -vv)",
+    )
+
+    parser.add_argument(
+        "--log-file",
+        type=str,
+        help="Fichier de log (optionnel, ex: install.log)",
+    )
 
     args = parser.parse_args()
 
     # Détermination du répertoire d'installation
     script_dir = Path(__file__).parent
     install_dir = script_dir.parent
+    
+    # Tentative d'assurer que la console est en UTF-8 (best-effort)
+    try:
+        ensure_utf8_console()
+    except Exception:
+        pass
+
+    # Configuration du logging (Loguru si disponible)
+    _setup_install_logging(args, install_dir)
 
     # Using the top-level helper so tests can import and call it directly
     def _running_in_project_venv() -> bool:

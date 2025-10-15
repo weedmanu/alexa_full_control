@@ -12,6 +12,7 @@ import socket
 import json
 from typing import Optional, List, Dict, Any
 from loguru import logger
+from utils.logger import SharedIcons
 
 
 class AlexaNetworkDiscovery:
@@ -71,7 +72,7 @@ class AlexaNetworkDiscovery:
             >>> print(f"Trouvé {len(devices)} appareils")
         """
         try:
-            logger.info(f"🔍 Découverte UPnP/SSDP (timeout={timeout}s)...")
+            logger.info(f"{SharedIcons.SEARCH} Découverte UPnP/SSDP (timeout={timeout}s)...")
 
             # Message SSDP M-SEARCH
             ssdp_request = (
@@ -107,7 +108,7 @@ class AlexaNetworkDiscovery:
                             seen_ips.add(ip)
                             device_info = self._parse_ssdp_response(response, ip)
                             devices.append(device_info)
-                            logger.info(f"  📱 Trouvé: {ip} - {device_info.get('server', 'Unknown')}")
+                            logger.info(f"  {SharedIcons.DEVICE} Trouvé: {ip} - {device_info.get('server', 'Unknown')}")
 
                 except socket.timeout:
                     break
@@ -117,7 +118,7 @@ class AlexaNetworkDiscovery:
 
             sock.close()
 
-            logger.success(f"✅ {len(devices)} appareil(s) Alexa découvert(s)")
+            logger.success(f"{SharedIcons.SUCCESS} {len(devices)} appareil(s) Alexa découvert(s)")
             return devices
 
         except Exception:
@@ -173,7 +174,7 @@ class AlexaNetworkDiscovery:
         if ports is None:
             ports = self.COMMON_PORTS
 
-        logger.debug(f"🔍 Scan des ports sur {ip}...")
+        logger.debug(f"{SharedIcons.SEARCH} Scan des ports sur {ip}...")
 
         results = {}
         for port in ports:
@@ -186,10 +187,10 @@ class AlexaNetworkDiscovery:
                 results[port] = is_open
 
                 if is_open:
-                    logger.debug(f"  ✅ Port {port} ouvert")
+                    logger.debug(f"  {SharedIcons.SUCCESS} Port {port} ouvert")
 
             except Exception as e:
-                logger.debug(f"  ❌ Port {port} erreur: {e}")
+                logger.debug(f"  {SharedIcons.ERROR} Port {port} erreur: {e}")
                 results[port] = False
             finally:
                 sock.close()
@@ -211,11 +212,11 @@ class AlexaNetworkDiscovery:
             >>> results = discovery.test_local_api("192.168.1.100")
             >>> for endpoint, data in results.items():
             ...     if data.get('status') == 200:
-            ...         print(f"✅ {endpoint} accessible!")
+            ...         print(f"{SharedIcons.SUCCESS} {endpoint} accessible!")
         """
         import requests
 
-        logger.info(f"🔍 Test API locale sur {ip}:{port}...")
+        logger.info(f"{SharedIcons.SEARCH} Test API locale sur {ip}:{port}...")
 
         results = {}
 
@@ -232,13 +233,13 @@ class AlexaNetworkDiscovery:
                 }
 
                 if response.status_code == 200:
-                    logger.info(f"  ✅ {endpoint} → {response.status_code}")
+                    logger.info(f"  {SharedIcons.SUCCESS} {endpoint} → {response.status_code}")
                     try:
                         results[endpoint]["data"] = response.json()
                     except:
                         results[endpoint]["text"] = response.text[:500]
                 else:
-                    logger.debug(f"  ⚠️ {endpoint} → {response.status_code}")
+                    logger.debug(f"  {SharedIcons.WARNING} {endpoint} → {response.status_code}")
 
             except requests.exceptions.Timeout:
                 results[endpoint] = {"error": "timeout"}
@@ -265,13 +266,13 @@ class AlexaNetworkDiscovery:
             >>> if ip:
             ...     print(f"Salon Echo trouvé à {ip}")
         """
-        logger.info(f"🔍 Recherche de l'appareil {serial[:8]}... sur {subnet}.0/24")
+        logger.info(f"{SharedIcons.SEARCH} Recherche de l'appareil {serial[:8]}... sur {subnet}.0/24")
 
         # Essayer mDNS d'abord
         try:
             hostname = f"{serial.lower()}.local"
             ip = socket.gethostbyname(hostname)
-            logger.success(f"✅ Trouvé via mDNS: {ip}")
+            logger.success(f"{SharedIcons.SUCCESS} Trouvé via mDNS: {ip}")
             return ip
         except socket.gaierror:
             logger.debug(f"mDNS échoué pour {hostname}")

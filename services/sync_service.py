@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from services.cache_service import CacheService
+from utils.logger import SharedIcons
 
 
 class SyncService:
@@ -97,7 +98,7 @@ class SyncService:
             "failed": [],
         }
 
-        logger.info("🔄 Démarrage synchronisation des appareils (lazy loading)...")
+        logger.info(f"{SharedIcons.SYNC} Démarrage synchronisation des appareils (lazy loading)...")
 
         # 1. Devices Alexa uniquement
         try:
@@ -120,7 +121,7 @@ class SyncService:
 
         total_synced = sum(stats["synced"].values())
         logger.success(
-            f"🎉 Synchronisation appareils terminée: {total_synced} éléments en {duration:.1f}s"
+            f"{SharedIcons.CELEBRATION} Synchronisation appareils terminée: {total_synced} éléments en {duration:.1f}s"
         )
 
         return stats
@@ -139,7 +140,7 @@ class SyncService:
         Returns:
             Dict avec statistiques de synchronisation
         """
-        logger.info("🔄 Synchronisation complète demandée (lazy loading activé)...")
+        logger.info(f"{SharedIcons.SYNC} Synchronisation complète demandée (lazy loading activé)...")
 
         # Forcer le chargement de toutes les données
         self.get_smart_home_devices(force=force)
@@ -299,7 +300,7 @@ class SyncService:
         Returns:
             Statistiques de préchargement
         """
-        logger.info("🔄 Préchargement de toutes les données...")
+        logger.info(f"{SharedIcons.SYNC} Préchargement de toutes les données...")
 
         start_time = time.time()
         stats = {
@@ -331,7 +332,7 @@ class SyncService:
         stats["duration_seconds"] = round(duration, 2)
 
         total_preloaded = sum(stats["preloaded"].values())
-        logger.success(f"🎉 Préchargement terminé: {total_preloaded} éléments en {duration:.1f}s")
+        logger.success(f"{SharedIcons.CELEBRATION} Préchargement terminé: {total_preloaded} éléments en {duration:.1f}s")
 
         return stats
 
