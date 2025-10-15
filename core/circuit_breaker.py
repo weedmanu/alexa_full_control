@@ -114,7 +114,7 @@ class CircuitBreaker:
             # Vérifier si on peut tenter une récupération
             if self._state == CircuitState.OPEN:
                 if time.time() - self._last_failure_time >= self._timeout:
-                    logger.log("PROCESS", "Circuit OPEN  HALF_OPEN (tentative rcupration)")
+                    logger.info("Circuit OPEN -> HALF_OPEN (tentative récupération)")
                     self._state = CircuitState.HALF_OPEN
                     self._half_open_calls = 0
                 else:
@@ -154,7 +154,7 @@ class CircuitBreaker:
             self._last_failure_time = time.time()
 
             if self._state == CircuitState.HALF_OPEN:
-                logger.log("WARNING", "Circuit HALF_OPEN  OPEN (rcupration choue)")
+                logger.warning("Circuit HALF_OPEN -> OPEN (récupération échouée)")
                 self._state = CircuitState.OPEN
                 return
 
@@ -165,7 +165,7 @@ class CircuitBreaker:
     def reset(self) -> None:
         """Réinitialise le circuit breaker."""
         with self._lock:
-            logger.log("PROCESS", "Rinitialisation du Circuit Breaker")
+            logger.info("Réinitialisation du Circuit Breaker")
             self._state = CircuitState.CLOSED
             self._failure_count = 0
             self._half_open_calls = 0

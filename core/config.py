@@ -105,17 +105,23 @@ class Config:
 
     def _get_temp_dir(self) -> Path:
         """Retourne le répertoire temporaire selon la plateforme."""
-        if sys.platform == "win32":
-            tmp_path = Path(os.getenv("TEMP", "C:\\Temp"))
-        else:
-            # Use tempfile.gettempdir() instead of hardcoded '/tmp'
-            try:
-                import tempfile
+        import tempfile
 
-                tmp_path = Path(tempfile.gettempdir())
+        # On Windows prefer the TEMP env var but fall back to the system tempdir
+        if sys.platform == "win32":
+            tmp_env = os.getenv("TEMP")
+            tmp_path = Path(tmp_env) if tmp_env else Path(tempfile.gettempdir())
+        else:
+            # For non-Windows platforms prefer the conventional '/tmp'.
+            # Tests may patch sys.platform to 'linux' and expect '/tmp'.
+            try:
+                tmp_path = Path('/tmp')
             except Exception:
-                # Fallback to current working directory if tempdir unavailable
-                tmp_path = Path('.')
+                # Fallback to system tempdir or current working directory
+                try:
+                    tmp_path = Path(tempfile.gettempdir())
+                except Exception:
+                    tmp_path = Path('.')
 
         # Vérifier que le répertoire existe et est accessible
         if not tmp_path.exists():

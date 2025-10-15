@@ -46,26 +46,7 @@ from typing import Any, Dict, List, Optional
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-class Colors:
-    """Codes ANSI pour la colorisation standardisée."""
-
-    # Couleurs de base
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
-
-    # Couleurs des sections (cohérentes partout)
-    GRAY_BOLD = "\033[1;90m"  # 🎯 Fonctionnalités, 💡 Aide, alexa
-    CYAN_BOLD = "\033[1;36m"  # 🎯 Sous-catégories, 📖 Usage
-    CYAN = "\033[0;36m"  # Options de sous-catégories (plus clair)
-    MAGENTA_BOLD = "\033[1;35m"  # 🔧 Titre Options globales
-    MAGENTA = "\033[0;35m"  # Options globales (pas en gras)
-    GREEN_BOLD = "\033[1;32m"  # 📂 Catégories
-    GREEN = "\033[0;32m"  # Options de catégories (plus clair)
-    ORANGE_BOLD = "\033[1;38;5;208m"  # ⚡ Actions
-    ORANGE = "\033[0;38;5;208m"  # Options d'actions (plus clair)
-    YELLOW_BOLD = "\033[1;33m"  # 📋 Exemples
-    WHITE_BOLD = "\033[1;37m"  # Texte normal, aide
-    RED_BOLD = "\033[1;31m"  # ⚠️ Prérequis, erreurs
+from utils.term import Colors
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

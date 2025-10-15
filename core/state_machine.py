@@ -198,7 +198,7 @@ class AlexaStateMachine:
     def reset(self) -> None:
         """Réinitialise la machine à l'état DISCONNECTED."""
         with self._lock:
-            logger.log("PROCESS", "Rinitialisation de la State Machine")
+            logger.info("Réinitialisation de la State Machine")
             self._state = ConnectionState.DISCONNECTED
             self._state_history.append(ConnectionState.DISCONNECTED)
 

@@ -17,23 +17,10 @@ from typing import Optional
 # Ajouter le parent au path pour importer utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.logger import setup_logger
+from utils.term import Colors
 
 # Configuration du logger
 logger = setup_logger(__name__)
-
-
-class Colors:
-    """Codes couleurs ANSI pour le terminal"""
-
-    BLUE = "\033[1;34m"
-    YELLOW = "\033[1;33m"
-    RED = "\033[1;31m"
-    RESET = "\033[0m"
-
-    @staticmethod
-    def is_supported():
-        """Vérifie si les couleurs sont supportées"""
-        return sys.stdout.isatty() and os.name != "nt"
 
 
 def print_step(message: str):

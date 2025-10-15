@@ -137,38 +137,7 @@ class CLIError(Exception):
         self.message = message
 
 
-class Colors:
-    """Gestion des couleurs pour l'affichage cross-platform."""
-
-    # Codes ANSI
-    RESET = "\033[0m"
-
-    # Couleurs principales utilisées
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    MAGENTA = "\033[95m"
-    CYAN = "\033[96m"
-
-    @staticmethod
-    def supports_color() -> bool:
-        """Vérifie si le terminal supporte les couleurs."""
-        if platform.system() == "Windows":
-            try:
-                import colorama
-
-                colorama.init()
-                return True
-            except ImportError:
-                return False
-        return True
-
-    @staticmethod
-    def colorize(text: str, color: str) -> str:
-        """Colorise le texte si supporté."""
-        if not Colors.supports_color():
-            return text
-        return f"{color}{text}{Colors.RESET}"
+from utils.term import Colors
 
 
 class Logger:

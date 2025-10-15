@@ -319,10 +319,15 @@ class ActivityManager:
         patterns = [
             r'name="csrf"[^>]*value="([^"]+)"',
             r'<meta[^>]*name="csrf"[^>]*content="([^"]+)"',
+            # Support key without quotes: csrf: 'token'
+            r'csrf\s*:\s*["\']([^"\']+)["\']',
+            # Privacy specific token, support unquoted key as well
+            r'anti-csrftoken-a2z\s*:\s*["\']([^"\']+)["\']',
+            # Support quoted key forms: 'anti-csrftoken-a2z': 'token'
+            r'["\']anti-csrftoken-a2z["\']\s*:\s*["\']([^"\']+)["\']',
             r'csrf["\']\s*:\s*["\']([^"\']+)["\']',
-            r'anti-csrftoken-a2z["\']\s*:\s*["\']([^"\']+)["\']',  # Token spécifique à l'API Privacy
-            r'csrfToken["\']\s*:\s*["\']([^"\']+)["\']',
-            r'_csrf["\']\s*:\s*["\']([^"\']+)["\']',
+            r'csrfToken\s*:\s*["\']([^"\']+)["\']',
+            r'_csrf\s*:\s*["\']([^"\']+)["\']',
         ]
 
         logger.debug(f"Recherche du token CSRF dans {len(html_content)} caractères de HTML")
