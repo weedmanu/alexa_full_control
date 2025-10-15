@@ -15,6 +15,7 @@ Date: 7 octobre 2025
 
 import argparse
 import json
+from typing import List, Dict, Any, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
@@ -224,17 +225,19 @@ class SmartHomeCommand(BaseCommand):
             self.info("🏠 Récupération des appareils Smart Home...")
 
             ctx = self.require_context()
-            if not ctx.device_ctrl:
+            device_ctrl = getattr(ctx, "device_ctrl", None)
+            if not device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
             # Vérifier si les données smart home sont en cache
-            devices = ctx.device_ctrl.get_smart_home_devices()
+            devices = device_ctrl.get_smart_home_devices()
 
             # Si pas de données en cache, déclencher le chargement lazy
-            if not devices and ctx.sync_service:
+            sync_service = getattr(ctx, "sync_service", None)
+            if not devices and sync_service:
                 self.info("🔄 Chargement lazy des appareils Smart Home...")
-                devices = ctx.sync_service.get_smart_home_devices()
+                devices = sync_service.get_smart_home_devices()
 
             if devices:
                 # Filtrer par type
@@ -275,11 +278,12 @@ class SmartHomeCommand(BaseCommand):
             self.info(f"📋 Informations de '{args.entity}'...")
 
             ctx = self.require_context()
-            if not ctx.device_ctrl:
+            device_ctrl = getattr(ctx, "device_ctrl", None)
+            if not device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
-            info = self.call_with_breaker(ctx.device_ctrl.get_device_info, args.entity)
+            info = self.call_with_breaker(device_ctrl.get_device_info, args.entity)
 
             if info:
                 if hasattr(args, "json_output") and args.json_output:
@@ -309,16 +313,17 @@ class SmartHomeCommand(BaseCommand):
             self.info(f"{action_text} de '{args.entity}'...")
 
             ctx = self.require_context()
-            if not ctx.device_ctrl:
+            device_ctrl = getattr(ctx, "device_ctrl", None)
+            if not device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
             if args.operation == "on":
-                result = self.call_with_breaker(ctx.device_ctrl.turn_on, args.entity)
+                result = self.call_with_breaker(device_ctrl.turn_on, args.entity)
             elif args.operation == "off":
-                result = self.call_with_breaker(ctx.device_ctrl.turn_off, args.entity)
+                result = self.call_with_breaker(device_ctrl.turn_off, args.entity)
             else:  # toggle
-                result = self.call_with_breaker(ctx.device_ctrl.toggle, args.entity)
+                result = self.call_with_breaker(device_ctrl.toggle, args.entity)
 
             if result:
                 self.success(f"✅ {action_text} effectué")
@@ -337,13 +342,14 @@ class SmartHomeCommand(BaseCommand):
             self.info(f"🔒 Verrouillage de '{args.entity}'...")
 
             ctx = self.require_context()
-            if not ctx.device_ctrl:
+            device_ctrl = getattr(ctx, "device_ctrl", None)
+            if not device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
             code = getattr(args, "code", None)
 
-            result = self.call_with_breaker(ctx.device_ctrl.lock, args.entity, code)
+            result = self.call_with_breaker(device_ctrl.lock, args.entity, code)
 
             if result:
                 self.success("✅ Serrure verrouillée")
@@ -362,7 +368,8 @@ class SmartHomeCommand(BaseCommand):
             self.info(f"🔓 Déverrouillage de '{args.entity}'...")
 
             ctx = self.require_context()
-            if not ctx.device_ctrl:
+            device_ctrl = getattr(ctx, "device_ctrl", None)
+            if not device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
@@ -370,7 +377,7 @@ class SmartHomeCommand(BaseCommand):
                 self.error("Un code de sécurité est requis pour déverrouiller")
                 return False
 
-            result = self.call_with_breaker(ctx.device_ctrl.unlock, args.entity, args.code)
+            result = self.call_with_breaker(device_ctrl.unlock, args.entity, args.code)
 
             if result:
                 self.success("✅ Serrure déverrouillée")
@@ -389,11 +396,12 @@ class SmartHomeCommand(BaseCommand):
             self.info(f"📊 État de '{args.entity}'...")
 
             ctx = self.require_context()
-            if not ctx.device_ctrl:
+            device_ctrl = getattr(ctx, "device_ctrl", None)
+            if not device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
-            status = self.call_with_breaker(ctx.device_ctrl.get_status, args.entity)
+            status = self.call_with_breaker(device_ctrl.get_status, args.entity)
 
             if status:
                 if hasattr(args, "json_output") and args.json_output:
@@ -415,12 +423,14 @@ class SmartHomeCommand(BaseCommand):
     # HELPERS
     # ========================================================================
 
-    def _display_devices(self, devices: list) -> None:
+    def _display_devices(self, devices: List[Dict[str, Any]]) -> None:
         """Affiche les appareils."""
         print(f"\n🏠 {len(devices)} appareil(s) Smart Home:\n")
 
         # Grouper par type
-        by_type = {}
+        from typing import Dict, List
+
+        by_type: Dict[str, List[dict]] = {}
         for device in devices:
             device_type = self._determine_device_type(device)
             if device_type not in by_type:
@@ -460,7 +470,7 @@ class SmartHomeCommand(BaseCommand):
                         print(f"     Actions: {', '.join(important_props)}")
                 print()
 
-    def _determine_device_type(self, device: dict) -> str:
+    def _determine_device_type(self, device: Dict[str, Any]) -> str:
         """Détermine le type d'appareil basé sur ses propriétés."""
         provider_data = device.get("providerData", {})
         category = provider_data.get("categoryType", "").upper()
@@ -496,7 +506,7 @@ class SmartHomeCommand(BaseCommand):
         else:
             return "other"
 
-    def _display_info(self, info: dict) -> None:
+    def _display_info(self, info: Dict[str, Any]) -> None:
         """Affiche les informations détaillées."""
         print("\n📋 Informations détaillées:\n")
 
@@ -525,7 +535,7 @@ class SmartHomeCommand(BaseCommand):
         if "last_updated" in info:
             print(f"  Dernière mise à jour: {info['last_updated']}")
 
-    def _display_status(self, status: dict) -> None:
+    def _display_status(self, status: Dict[str, Any]) -> None:
         """Affiche l'état."""
         print("\n📊 État actuel:\n")
 

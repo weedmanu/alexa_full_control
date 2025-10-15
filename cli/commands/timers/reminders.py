@@ -6,6 +6,7 @@ Date: 8 octobre 2025
 """
 
 import argparse
+from typing import List, Dict, Any
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand
@@ -179,7 +180,7 @@ class RemindersCommands(TimeSubCommand):
             self.error(f"Erreur: {e}")
             return False
 
-    def _display(self, reminders: list) -> None:
+    def _display(self, reminders: List[Dict[str, Any]]) -> None:
         """Affiche la liste des rappels de manière formatée."""
         print(f"\n📋 Rappels ({len(reminders)}):")
         print("=" * 80)
@@ -198,7 +199,7 @@ class RemindersCommands(TimeSubCommand):
             for reminder in completed_reminders:
                 self._display_single(reminder)
 
-    def _display_single(self, reminder: dict) -> None:
+    def _display_single(self, reminder: Dict[str, Any]) -> None:
         """Affiche un rappel de manière formatée."""
         reminder_id = reminder.get("id", "N/A")
         label = reminder.get("label", "N/A")

@@ -33,10 +33,11 @@ class MusicSubCommand:
         Returns:
             Serial de l'appareil ou None
         """
-        if self.context is None or self.context.device_mgr is None:
+        ctx = getattr(self, "context", None)
+        if ctx is None or getattr(ctx, "device_mgr", None) is None:
             return None
 
-        devices = self.context.device_mgr.get_devices()
+        devices = ctx.device_mgr.get_devices()
         for device in devices:
             if device.get("accountName") == device_name:
                 return device.get("serialNumber")
@@ -94,10 +95,11 @@ class MusicSubCommand:
 
     def _get_device_type(self, device_name: str) -> str:
         """Récupère le type d'appareil."""
-        if self.context is None or self.context.device_mgr is None:
+        ctx = getattr(self, "context", None)
+        if ctx is None or getattr(ctx, "device_mgr", None) is None:
             return "ECHO"
 
-        devices = self.context.device_mgr.get_devices()
+        devices = ctx.device_mgr.get_devices()
         for device in devices:
             if device.get("accountName") == device_name:
                 return device.get("deviceType", "ECHO")
@@ -114,10 +116,11 @@ class MusicSubCommand:
         Returns:
             Tuple (parent_id, parent_type) ou (None, None)
         """
-        if self.context is None or self.context.device_mgr is None:
+        ctx = getattr(self, "context", None)
+        if ctx is None or getattr(ctx, "device_mgr", None) is None:
             return (None, None)
 
-        devices = self.context.device_mgr.get_devices()
+        devices = ctx.device_mgr.get_devices()
         for device in devices:
             if device.get("accountName") == device_name:
                 clusters = device.get("parentClusters", [])
@@ -133,6 +136,7 @@ class MusicSubCommand:
 
     def get_media_owner_id(self) -> str:
         """Récupère le media owner customer ID."""
-        if self.context and hasattr(self.context, "auth"):
-            return getattr(self.context.auth, "customer_id", "")
+        ctx = getattr(self, "context", None)
+        if ctx and getattr(ctx, "auth", None):
+            return getattr(ctx.auth, "customer_id", "")
         return ""

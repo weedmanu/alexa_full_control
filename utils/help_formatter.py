@@ -961,8 +961,14 @@ class HelpBuilder:
         self._sections.append(f"{title}\n{content}")
         return self
 
-    def add_examples(self, examples: List[str]) -> "HelpBuilder":
-        """Ajoute des exemples d'utilisation."""
+    def add_examples(self, examples: Optional[List[str]]) -> "HelpBuilder":
+        """Ajoute des exemples d'utilisation.
+
+        Accepte None (aucun exemple) pour faciliter les appels depuis les helpers.
+        """
+        if not examples:
+            return self
+
         title = self.components.section_title("📋", "Exemples d'utilisation", Colors.YELLOW_BOLD)
         content = "\n".join(self.components.example(ex) for ex in examples)
         self._sections.append(f"{title}\n{content}")
@@ -1036,8 +1042,14 @@ class HelpBuilder:
         self._sections.append(f"{title}{content}")
         return self
 
-    def add_prerequisites(self, prereqs: List[str]) -> "HelpBuilder":
-        """Ajoute les prérequis."""
+    def add_prerequisites(self, prereqs: Optional[List[str]]) -> "HelpBuilder":
+        """Ajoute les prérequis.
+
+        Accepte None pour faciliter l'utilisation depuis create helpers.
+        """
+        if not prereqs:
+            return self
+
         title = self.components.section_title("⚠️ ", "Prérequis essentiels", Colors.RED_BOLD)
         content = self.components.bullet_list(prereqs)
         self._sections.append(f"{title}\n{content}")
@@ -1147,8 +1159,8 @@ def create_category_help(
     features: List[str],
     subcategories: Optional[List[Dict[str, str]]] = None,
     actions: Optional[List[Dict[str, str]]] = None,
-    examples: List[str] = None,
-    prerequisites: List[str] = None,
+    examples: Optional[List[str]] = None,
+    prerequisites: Optional[List[str]] = None,
 ) -> str:
     """Crée l'aide d'une catégorie (ex: alexa timers -h)."""
     builder = HelpBuilder()
@@ -1180,8 +1192,8 @@ def create_subcategory_help(
     description: str,
     features: List[str],
     actions: List[Dict[str, str]],
-    examples: List[str],
-    prerequisites: List[str],
+    examples: Optional[List[str]] = None,
+    prerequisites: Optional[List[str]] = None,
 ) -> str:
     """Crée l'aide d'une sous-catégorie (ex: alexa timers countdown -h)."""
     builder = HelpBuilder()

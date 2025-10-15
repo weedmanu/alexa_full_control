@@ -9,15 +9,15 @@ import json
 import threading
 
 # Import retardé pour éviter cycle avec core.smart_home
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any, Dict, List, Tuple, cast
 
 from loguru import logger
 
 from utils.logger import SharedIcons
 
 if TYPE_CHECKING:
-    from core.circuit_breaker import CircuitBreaker
-    from core.state_machine import AlexaStateMachine
+    from core.circuit_breaker import CircuitBreaker  # type: ignore
+    from core.state_machine import AlexaStateMachine  # type: ignore
 else:
     CircuitBreaker = None
     AlexaStateMachine = None
@@ -31,7 +31,7 @@ class VoiceCommandService:
     des commandes vocales par Alexa (TTS + exécution).
     """
 
-    def __init__(self, auth, config, state_machine=None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[Any] = None):
         """
         Initialise le service.
 
@@ -44,18 +44,33 @@ class VoiceCommandService:
         self.config = config
 
         # Import au runtime pour éviter cycles
-        if AlexaStateMachine is None:
+        # Best-effort typing: initialize attributes as Any so mypy can track assignments
+        self.state_machine: Any
+        self.breaker: Any
+
+        # Try runtime imports to avoid import cycles; fall back to TYPE_CHECKING names
+        try:
             from core.circuit_breaker import CircuitBreaker as CB
             from core.state_machine import AlexaStateMachine as ASM
 
             self.state_machine = state_machine or ASM()
             self.breaker = CB(failure_threshold=3, timeout=30)
-        else:
-            self.state_machine = state_machine or AlexaStateMachine()
-            self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
+        except Exception:
+            # If imports fail (import cycle), try to use names defined under TYPE_CHECKING
+            # They may be None at runtime; guard their use accordingly.
+            if state_machine is not None:
+                self.state_machine = state_machine
+            else:
+                # Last resort: leave uninitialized (mypy will accept Any)
+                self.state_machine = None
 
-        self._lock = threading.RLock()
-        self._customer_id = None
+            try:
+                self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)  # type: ignore[name-defined]
+            except Exception:
+                self.breaker = None
+
+        self._lock: threading.RLock = threading.RLock()
+        self._customer_id: Optional[str] = None
 
         logger.info(f"{SharedIcons.GEAR} VoiceCommandService initialisé")
 
@@ -107,7 +122,7 @@ class VoiceCommandService:
 
                     cache = CacheService()
                     devices_data = cache.get("devices") or {}
-                    devices = devices_data.get("devices", [])
+                    devices: List[Dict[str, Any]] = devices_data.get("devices", []) if isinstance(devices_data, dict) else []
                     dtype = None
                     device_name = None
                     for dev in devices:
@@ -133,7 +148,7 @@ class VoiceCommandService:
                     )
 
                 # Construire le payload - FORMAT DEV EXACT
-                sequence_json_content = {
+                sequence_json_content = cast(Dict[str, Any], {
                     "@type": "com.amazon.alexa.behaviors.model.Sequence",
                     "startNode": {
                         "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
@@ -147,43 +162,41 @@ class VoiceCommandService:
                             "text": text_clean,
                         },
                     },
-                }
+                })
 
                 # ← IMPORTANT : sequenceJson doit être une STRING (json.dumps) !
-                payload = {
+                payload = cast(Dict[str, Any], {
                     "behaviorId": "PREVIEW",
                     "sequenceJson": json.dumps(sequence_json_content),
                     "status": "ENABLED",
-                }
+                })
 
                 logger.debug(f"📤 Envoi commande vocale: '{text_clean}'")
                 logger.debug(f"📦 Device: {dtype} / {dsn}")
                 logger.debug("📋 Payload type: Alexa.TextCommand")
                 logger.debug(f"📋 Payload text: '{text_clean}'")
-                # Envoyer la requête avec les headers COMPLETS (comme alexa_advanced_control-main)
-                # URL en dur comme alexa_advanced_control.py
 
-                # Appel direct comme alexa_advanced_control.py ligne 998
+                # Appel direct
                 response = self.auth.session.post(
                     "https://alexa.amazon.fr/api/behaviors/preview",
                     headers={
                         "Content-Type": "application/json; charset=UTF-8",
                         "Referer": "https://alexa.amazon.fr/spa/index.html",
                         "Origin": "https://alexa.amazon.fr",
-                        "csrf": self.auth.csrf,
+                        "csrf": getattr(self.auth, "csrf", ""),
                     },
                     json=payload,
                 )
 
                 response.raise_for_status()
 
-                # Log de la réponse COMPLÈTE
+                # Log de la réponse COMPLÈTE (si JSON)
                 try:
-                    response_data = response.json() if hasattr(response, "json") else {}
-                    logger.debug(f"📥 Réponse API complète: status={response.status_code}")
+                    response_data = response.json()
+                    logger.debug(f"📥 Réponse API complète: status={getattr(response, 'status_code', 'unknown')}")
                     logger.debug(f"📥 Body: {json.dumps(response_data, indent=2)}")
-                except:
-                    logger.debug(f"📥 Réponse API: status={response.status_code}, no JSON body")
+                except Exception:
+                    logger.debug(f"📥 Réponse API: status={getattr(response, 'status_code', 'unknown')}, no JSON body")
 
                 logger.success(f"✅ Commande vocale envoyée: '{text_clean}'")
                 return True
@@ -313,7 +326,7 @@ class VoiceCommandService:
                 logger.error(f"❌ Erreur commande vocale simulée: {e}")
                 return False
 
-    def _get_default_echo_device(self) -> Optional[dict]:
+    def _get_default_echo_device(self) -> Optional[Dict[str, Any]]:
         """
         Récupère un device Echo par défaut pour exécuter les commandes vocales.
 
@@ -337,7 +350,7 @@ class VoiceCommandService:
             )
 
             # Chercher un Echo (priorité: Salon Echo, sinon premier Echo disponible)
-            echo_devices = []
+            echo_devices: List[Dict[str, Any]] = []
             for device in devices:
                 device_family = device.get("deviceFamily", "")
                 # KNIGHT, ROOK, etc. sont des familles Echo
@@ -487,9 +500,9 @@ class VoiceCommandService:
 
             try:
                 # 1. Enregistrer le timestamp avant l'envoi
-                from datetime import datetime
+                import datetime as _datetime
 
-                timestamp_before = datetime.now()
+                timestamp_before = _datetime.datetime.now()
 
                 # 2. Envoyer la commande vocale
                 logger.info(f"📤 Envoi commande à Alexa: '{question}'")
@@ -537,11 +550,11 @@ class VoiceCommandService:
                 # Chercher la réponse d'Alexa qui correspond à notre commande
                 # Chercher des réponses qui semblent être des réponses à des questions sur les listes
                 # et qui sont suffisamment récentes (moins de 30 secondes)
-                import datetime
+                import datetime as _datetime
 
-                current_time = datetime.datetime.now().timestamp() * 1000
+                current_time = _datetime.datetime.now().timestamp() * 1000
 
-                list_related_responses = []
+                list_related_responses: List[Tuple[Dict[str, Any], str]] = []
 
                 for idx, activity in enumerate(activities):
                     # Vérifier que c'est une interaction vocale avec réponse Alexa
@@ -553,7 +566,7 @@ class VoiceCommandService:
                         try:
                             if isinstance(timestamp_str, str) and timestamp_str:
                                 # Le timestamp est au format ISO, le convertir en timestamp Unix
-                                dt = datetime.datetime.fromisoformat(
+                                dt = _datetime.datetime.fromisoformat(
                                     timestamp_str.replace("Z", "+00:00")
                                 )
                                 timestamp = dt.timestamp() * 1000
@@ -623,19 +636,19 @@ class VoiceCommandService:
                     list_related_responses.sort(
                         key=lambda x: x[0].get("timestamp", ""), reverse=True
                     )
-                    best_activity, best_response = list_related_responses[0]
+                    _, best_response = list_related_responses[0]
                     logger.success("✅ Réponse Alexa liée à une liste trouvée")
                     return best_response
 
                 # Fallback: si on n'a pas de réponse liée aux listes, mais qu'on a des réponses récentes,
                 # prendre la plus récente (elle pourrait être notre réponse même si elle ne contient pas de mots-clés)
-                recent_responses = []
+                recent_responses: List[Dict[str, Any]] = []
                 for activity in activities:
                     if activity.get("type") == "voice" and activity.get("alexaResponse"):
                         timestamp_str = activity.get("timestamp", "")
                         try:
                             if isinstance(timestamp_str, str) and timestamp_str:
-                                dt = datetime.datetime.fromisoformat(
+                                dt = _datetime.datetime.fromisoformat(
                                     timestamp_str.replace("Z", "+00:00")
                                 )
                                 timestamp = dt.timestamp() * 1000
@@ -659,15 +672,6 @@ class VoiceCommandService:
                 logger.warning(
                     f"⚠️ Aucune réponse récente trouvée dans les {len(activities)} activités"
                 )
-                return None
-
-                logger.warning(
-                    f"⚠️ Aucune réponse correspondante trouvée dans les {len(activities)} activités récentes"
-                )
-                logger.info("💡 Assurez-vous que:")
-                logger.info("   1. Votre appareil Alexa est allumé et connecté")
-                logger.info("   2. La commande a bien été exécutée (vérifiez dans l'app Alexa)")
-                logger.info("   3. Augmentez le délai d'attente si nécessaire")
                 return None
 
             except Exception as e:

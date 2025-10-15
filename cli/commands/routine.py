@@ -8,6 +8,7 @@ Ce module fournit une interface CLI pour gérer les routines Alexa :
 """
 
 import argparse
+from typing import List, Dict, Any, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
@@ -209,11 +210,12 @@ class RoutineCommand(BaseCommand):
             self.info("� Récupération des routines...")
 
             ctx = self.require_context()
-            if not ctx.routine_mgr:
+            routine_mgr = getattr(ctx, "routine_mgr", None)
+            if not routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
-            routines = self.call_with_breaker(ctx.routine_mgr.get_routines)
+            routines = self.call_with_breaker(routine_mgr.get_routines)
 
             if not routines:
                 self.warning("Aucune routine trouvée")
@@ -239,7 +241,8 @@ class RoutineCommand(BaseCommand):
             self.info(f"📋 Récupération détails routine '{args.name}'...")
 
             ctx = self.require_context()
-            if not ctx.routine_mgr:
+            routine_mgr = getattr(ctx, "routine_mgr", None)
+            if not routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -264,7 +267,8 @@ class RoutineCommand(BaseCommand):
             self.info(f"▶️  Exécution routine '{args.name}'...")
 
             ctx = self.require_context()
-            if not ctx.routine_mgr:
+            routine_mgr = getattr(ctx, "routine_mgr", None)
+            if not routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -284,8 +288,9 @@ class RoutineCommand(BaseCommand):
             if hasattr(args, "device") and args.device:
                 # Utiliser le DeviceManager du contexte pour récupérer le device
                 ctx2 = self.require_context()
-                if ctx2.device_mgr:
-                    devices = self.call_with_breaker(ctx2.device_mgr.get_devices) or []
+                device_mgr = getattr(ctx2, "device_mgr", None)
+                if device_mgr:
+                    devices = self.call_with_breaker(device_mgr.get_devices) or []
                     device_name_lower = args.device.lower().strip()
 
                     for dev in devices:
@@ -303,7 +308,7 @@ class RoutineCommand(BaseCommand):
                         )
 
             result = self.call_with_breaker(
-                ctx.routine_mgr.execute_routine,
+                routine_mgr.execute_routine,
                 routine_id,
                 device_serial=device_serial,
                 device_type=device_type,
@@ -326,7 +331,8 @@ class RoutineCommand(BaseCommand):
             self.info(f"✓ Activation routine '{args.name}'...")
 
             ctx = self.require_context()
-            if not ctx.routine_mgr:
+            routine_mgr = getattr(ctx, "routine_mgr", None)
+            if not routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -338,9 +344,7 @@ class RoutineCommand(BaseCommand):
 
             routine_id = routine.get("automationId")
 
-            result = self.call_with_breaker(
-                ctx.routine_mgr.set_routine_enabled, routine_id, True
-            )
+            result = self.call_with_breaker(routine_mgr.set_routine_enabled, routine_id, True)
 
             if result:
                 self.success("✅ Routine activée")
@@ -359,7 +363,8 @@ class RoutineCommand(BaseCommand):
             self.info(f"✗ Désactivation routine '{args.name}'...")
 
             ctx = self.require_context()
-            if not ctx.routine_mgr:
+            routine_mgr = getattr(ctx, "routine_mgr", None)
+            if not routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -371,9 +376,7 @@ class RoutineCommand(BaseCommand):
 
             routine_id = routine.get("automationId")
 
-            result = self.call_with_breaker(
-                ctx.routine_mgr.set_routine_enabled, routine_id, False
-            )
+            result = self.call_with_breaker(routine_mgr.set_routine_enabled, routine_id, False)
 
             if result:
                 self.success("✅ Routine désactivée")
@@ -386,7 +389,7 @@ class RoutineCommand(BaseCommand):
             self.error(f"Erreur: {e}")
             return False
 
-    def _find_routine_by_name(self, name: str) -> dict | None:
+    def _find_routine_by_name(self, name: str) -> Optional[Dict[str, Any]]:
         """
         Trouve une routine par son nom.
 
@@ -398,7 +401,11 @@ class RoutineCommand(BaseCommand):
         """
         try:
             ctx = self.require_context()
-            routines = self.call_with_breaker(ctx.routine_mgr.get_routines)
+            routine_mgr = getattr(ctx, "routine_mgr", None)
+            if not routine_mgr:
+                return None
+
+            routines = self.call_with_breaker(routine_mgr.get_routines)
             if not routines:
                 return None
 
@@ -415,7 +422,7 @@ class RoutineCommand(BaseCommand):
             self.logger.exception(f"Erreur lors de la recherche de la routine '{name}'")
             return None
 
-    def _display_routines(self, routines: list) -> None:
+    def _display_routines(self, routines: List[Dict[str, Any]]) -> None:
         """Affiche la liste des routines de manière formatée."""
         if not routines:
             print("  Aucune routine trouvée")
@@ -446,7 +453,7 @@ class RoutineCommand(BaseCommand):
         table = self.format_table(table_data, ["Nom", "État", "Déclencheur", "ID"])
         print(table)
 
-    def _display_routine_details(self, routine: dict) -> None:
+    def _display_routine_details(self, routine: Dict[str, Any]) -> None:
         """Affiche les détails complets d'une routine."""
         name = routine.get("name", "Sans nom")
         routine_id = routine.get("automationId", "N/A")

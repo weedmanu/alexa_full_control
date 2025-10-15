@@ -7,7 +7,7 @@ Date: 8 octobre 2025
 
 import argparse
 import json
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand
@@ -265,7 +265,7 @@ class TimersCommands(TimeSubCommand):
 
         return command
 
-    def _display(self, timers: list) -> None:
+    def _display(self, timers: List[Dict[str, Any]]) -> None:
         """Affiche les minuteurs."""
         print(f"\n⏱️  {len(timers)} minuteur(s):\n")
 
@@ -278,9 +278,10 @@ class TimersCommands(TimeSubCommand):
 
             # Essayer de récupérer le nom de l'appareil
             device_name = "Inconnu"
-            if hasattr(self, "context") and self.context and self.context.device_mgr:
+            ctx = getattr(self, "context", None)
+            if ctx and getattr(ctx, "device_mgr", None):
                 try:
-                    device_info = self.context.device_mgr.find_device_by_serial(device_serial)
+                    device_info = ctx.device_mgr.find_device_by_serial(device_serial)
                     if device_info:
                         device_name = device_info.get("accountName", device_serial)
                 except Exception:

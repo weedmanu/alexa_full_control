@@ -168,12 +168,13 @@ class ListsCommand(BaseCommand):
                 self.info(f"📝 Ajout de la tâche: '{args.text}' (priorité: {args.priority})")
 
             ctx = self.require_context()
-            if not ctx.list_mgr:
+            list_mgr = getattr(ctx, "list_mgr", None)
+            if not list_mgr:
                 self.error("ListManager non disponible")
                 return False
 
             # Utiliser les vraies commandes vocales
-            success = ctx.list_mgr.add_item(list_type, text, device_serial=device_serial)
+            success = list_mgr.add_item(list_type, text, device_serial=device_serial)
 
             if success:
                 if list_type == "shopping":
@@ -220,14 +221,13 @@ class ListsCommand(BaseCommand):
                 self.info(f"🗑️ Suppression de la tâche: '{args.text}'")
 
             ctx = self.require_context()
-            if not ctx.list_mgr:
+            list_mgr = getattr(ctx, "list_mgr", None)
+            if not list_mgr:
                 self.error("ListManager non disponible")
                 return False
 
             # Utiliser les vraies commandes vocales
-            success = ctx.list_mgr.remove_item(
-                list_type, text, device_serial=device_serial
-            )
+            success = list_mgr.remove_item(list_type, text, device_serial=device_serial)
 
             if success:
                 if list_type == "shopping":
@@ -267,14 +267,13 @@ class ListsCommand(BaseCommand):
                 self.info("📝 Demande du contenu de la liste de tâches...")
 
             ctx = self.require_context()
-            if not hasattr(ctx, "voice_service") or not ctx.voice_service:
+            voice = getattr(ctx, "voice_service", None)
+            if not voice:
                 self.error("VoiceCommandService non disponible")
                 return False
 
             # Utiliser get_list_content pour récupérer le contenu via commande vocale
-            content = ctx.voice_service.get_list_content(
-                list_type, device_serial, wait_seconds=5.0
-            )
+            content = voice.get_list_content(list_type, device_serial, wait_seconds=5.0)
 
             # La commande vocale a été envoyée, considérer cela comme un succès
             # même si on ne peut pas récupérer la réponse textuelle
@@ -306,7 +305,8 @@ class ListsCommand(BaseCommand):
                     return False
 
             ctx = self.require_context()
-            if not ctx.list_mgr:
+            list_mgr = getattr(ctx, "list_mgr", None)
+            if not list_mgr:
                 self.error("ListManager non disponible")
                 return False
 
@@ -326,7 +326,7 @@ class ListsCommand(BaseCommand):
                 sys.stdout.flush()
 
                 # Utiliser les vraies commandes vocales pour vider la liste
-                success = ctx.list_mgr.clear_list(
+                success = list_mgr.clear_list(
                     list_type, completed_only=args.completed_only, device_serial=device_serial
                 )
 
@@ -360,7 +360,7 @@ class ListsCommand(BaseCommand):
                     return False
 
             # Pour les tâches ou si completed_only, pas de confirmation spéciale
-            success = ctx.list_mgr.clear_list(
+            success = list_mgr.clear_list(
                 list_type, completed_only=args.completed_only, device_serial=device_serial
             )
             if success:
@@ -399,9 +399,12 @@ class ListsCommand(BaseCommand):
             url = "https://www.amazon.fr/alexa-privacy/apd/activity?ref=activityHistory"
 
             ctx = self.require_context()
-            response = ctx.auth.session.get(
-                url, headers={"csrf": ctx.auth.csrf}, timeout=5
-            )
+            auth = getattr(ctx, "auth", None)
+            if not auth or not getattr(auth, "session", None):
+                self.logger.debug("Auth ou session manquante pour récupérer HTML")
+                return False
+
+            response = auth.session.get(url, headers={"csrf": auth.csrf}, timeout=5)
 
             if response.status_code != 200:
                 self.logger.debug(f"Impossible de récupérer la page HTML: {response.status_code}")
@@ -478,11 +481,12 @@ class ListsCommand(BaseCommand):
         """
         try:
             ctx = self.require_context()
-            if not ctx.list_mgr:
+            list_mgr = getattr(ctx, "list_mgr", None)
+            if not list_mgr:
                 return True  # Considérer comme vide si pas de manager
 
             # Essayer de récupérer la liste via l'API
-            list_data = ctx.list_mgr.get_list(list_type)
+            list_data = list_mgr.get_list(list_type)
             if list_data:
                 items = list_data.get("items", [])
                 if isinstance(items, list):

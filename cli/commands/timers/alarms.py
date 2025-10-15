@@ -9,7 +9,7 @@ import argparse
 import json
 import re
 from datetime import time
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand
@@ -292,7 +292,7 @@ class AlarmsCommands(TimeSubCommand):
         alarm_time = time(hours, minutes)
         return alarm_time.isoformat()
 
-    def _display(self, alarms: list) -> None:
+    def _display(self, alarms: List[Dict[str, Any]]) -> None:
         """Affiche les alarmes."""
         print(f"\n⏰ {len(alarms)} alarme(s):\n")
 

@@ -6,4 +6,6 @@ Note: Drop-in et Announcement sont bloqués par Amazon pour raisons de privacy.
 """
 
 # Plus d'imports - package vide maintenant
-__all__ = []
+from typing import List
+
+__all__: List[str] = []

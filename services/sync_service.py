@@ -58,7 +58,7 @@ class SyncService:
 
         # Statistiques de sync
         self.last_sync_time = 0.0
-        self.sync_stats = {}
+        self.sync_stats: Dict[str, Any] = {}
 
         # Suivi du chargement lazy
         self._lazy_loaded = {
@@ -91,7 +91,7 @@ class SyncService:
             return {"success": False, "error": "not_connected"}
 
         start_time = time.time()
-        stats = {
+        stats: Dict[str, Any] = {
             "success": True,
             "timestamp": start_time,
             "synced": {},
@@ -323,7 +323,11 @@ class SyncService:
 
         for category, getter in categories:
             try:
-                data = getter(force=force)
+                if callable(getter):
+                    data = getter(force=force)
+                else:
+                    logger.warning(f"Getter for {category} is not callable, skipping")
+                    data = []
                 stats["preloaded"][category] = len(data)
                 logger.debug(f"✅ {len(data)} {category} préchargés")
             except Exception as e:

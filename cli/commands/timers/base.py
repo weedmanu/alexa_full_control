@@ -34,10 +34,11 @@ class TimeSubCommand:
         Returns:
             Serial de l'appareil ou None
         """
-        if self.context is None or self.context.device_mgr is None:
+        ctx = getattr(self, "context", None)
+        if ctx is None or getattr(ctx, "device_mgr", None) is None:
             return None
 
-        devices = self.context.device_mgr.get_devices()
+        devices = ctx.device_mgr.get_devices()
         for device in devices:
             if device.get("accountName") == device_name:
                 return device.get("serialNumber")
@@ -74,10 +75,11 @@ class TimeSubCommand:
         Returns:
             Type d'appareil (ex: "ECHO")
         """
-        if self.context is None or self.context.device_mgr is None:
+        ctx = getattr(self, "context", None)
+        if ctx is None or getattr(ctx, "device_mgr", None) is None:
             return "ECHO"
 
-        devices = self.context.device_mgr.get_devices()
+        devices = ctx.device_mgr.get_devices()
         for device in devices:
             if device.get("accountName") == device_name:
                 return device.get("deviceType", "ECHO")

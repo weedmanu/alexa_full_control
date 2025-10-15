@@ -128,7 +128,7 @@ class CalendarManager:
 
                 if method == "POST":
                     # Payload minimal pour POST
-                    payload = {}
+                    payload: Dict[str, Any] = {}
                     response = self.auth.session.post(url, json=payload, headers=headers)
                 else:
                     response = self.auth.session.get(url, headers=headers)

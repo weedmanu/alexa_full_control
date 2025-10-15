@@ -252,7 +252,7 @@ class ReminderManager:
 
                 # Si pas de cache disque ou expiré, rafraîchir depuis l'API
                 if cached_reminders is None:
-                    cached_reminders = self._refresh_reminders_cache()
+                        cached_reminders = self._refresh_reminders_cache()
                 else:
                     self._reminders_cache = cached_reminders
                     self._cache_timestamp = time.time()
