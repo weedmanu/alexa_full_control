@@ -79,7 +79,9 @@ class PlaybackManager:
                 logger.info(f"⚠️  Commande {command_type} non supportée dans ce contexte (normal)")
                 return False
             else:
-                logger.warning(f"Échec commande NP {command_data}: {e} - fallback vers VoiceCommand")
+                logger.warning(
+                    f"Échec commande NP {command_data}: {e} - fallback vers VoiceCommand"
+                )
                 return False
 
     def set_shuffle(self, device_serial: str, device_type: str, enabled: bool) -> bool:

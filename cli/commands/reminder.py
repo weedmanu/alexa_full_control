@@ -11,13 +11,13 @@ import argparse
 from datetime import datetime
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.reminder_help import (
-    REMINDER_DESCRIPTION,
-    LIST_HELP,
+    COMPLETE_HELP,
     CREATE_HELP,
     DELETE_HELP,
-    COMPLETE_HELP,
+    LIST_HELP,
+    REMINDER_DESCRIPTION,
 )
 
 
@@ -77,7 +77,13 @@ class ReminderCommand(BaseCommand):
         )
 
         # Action: list
-        list_parser = subparsers.add_parser("list", help="Lister rappels", description=LIST_HELP, formatter_class=ActionHelpFormatter, add_help=False)
+        list_parser = subparsers.add_parser(
+            "list",
+            help="Lister rappels",
+            description=LIST_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
         list_parser.add_argument(
             "-d",
             "--device",
@@ -96,7 +102,11 @@ class ReminderCommand(BaseCommand):
 
         # Action: create
         create_parser = subparsers.add_parser(
-            "create", help="Créer rappel", description=CREATE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "create",
+            help="Créer rappel",
+            description=CREATE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         create_parser.add_argument(
             "--label", type=str, required=True, metavar="TEXT", help="Texte du rappel"
@@ -119,7 +129,11 @@ class ReminderCommand(BaseCommand):
 
         # Action: delete
         delete_parser = subparsers.add_parser(
-            "delete", help="Supprimer rappel", description=DELETE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "delete",
+            help="Supprimer rappel",
+            description=DELETE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         delete_parser.add_argument(
             "--id", type=str, required=True, metavar="REMINDER_ID", help="ID du rappel à supprimer"
@@ -130,7 +144,11 @@ class ReminderCommand(BaseCommand):
 
         # Action: complete
         complete_parser = subparsers.add_parser(
-            "complete", help="Marquer complété", description=COMPLETE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "complete",
+            help="Marquer complété",
+            description=COMPLETE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         complete_parser.add_argument(
             "--id",
@@ -182,11 +200,12 @@ class ReminderCommand(BaseCommand):
                 self.info("📋 Récupération de tous les rappels...")
                 serial = None
 
-            if not self.context.reminder_mgr:
+            ctx = self.require_context()
+            if not ctx.reminder_mgr:
                 self.error("ReminderManager non disponible")
                 return False
 
-            reminders = self.call_with_breaker(self.context.reminder_mgr.get_reminders, serial)
+            reminders = self.call_with_breaker(ctx.reminder_mgr.get_reminders, serial)
 
             if not reminders:
                 self.warning("Aucun rappel trouvé")
@@ -237,7 +256,8 @@ class ReminderCommand(BaseCommand):
             if not serial:
                 return False
 
-            if not self.context.reminder_mgr:
+            ctx = self.require_context()
+            if not ctx.reminder_mgr:
                 self.error("ReminderManager non disponible")
                 return False
 
@@ -249,7 +269,7 @@ class ReminderCommand(BaseCommand):
                 self.info(f"   Date: {args.datetime}")
 
                 result = self.call_with_breaker(
-                    self.context.reminder_mgr.create_reminder, serial, args.label, args.datetime
+                    ctx.reminder_mgr.create_reminder, serial, args.label, args.datetime
                 )
             else:
                 # Rappel récurrent
@@ -259,7 +279,7 @@ class ReminderCommand(BaseCommand):
                 self.info(f"   Heure: {args.time}")
 
                 result = self.call_with_breaker(
-                    self.context.reminder_mgr.create_recurring_reminder,
+                    ctx.reminder_mgr.create_recurring_reminder,
                     serial,
                     args.label,
                     args.recurrence,
@@ -290,11 +310,12 @@ class ReminderCommand(BaseCommand):
 
             self.info(f"🗑️  Suppression rappel '{args.id}'...")
 
-            if not self.context.reminder_mgr:
+            ctx = self.require_context()
+            if not ctx.reminder_mgr:
                 self.error("ReminderManager non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.reminder_mgr.delete_reminder, args.id)
+            result = self.call_with_breaker(ctx.reminder_mgr.delete_reminder, args.id)
 
             if result:
                 self.success(f"✅ Rappel '{args.id}' supprimé")
@@ -312,11 +333,12 @@ class ReminderCommand(BaseCommand):
         try:
             self.info(f"✅ Marquage rappel '{args.id}' comme complété...")
 
-            if not self.context.reminder_mgr:
+            ctx = self.require_context()
+            if not ctx.reminder_mgr:
                 self.error("ReminderManager non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.reminder_mgr.complete_reminder, args.id)
+            result = self.call_with_breaker(ctx.reminder_mgr.complete_reminder, args.id)
 
             if result:
                 self.success(f"✅ Rappel '{args.id}' marqué comme complété")
@@ -348,13 +370,15 @@ class ReminderCommand(BaseCommand):
 
             # Résoudre le nom d'appareil
             device_name = "N/A"
-            if device_serial != "N/A" and self.context.device_mgr:
-                try:
-                    device = self.context.device_mgr.find_device_by_serial(device_serial)
-                    if device:
-                        device_name = device.get("name", device_serial)
-                except Exception:
-                    device_name = device_serial
+            if device_serial != "N/A":
+                ctx2 = self.require_context()
+                if ctx2.device_mgr:
+                    try:
+                        device = ctx2.device_mgr.find_device_by_serial(device_serial)
+                        if device:
+                            device_name = device.get("name", device_serial)
+                    except Exception:
+                        device_name = device_serial
 
             # Déterminer le statut
             status_emoji = "✅ Complété" if completed else "🔔 Actif"

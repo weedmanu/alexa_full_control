@@ -5,9 +5,8 @@ Gestionnaire d'activités et historique vocal Alexa - Thread-safe.
 import re
 import threading
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from bs4 import BeautifulSoup
 from loguru import logger
 
 from .circuit_breaker import CircuitBreaker
@@ -25,7 +24,9 @@ class ActivityManager:
         self._lock = threading.RLock()
         logger.info("ActivityManager initialisé")
 
-    def get_customer_history_records(self, limit: int = 50, start_time: Optional[int] = None) -> List[Dict[str, Any]]:
+    def get_customer_history_records(
+        self, limit: int = 50, start_time: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
         """
         Récupère l'historique vocal complet via l'API Privacy ou cache local.
 
@@ -56,7 +57,9 @@ class ActivityManager:
             logger.info("🔄 Utilisation du cache local d'activités")
             return self._get_activities_from_cache(limit, start_time)
 
-    def _fetch_privacy_api_records(self, limit: int, start_time: Optional[int], privacy_csrf: str) -> List[Dict[str, Any]]:
+    def _fetch_privacy_api_records(
+        self, limit: int, start_time: Optional[int], privacy_csrf: str
+    ) -> List[Dict[str, Any]]:
         """Récupère les enregistrements via l'API Privacy Amazon."""
         # Préparer les paramètres de l'API
         end_time = int(datetime.now().timestamp() * 1000)  # Maintenant
@@ -64,11 +67,7 @@ class ActivityManager:
 
         # URL de l'API Privacy
         privacy_url = f"https://www.{self.config.amazon_domain}/alexa-privacy/apd/rvh/customer-history-records-v2/"
-        params = {
-            "startTime": start_time_param,
-            "endTime": end_time,
-            "pageType": "VOICE_HISTORY"
-        }
+        params = {"startTime": start_time_param, "endTime": end_time, "pageType": "VOICE_HISTORY"}
 
         logger.debug(f"Appel API Privacy: {privacy_url} avec startTime={start_time_param}")
 
@@ -76,7 +75,7 @@ class ActivityManager:
         headers = {
             "csrf": self.auth.csrf or "",
             "anti-csrftoken-a2z": privacy_csrf,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         # Body de la requête
@@ -91,7 +90,7 @@ class ActivityManager:
             params=params,
             headers=headers,
             json=body,
-            timeout=15
+            timeout=15,
         )
 
         response.raise_for_status()
@@ -115,7 +114,7 @@ class ActivityManager:
             cache_data = {
                 "records": records,
                 "last_updated": datetime.now().isoformat(),
-                "source": "privacy_api"
+                "source": "privacy_api",
             }
 
             # Sauvegarder avec TTL de 24h (puisque c'est de l'historique)
@@ -125,7 +124,9 @@ class ActivityManager:
         except Exception as e:
             logger.debug(f"Erreur sauvegarde cache activités: {e}")
 
-    def _get_activities_from_cache(self, limit: int, start_time: Optional[int]) -> List[Dict[str, Any]]:
+    def _get_activities_from_cache(
+        self, limit: int, start_time: Optional[int]
+    ) -> List[Dict[str, Any]]:
         """Récupère les activités depuis le cache local."""
         try:
             cache_data = self._load_from_local_cache("activities")
@@ -162,19 +163,16 @@ class ActivityManager:
                 "device": {
                     "deviceName": "Salon Echo",
                     "serialNumber": "MOCKSERIAL001",
-                    "deviceType": "A2UONLFQW0PADH"
+                    "deviceType": "A2UONLFQW0PADH",
                 },
                 "voiceHistoryRecordItems": [
                     {
                         "recordItemType": "CUSTOMER_TRANSCRIPT",
-                        "transcriptText": "Alexa, quelle heure est-il ?"
+                        "transcriptText": "Alexa, quelle heure est-il ?",
                     },
-                    {
-                        "recordItemType": "ALEXA_RESPONSE",
-                        "transcriptText": "Il est 17 heures 30"
-                    }
+                    {"recordItemType": "ALEXA_RESPONSE", "transcriptText": "Il est 17 heures 30"},
                 ],
-                "activityStatus": "SUCCESS"
+                "activityStatus": "SUCCESS",
             },
             {
                 "recordKey": "mock-002",
@@ -182,19 +180,19 @@ class ActivityManager:
                 "device": {
                     "deviceName": "Cuisine Echo Dot",
                     "serialNumber": "MOCKSERIAL002",
-                    "deviceType": "A2UONLFQW0PADH"
+                    "deviceType": "A2UONLFQW0PADH",
                 },
                 "voiceHistoryRecordItems": [
                     {
                         "recordItemType": "CUSTOMER_TRANSCRIPT",
-                        "transcriptText": "Alexa, joue de la musique"
+                        "transcriptText": "Alexa, joue de la musique",
                     },
                     {
                         "recordItemType": "ALEXA_RESPONSE",
-                        "transcriptText": "Je lance votre playlist préférée"
-                    }
+                        "transcriptText": "Je lance votre playlist préférée",
+                    },
                 ],
-                "activityStatus": "SUCCESS"
+                "activityStatus": "SUCCESS",
             },
             {
                 "recordKey": "mock-003",
@@ -202,20 +200,20 @@ class ActivityManager:
                 "device": {
                     "deviceName": "Chambre Echo Show",
                     "serialNumber": "MOCKSERIAL003",
-                    "deviceType": "A2UONLFQW0PADH"
+                    "deviceType": "A2UONLFQW0PADH",
                 },
                 "voiceHistoryRecordItems": [
                     {
                         "recordItemType": "CUSTOMER_TRANSCRIPT",
-                        "transcriptText": "Alexa, règle un timer de 10 minutes"
+                        "transcriptText": "Alexa, règle un timer de 10 minutes",
                     },
                     {
                         "recordItemType": "ALEXA_RESPONSE",
-                        "transcriptText": "Timer de 10 minutes programmé"
-                    }
+                        "transcriptText": "Timer de 10 minutes programmé",
+                    },
                 ],
-                "activityStatus": "SUCCESS"
-            }
+                "activityStatus": "SUCCESS",
+            },
         ]
 
         # Limiter selon la demande
@@ -234,10 +232,7 @@ class ActivityManager:
             cache_dir.mkdir(parents=True, exist_ok=True)
 
             cache_file = cache_dir / f"{key}_local.json"
-            cache_file.write_text(
-                json.dumps(data, indent=2, ensure_ascii=False),
-                encoding="utf-8"
-            )
+            cache_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
             logger.debug(f"💾 Données sauvegardées dans cache local: {key}")
 
         except Exception as e:
@@ -273,7 +268,9 @@ class ActivityManager:
             # Essayer d'abord d'utiliser le token CSRF standard des cookies
             # L'API Privacy pourrait accepter le même token que les autres APIs
             if self.auth.csrf:
-                logger.debug(f"Utilisation du token CSRF standard des cookies: {self.auth.csrf[:20]}...")
+                logger.debug(
+                    f"Utilisation du token CSRF standard des cookies: {self.auth.csrf[:20]}..."
+                )
                 return self.auth.csrf
 
             # Fallback: essayer d'extraire depuis la page HTML (peut ne plus fonctionner)
@@ -317,7 +314,6 @@ class ActivityManager:
         Returns:
             Token CSRF ou None si non trouvé
         """
-        import re
 
         # Chercher le token CSRF dans les meta tags ou les inputs hidden
         patterns = [
@@ -360,7 +356,9 @@ class ActivityManager:
         logger.debug("Aucun token CSRF trouvé dans le HTML")
         return None
 
-    def get_activities(self, limit: int = 50, start_time: Optional[datetime] = None) -> List[Dict[str, Any]]:
+    def get_activities(
+        self, limit: int = 50, start_time: Optional[datetime] = None
+    ) -> List[Dict[str, Any]]:
         """
         Récupère l'historique des activités via l'API Privacy.
 
@@ -404,7 +402,9 @@ class ActivityManager:
                 logger.error(f"Erreur récupération activités: {e}")
                 return []
 
-    def _convert_privacy_record_to_activity(self, record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _convert_privacy_record_to_activity(
+        self, record: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """
         Convertit un enregistrement Privacy au format d'activité standard.
 
@@ -424,18 +424,22 @@ class ActivityManager:
             # Créer l'activité de base
             activity = {
                 "id": record_key,
-                "timestamp": datetime.fromtimestamp(timestamp / 1000).isoformat() if timestamp else None,
+                "timestamp": datetime.fromtimestamp(timestamp / 1000).isoformat()
+                if timestamp
+                else None,
                 "deviceSerialNumber": device.get("serialNumber"),
                 "deviceName": device.get("deviceName"),
                 "activityStatus": record.get("activityStatus", "UNKNOWN"),
-                "source": "privacy_api"
+                "source": "privacy_api",
             }
 
             # Enrichir avec les informations du cache des appareils si disponible
             if activity.get("deviceSerialNumber"):
                 device_info = self._get_device_info_from_cache(activity["deviceSerialNumber"])
                 if device_info:
-                    activity["deviceName"] = device_info.get("accountName", activity.get("deviceName", "N/A"))
+                    activity["deviceName"] = device_info.get(
+                        "accountName", activity.get("deviceName", "N/A")
+                    )
 
             # Déterminer le type d'activité et enrichir les données
             if voice_items:
@@ -452,18 +456,17 @@ class ActivityManager:
                     elif item_type == "ALEXA_RESPONSE":
                         alexa_response = transcript
 
-                activity.update({
-                    "type": "voice",
-                    "utterance": customer_transcript,
-                    "alexaResponse": alexa_response,
-                    "description": customer_transcript or "Interaction vocale"
-                })
+                activity.update(
+                    {
+                        "type": "voice",
+                        "utterance": customer_transcript,
+                        "alexaResponse": alexa_response,
+                        "description": customer_transcript or "Interaction vocale",
+                    }
+                )
             else:
                 # Autre type d'activité (musique, alarme, etc.)
-                activity.update({
-                    "type": "system",
-                    "description": "Activité système"
-                })
+                activity.update({"type": "system", "description": "Activité système"})
 
             return activity
 
@@ -490,7 +493,7 @@ class ActivityManager:
 
             cache_file = Path("data/cache/devices.json")
             if cache_file.exists():
-                with open(cache_file, 'r', encoding='utf-8') as f:
+                with open(cache_file, encoding="utf-8") as f:
                     cache_data = json.load(f)
 
                 devices = cache_data.get("devices", [])
@@ -645,7 +648,9 @@ class ActivityManager:
                 return activity
         return None
 
-    def add_mock_activity(self, utterance: str, alexa_response: str, device_name: str = "Salon Echo") -> bool:
+    def add_mock_activity(
+        self, utterance: str, alexa_response: str, device_name: str = "Salon Echo"
+    ) -> bool:
         """
         Ajoute une activité simulée au cache local.
 
@@ -665,30 +670,26 @@ class ActivityManager:
                 "device": {
                     "deviceName": device_name,
                     "serialNumber": f"MANUAL{int(datetime.now().timestamp())}",
-                    "deviceType": "A2UONLFQW0PADH"
+                    "deviceType": "A2UONLFQW0PADH",
                 },
                 "voiceHistoryRecordItems": [
-                    {
-                        "recordItemType": "CUSTOMER_TRANSCRIPT",
-                        "transcriptText": utterance
-                    },
-                    {
-                        "recordItemType": "ALEXA_RESPONSE",
-                        "transcriptText": alexa_response
-                    }
+                    {"recordItemType": "CUSTOMER_TRANSCRIPT", "transcriptText": utterance},
+                    {"recordItemType": "ALEXA_RESPONSE", "transcriptText": alexa_response},
                 ],
-                "activityStatus": "SUCCESS"
+                "activityStatus": "SUCCESS",
             }
 
             # Charger les activités existantes
             cache_data = self._load_from_local_cache("activities") or {
                 "records": [],
                 "last_updated": datetime.now().isoformat(),
-                "source": "manual"
+                "source": "manual",
             }
 
             # Ajouter la nouvelle activité
-            cache_data["records"].insert(0, mock_activity)  # Au début pour qu'elle soit la plus récente
+            cache_data["records"].insert(
+                0, mock_activity
+            )  # Au début pour qu'elle soit la plus récente
             cache_data["last_updated"] = datetime.now().isoformat()
 
             # Limiter à 100 activités maximum

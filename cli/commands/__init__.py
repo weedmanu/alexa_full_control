@@ -28,6 +28,7 @@ Date: 7 octobre 2025
 
 from cli.commands.activity import ActivityCommand
 from cli.commands.alarm import AlarmCommand
+from cli.commands.announcement import AnnouncementCommand
 from cli.commands.auth import AuthCommand
 from cli.commands.cache import CacheCommand
 from cli.commands.calendar import CalendarCommand
@@ -36,7 +37,6 @@ from cli.commands.dnd import DNDCommand
 from cli.commands.lists import ListsCommand
 from cli.commands.multiroom import MultiroomCommand
 from cli.commands.music import MusicCommand
-from cli.commands.announcement import AnnouncementCommand
 from cli.commands.reminder import ReminderCommand
 from cli.commands.routine import RoutineCommand
 from cli.commands.smarthome import SmartHomeCommand

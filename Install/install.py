@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Script d'installation cross-platform pour Alexa Advanced Control.
 
@@ -34,13 +34,14 @@ if str(_PROJECT_ROOT) not in sys.path:
 # Tentative d'import de Loguru pour logging avancé
 try:
     from loguru import logger
+
     LOGURU_AVAILABLE = True
 except ImportError:
     LOGURU_AVAILABLE = False
     logger = None  # type: ignore
 
 # Import de la fonction setup_loguru_logger depuis utils/logger.py
-from utils.logger import setup_loguru_logger, SharedIcons
+from utils.logger import SharedIcons, setup_loguru_logger
 
 
 def ensure_utf8_console() -> None:
@@ -54,6 +55,7 @@ def ensure_utf8_console() -> None:
     """
     try:
         import os
+
         if os.environ.get("PYTHONIOENCODING") is None:
             os.environ["PYTHONIOENCODING"] = "utf-8"
 
@@ -77,13 +79,18 @@ def ensure_utf8_console() -> None:
             try:
                 import io
 
-                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
-                sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", line_buffering=True)
+                sys.stdout = io.TextIOWrapper(
+                    sys.stdout.buffer, encoding="utf-8", line_buffering=True
+                )
+                sys.stderr = io.TextIOWrapper(
+                    sys.stderr.buffer, encoding="utf-8", line_buffering=True
+                )
             except Exception:
                 pass
     except Exception:
         # Defensive: never crash the installer because of console config
         pass
+
 
 # Configuration
 PYTHON_MIN_VERSION = (3, 8)
@@ -274,7 +281,12 @@ class Logger:
         # Prevent adjacent emojis: if msg starts with a non-alphanumeric character
         # (likely an emoji), strip it to avoid double emojis like "✅ 🎉 ...".
         if text and not text.lstrip()[0].isalnum():
-            text = text.lstrip("".join(set(text) - set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ")))
+            text = text.lstrip(
+                "".join(
+                    set(text)
+                    - set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ")
+                )
+            )
 
         def _strip_edge_emojis(s: str) -> str:
             """Remove known emoji prefixes and suffixes from a string ends.
@@ -447,7 +459,7 @@ class PackageInstaller:
             )
             if LOGURU_AVAILABLE and logger:
                 logger.debug(f"Commande réussie: {cmd_display}")
-                logger.success(f"Commande exécutée avec succès")
+                logger.success("Commande exécutée avec succès")
             return result
         except subprocess.CalledProcessError as e:
             if LOGURU_AVAILABLE and logger:
@@ -462,7 +474,7 @@ class PackageInstaller:
         if LOGURU_AVAILABLE and logger:
             logger.info("Création de l'environnement virtuel Python")
             logger.debug(f"Chemin du venv: {self.venv_path}")
-        
+
         try:
             self.run_command([sys.executable, "-m", "venv", str(self.venv_path)])
             if LOGURU_AVAILABLE and logger:
@@ -471,7 +483,7 @@ class PackageInstaller:
             if LOGURU_AVAILABLE and logger:
                 logger.error(f"Échec de création du venv: {e}")
             raise
-        
+
         Logger.success("Environnement virtuel créé")
 
     def get_venv_python(self) -> Path:
@@ -495,7 +507,7 @@ class PackageInstaller:
         if LOGURU_AVAILABLE and logger:
             logger.info("Mise à jour de pip dans l'environnement virtuel")
             logger.debug(f"Python du venv: {venv_python}")
-        
+
         try:
             # Utiliser python -m pip pour éviter les problèmes de verrouillage
             self.run_command([str(venv_python), "-m", "pip", "install", "--upgrade", "pip"])
@@ -505,7 +517,7 @@ class PackageInstaller:
             if LOGURU_AVAILABLE and logger:
                 logger.error(f"Échec de mise à jour de pip: {e}")
             raise
-        
+
         Logger.success("pip mis à jour")
 
     def install_python_packages(self) -> None:
@@ -520,7 +532,7 @@ class PackageInstaller:
             if LOGURU_AVAILABLE and logger:
                 logger.info("Installation des dépendances Python depuis requirements.txt")
                 logger.debug(f"Fichier requirements.txt: {requirements_file}")
-            
+
             try:
                 self.run_command([str(venv_pip), "install", "-r", str(requirements_file)])
                 if LOGURU_AVAILABLE and logger:
@@ -532,9 +544,11 @@ class PackageInstaller:
         else:
             Logger.info("requirements.txt non trouvé, installation manuelle")
             if LOGURU_AVAILABLE and logger:
-                logger.warning("requirements.txt non trouvé, installation manuelle des packages essentiels")
+                logger.warning(
+                    "requirements.txt non trouvé, installation manuelle des packages essentiels"
+                )
                 logger.info(f"Installation de {len(REQUIRED_PACKAGES)} packages essentiels")
-            
+
             # Installation des packages essentiels
             for package in REQUIRED_PACKAGES:
                 try:
@@ -568,7 +582,14 @@ class PackageInstaller:
         try:
             # Installation via nodeenv
             self.run_command(
-                [str(venv_python), "-m", "nodeenv", f"--node={NODE_VERSION}", "--prebuilt", ".nodeenv"],
+                [
+                    str(venv_python),
+                    "-m",
+                    "nodeenv",
+                    f"--node={NODE_VERSION}",
+                    "--prebuilt",
+                    ".nodeenv",
+                ],
                 cwd=nodejs_dir,
             )
             if LOGURU_AVAILABLE and logger:
@@ -633,7 +654,7 @@ class PackageInstaller:
             Logger.progress(f"Installation de {package}")
             if LOGURU_AVAILABLE and logger:
                 logger.info(f"Installation du package npm: {package}")
-            
+
             try:
                 self.run_command([str(npm_path), "install", package], cwd=nodejs_dir)
                 Logger.success(f"{package} installé")
@@ -731,7 +752,7 @@ class InstallationManager:
         Logger.warning("Installation existante détectée")
         if LOGURU_AVAILABLE and logger:
             logger.warning("Installation précédente détectée - nettoyage nécessaire")
-        
+
         if not self.force:
             if not self.non_interactive:
                 response = (
@@ -812,7 +833,9 @@ class InstallationManager:
                             logger.success(f"Cookie supprimé: {cookie_file}")
                     except Exception as e:
                         if LOGURU_AVAILABLE and logger:
-                            logger.error(f"Erreur lors de la suppression du cookie {cookie_file}: {e}")
+                            logger.error(
+                                f"Erreur lors de la suppression du cookie {cookie_file}: {e}"
+                            )
 
         # Suppression des fichiers cache
         cache_dir = self.install_dir / "data" / "cache"
@@ -831,7 +854,9 @@ class InstallationManager:
                                 logger.debug(f"Fichier cache supprimé: {cache_file.name}")
                         except Exception as e:
                             if LOGURU_AVAILABLE and logger:
-                                logger.error(f"Erreur lors de la suppression du cache {cache_file.name}: {e}")
+                                logger.error(
+                                    f"Erreur lors de la suppression du cache {cache_file.name}: {e}"
+                                )
                 Logger.success(f"✓ {len(cache_files)} fichier(s) cache supprimé(s)")
                 if LOGURU_AVAILABLE and logger:
                     logger.success(f"{len(cache_files)} fichiers cache supprimés")
@@ -861,7 +886,9 @@ class InstallationManager:
             print("  Test-Path .\\.venv  # PowerShell (doit retourner False)")
             print()
             print("Vérifier suppression nodeenv:")
-            print("  Test-Path .\\alexa_auth\\nodejs\\.nodeenv  # PowerShell (doit retourner False)")
+            print(
+                "  Test-Path .\\alexa_auth\\nodejs\\.nodeenv  # PowerShell (doit retourner False)"
+            )
         else:
             print("Vérifier suppression .venv:")
             print("  [ -d .venv ] && echo 'existe' || echo 'supprimé'  # Bash")
@@ -990,12 +1017,18 @@ def running_in_project_venv(current_executable: Optional[str], install_dir: Path
         # Compute membership explicitly so coverage tools register execution
         inside = (
             (venv_path in current.parents)
-            or (current == (venv_path / "Scripts" / "python.exe"))  # pragma: no cover - redundant when parents includes venv_path
-            or (current == (venv_path / "bin" / "python"))  # pragma: no cover - redundant when parents includes venv_path
+            or (
+                current == (venv_path / "Scripts" / "python.exe")
+            )  # pragma: no cover - redundant when parents includes venv_path
+            or (
+                current == (venv_path / "bin" / "python")
+            )  # pragma: no cover - redundant when parents includes venv_path
         )
         return inside
     except Exception:
         return False  # pragma: no cover - defensive fallback for pathological Path.resolve failures
+
+
 def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_venv_fn) -> None:
     """Logique principale de l'installateur (testable).
 
@@ -1024,10 +1057,16 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
     try:
         try:
             manager = InstallationManager(
-                install_dir, args.force, args.skip_tests, dry_run=args.dry_run, non_interactive=args.yes
+                install_dir,
+                args.force,
+                args.skip_tests,
+                dry_run=args.dry_run,
+                non_interactive=args.yes,
             )
         except TypeError:
-            manager = InstallationManager(install_dir, args.force, args.skip_tests, dry_run=args.dry_run)
+            manager = InstallationManager(
+                install_dir, args.force, args.skip_tests, dry_run=args.dry_run
+            )
 
         # If running within the project venv, block dangerous operations
         if running_in_project_venv_fn():
@@ -1109,21 +1148,18 @@ def _setup_install_logging(args: argparse.Namespace, install_dir: Path) -> None:
     # Déterminer si on doit activer Loguru
     use_loguru = False
     level = "INFO"
-    
-    if hasattr(args, 'debug') and args.debug:
-        use_loguru = True
-        level = "DEBUG"
-    elif args.verbose >= 2:
+
+    if hasattr(args, "debug") and args.debug or args.verbose >= 2:
         use_loguru = True
         level = "DEBUG"
     elif args.verbose >= 1:
         use_loguru = True
         level = "INFO"
-    
+
     # Si pas de verbose/debug, on n'active pas Loguru
     if not use_loguru:
         return
-    
+
     # Loguru demandé mais non disponible
     if not LOGURU_AVAILABLE or logger is None:
         print("⚠️  Loguru non disponible. Installation: pip install loguru")
@@ -1131,7 +1167,7 @@ def _setup_install_logging(args: argparse.Namespace, install_dir: Path) -> None:
 
     # Fichier de log optionnel
     log_file = None
-    if hasattr(args, 'log_file') and args.log_file:
+    if hasattr(args, "log_file") and args.log_file:
         log_file = Path(args.log_file)
         if not log_file.is_absolute():
             log_file = install_dir / log_file
@@ -1216,7 +1252,7 @@ Exemples:
     # Détermination du répertoire d'installation
     script_dir = Path(__file__).parent
     install_dir = script_dir.parent
-    
+
     # Tentative d'assurer que la console est en UTF-8 (best-effort)
     try:
         ensure_utf8_console()

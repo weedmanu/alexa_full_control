@@ -30,7 +30,7 @@ Date: 8 octobre 2025
 
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 import io
 
 # Forcer l'encodage UTF-8 pour stdout/stderr sur Windows
@@ -169,13 +169,25 @@ def main() -> int:
                 sys.exit(0)
         
         args = parser.parse_args()
-        
+
         # Configurer le logging définitif avec les bonnes options
         verbose_mode = args.verbose if hasattr(args, 'verbose') else False
         debug_mode = args.debug if hasattr(args, 'debug') else False
-        
-        setup_logging(verbose=verbose_mode, debug=debug_mode)
-        
+        no_color_mode = args.no_color if hasattr(args, 'no_color') else False
+
+        # Déterminer le niveau de log
+        if debug_mode:
+            level = "DEBUG"
+        elif verbose_mode:
+            level = "INFO"
+        else:
+            level = "WARNING"
+
+        # Setup logger once, respecting --no-color
+        # log_file only in debug
+        log_file = Path("logs") / "alexa_cli.log" if debug_mode else None
+        setup_loguru_logger(log_file=log_file, level=level, ensure_utf8=True, no_color=no_color_mode)
+
         logger.info(f"Alexa Voice Control CLI v2.0.0 - Catégorie: {args.category}")
         
         # Créer le contexte
@@ -192,10 +204,20 @@ def main() -> int:
                 # Charger l'authentification avec cache
                 auth = AlexaAuth(cache_service=context.cache_service)
                 if auth.load_cookies():
-                    # Définir l'état initial AUTHENTICATED (credentials valides) AVANT initialize_auth
-                    context.state_machine.set_initial_state(ConnectionState.AUTHENTICATED)
-                    context.initialize_auth(auth)
-                    logger.debug(f"Authentification chargée: {auth.get_cookie_info()}")
+                    # Sanity check: tenter un ping minimal sur un endpoint devices
+                    try:
+                        resp = auth.get(f"https://{auth.amazon_domain}/api/devices-v2/device", timeout=10)
+                        if getattr(resp, 'status_code', None) == 200:
+                            # Cookies et endpoint valides
+                            context.state_machine.set_initial_state(ConnectionState.AUTHENTICATED)
+                            context.initialize_auth(auth)
+                            logger.debug(f"Authentification chargée: {auth.get_cookie_info()}")
+                        else:
+                            logger.warning(
+                                f"Cookies présents mais ping API a renvoyé {getattr(resp, 'status_code', 'unknown')}. Ne pas définir comme authentifié"
+                            )
+                    except Exception as e:
+                        logger.warning(f"Cookies chargés mais vérification API échouée: {e}")
                 else:
                     logger.debug("Pas de cookies valides trouvés")
             except Exception as e:

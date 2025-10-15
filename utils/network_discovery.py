@@ -9,21 +9,22 @@ Date: 12 octobre 2025
 """
 
 import socket
-import json
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from loguru import logger
+
 from utils.logger import SharedIcons
 
 
 class AlexaNetworkDiscovery:
     """
     Découverte et interaction avec les API locales des appareils Alexa.
-    
+
     Les appareils Echo exposent plusieurs services sur le réseau local :
     - UPnP/SSDP pour la découverte automatique
     - API HTTP locale sur certains ports (potentiellement)
     - mDNS/Bonjour pour les noms .local
-    
+
     Exemple:
         >>> discovery = AlexaNetworkDiscovery()
         >>> devices = discovery.discover_upnp()
@@ -33,13 +34,13 @@ class AlexaNetworkDiscovery:
 
     # Ports connus utilisés par les appareils Echo
     COMMON_PORTS = [
-        80,      # HTTP standard
-        443,     # HTTPS standard
-        8080,    # HTTP alternatif
-        8443,    # HTTPS alternatif
-        1900,    # UPnP/SSDP
-        5353,    # mDNS
-        55443,   # Parfois utilisé par Amazon
+        80,  # HTTP standard
+        443,  # HTTPS standard
+        8080,  # HTTP alternatif
+        8443,  # HTTPS alternatif
+        1900,  # UPnP/SSDP
+        5353,  # mDNS
+        55443,  # Parfois utilisé par Amazon
     ]
 
     # Endpoints API locaux potentiels
@@ -78,7 +79,7 @@ class AlexaNetworkDiscovery:
             ssdp_request = (
                 "M-SEARCH * HTTP/1.1\r\n"
                 "HOST: 239.255.255.250:1900\r\n"
-                "MAN: \"ssdp:discover\"\r\n"
+                'MAN: "ssdp:discover"\r\n'
                 "MX: 3\r\n"
                 "ST: upnp:rootdevice\r\n"
                 "\r\n"
@@ -99,16 +100,18 @@ class AlexaNetworkDiscovery:
             while True:
                 try:
                     data, addr = sock.recvfrom(65507)
-                    response = data.decode('utf-8', errors='ignore')
+                    response = data.decode("utf-8", errors="ignore")
 
                     # Filtrer les appareils Amazon/Echo
-                    if any(keyword in response.lower() for keyword in ['amazon', 'echo', 'alexa']):
+                    if any(keyword in response.lower() for keyword in ["amazon", "echo", "alexa"]):
                         ip = addr[0]
                         if ip not in seen_ips:
                             seen_ips.add(ip)
                             device_info = self._parse_ssdp_response(response, ip)
                             devices.append(device_info)
-                            logger.info(f"  {SharedIcons.DEVICE} Trouvé: {ip} - {device_info.get('server', 'Unknown')}")
+                            logger.info(
+                                f"  {SharedIcons.DEVICE} Trouvé: {ip} - {device_info.get('server', 'Unknown')}"
+                            )
 
                 except socket.timeout:
                     break
@@ -139,20 +142,20 @@ class AlexaNetworkDiscovery:
         info = {"ip": ip}
 
         # Parser les headers HTTP
-        for line in response.split('\r\n'):
-            if ':' in line:
-                key, value = line.split(':', 1)
+        for line in response.split("\r\n"):
+            if ":" in line:
+                key, value = line.split(":", 1)
                 key = key.strip().lower()
                 value = value.strip()
 
-                if key == 'server':
-                    info['server'] = value
-                elif key == 'location':
-                    info['location'] = value
-                elif key == 'usn':
-                    info['usn'] = value
-                elif key == 'st':
-                    info['service_type'] = value
+                if key == "server":
+                    info["server"] = value
+                elif key == "location":
+                    info["location"] = value
+                elif key == "usn":
+                    info["usn"] = value
+                elif key == "st":
+                    info["service_type"] = value
 
         return info
 
@@ -183,7 +186,7 @@ class AlexaNetworkDiscovery:
 
             try:
                 result = sock.connect_ex((ip, port))
-                is_open = (result == 0)
+                is_open = result == 0
                 results[port] = is_open
 
                 if is_open:
@@ -266,7 +269,9 @@ class AlexaNetworkDiscovery:
             >>> if ip:
             ...     print(f"Salon Echo trouvé à {ip}")
         """
-        logger.info(f"{SharedIcons.SEARCH} Recherche de l'appareil {serial[:8]}... sur {subnet}.0/24")
+        logger.info(
+            f"{SharedIcons.SEARCH} Recherche de l'appareil {serial[:8]}... sur {subnet}.0/24"
+        )
 
         # Essayer mDNS d'abord
         try:

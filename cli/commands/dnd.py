@@ -15,13 +15,13 @@ import argparse
 import json
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.dnd_help import (
-    DND_DESCRIPTION,
-    STATUS_HELP,
-    ENABLE_HELP,
     DISABLE_HELP,
+    DND_DESCRIPTION,
+    ENABLE_HELP,
     SCHEDULE_HELP,
+    STATUS_HELP,
 )
 
 
@@ -80,7 +80,13 @@ class DNDCommand(BaseCommand):
         )
 
         # Action: status
-        status_parser = subparsers.add_parser("status", help="Statut DND", description=STATUS_HELP, formatter_class=ActionHelpFormatter, add_help=False)
+        status_parser = subparsers.add_parser(
+            "status",
+            help="Statut DND",
+            description=STATUS_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
         status_parser.add_argument(
             "-d",
             "--device",
@@ -91,7 +97,13 @@ class DNDCommand(BaseCommand):
         )
 
         # Action: enable
-        enable_parser = subparsers.add_parser("enable", help="Activer DND", description=ENABLE_HELP, formatter_class=ActionHelpFormatter, add_help=False)
+        enable_parser = subparsers.add_parser(
+            "enable",
+            help="Activer DND",
+            description=ENABLE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
         enable_parser.add_argument(
             "-d",
             "--device",
@@ -103,7 +115,11 @@ class DNDCommand(BaseCommand):
 
         # Action: disable
         disable_parser = subparsers.add_parser(
-            "disable", help="Désactiver DND", description=DISABLE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "disable",
+            help="Désactiver DND",
+            description=DISABLE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         disable_parser.add_argument(
             "-d",
@@ -120,7 +136,7 @@ class DNDCommand(BaseCommand):
             help="Programmer DND",
             description=SCHEDULE_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         schedule_parser.add_argument(
             "-d",
@@ -184,11 +200,12 @@ class DNDCommand(BaseCommand):
 
             self.info(f"🔕 Statut DND de '{args.device}'...")
 
-            if not self.context.dnd_mgr:
+            ctx = self.require_context()
+            if not ctx.dnd_mgr:
                 self.error("DNDManager non disponible")
                 return False
 
-            status = self.call_with_breaker(self.context.dnd_mgr.get_dnd_status, serial)
+            status = self.call_with_breaker(ctx.dnd_mgr.get_dnd_status, serial)
 
             if status is not None:
                 if hasattr(args, "json_output") and args.json_output:
@@ -217,11 +234,12 @@ class DNDCommand(BaseCommand):
             device_type = self._get_device_type(args.device)
             self.info(f"🔕 Activation DND sur '{args.device}'...")
 
-            if not self.context.dnd_mgr:
+            ctx = self.require_context()
+            if not ctx.dnd_mgr:
                 self.error("DNDManager non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.dnd_mgr.enable_dnd, serial, device_type)
+            result = self.call_with_breaker(ctx.dnd_mgr.enable_dnd, serial, device_type)
 
             if result:
                 self.success(f"✅ DND activé sur '{args.device}'")
@@ -245,11 +263,12 @@ class DNDCommand(BaseCommand):
             device_type = self._get_device_type(args.device)
             self.info(f"🔔 Désactivation DND sur '{args.device}'...")
 
-            if not self.context.dnd_mgr:
+            ctx = self.require_context()
+            if not ctx.dnd_mgr:
                 self.error("DNDManager non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.dnd_mgr.disable_dnd, serial, device_type)
+            result = self.call_with_breaker(ctx.dnd_mgr.disable_dnd, serial, device_type)
 
             if result:
                 self.success(f"✅ DND désactivé sur '{args.device}'")
@@ -293,12 +312,13 @@ class DNDCommand(BaseCommand):
                 f"📅 Programmation DND sur '{args.device}': {args.start}-{args.end}{days_text}..."
             )
 
-            if not self.context.dnd_mgr:
+            ctx = self.require_context()
+            if not ctx.dnd_mgr:
                 self.error("DNDManager non disponible")
                 return False
 
             result = self.call_with_breaker(
-                self.context.dnd_mgr.set_dnd_schedule, serial, args.start, args.end, days
+                ctx.dnd_mgr.set_dnd_schedule, serial, args.start, args.end, days
             )
 
             if result:

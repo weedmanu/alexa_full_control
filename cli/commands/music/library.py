@@ -12,9 +12,9 @@ Date: 8 octobre 2025
 import argparse
 import json
 
-from cli.commands.music.base import MusicSubCommand
-from cli.help_texts.music_help import TRACK_HELP, PLAYLIST_HELP, LIBRARY_HELP
 from cli.command_parser import ActionHelpFormatter
+from cli.commands.music.base import MusicSubCommand
+from cli.help_texts.music_help import LIBRARY_HELP, PLAYLIST_HELP, TRACK_HELP
 
 
 class LibraryCommands(MusicSubCommand):
@@ -66,7 +66,10 @@ class LibraryCommands(MusicSubCommand):
 
         # Action: playlist
         playlist_parser = subparsers.add_parser(
-            "playlist", help="Lire une playlist", description=PLAYLIST_HELP, formatter_class=ActionHelpFormatter,
+            "playlist",
+            help="Lire une playlist",
+            description=PLAYLIST_HELP,
+            formatter_class=ActionHelpFormatter,
         )
         playlist_parser.add_argument(
             "-d",
@@ -133,7 +136,8 @@ class LibraryCommands(MusicSubCommand):
 
             serial, device_type = device_info
 
-            if not hasattr(self.context, "music_library"):
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "music_library", None):
                 self.error("MusicLibraryService non disponible")
                 return False
 
@@ -147,7 +151,7 @@ class LibraryCommands(MusicSubCommand):
             if args.track_id:
                 self.info(f"🎵 Lecture morceau {args.track_id} sur '{args.device}'...")
                 result = self.call_with_breaker(
-                    self.context.music_library.play_library_track,
+                    ctx.music_library.play_library_track,
                     serial,
                     device_type,
                     media_owner_id,
@@ -159,7 +163,7 @@ class LibraryCommands(MusicSubCommand):
                     f"💿 Lecture album '{args.album}' de {args.artist} sur '{args.device}'..."
                 )
                 result = self.call_with_breaker(
-                    self.context.music_library.play_library_track,
+                    ctx.music_library.play_library_track,
                     serial,
                     device_type,
                     media_owner_id,
@@ -188,7 +192,8 @@ class LibraryCommands(MusicSubCommand):
 
             serial, device_type = device_info
 
-            if not hasattr(self.context, "music_library"):
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "music_library", None):
                 self.error("MusicLibraryService non disponible")
                 return False
 
@@ -199,7 +204,7 @@ class LibraryCommands(MusicSubCommand):
             if args.type == "library":
                 self.info(f"📝 Lecture playlist bibliothèque sur '{args.device}'{shuffle_text}...")
                 result = self.call_with_breaker(
-                    self.context.music_library.play_library_playlist,
+                    ctx.music_library.play_library_playlist,
                     serial,
                     device_type,
                     media_owner_id,
@@ -211,7 +216,7 @@ class LibraryCommands(MusicSubCommand):
             elif args.type == "prime-asin":
                 self.info(f"📝 Lecture playlist Prime (ASIN) sur '{args.device}'...")
                 result = self.call_with_breaker(
-                    self.context.music_library.play_prime_playlist,
+                    ctx.music_library.play_prime_playlist,
                     serial,
                     device_type,
                     media_owner_id,
@@ -222,7 +227,7 @@ class LibraryCommands(MusicSubCommand):
             elif args.type == "prime-station":
                 self.info(f"📻 Lecture station Prime sur '{args.device}'...")
                 result = self.call_with_breaker(
-                    self.context.music_library.play_prime_station,
+                    ctx.music_library.play_prime_station,
                     serial,
                     device_type,
                     media_owner_id,
@@ -233,7 +238,7 @@ class LibraryCommands(MusicSubCommand):
             elif args.type == "prime-queue":
                 self.info(f"📜 Lecture queue historique Prime sur '{args.device}'...")
                 result = self.call_with_breaker(
-                    self.context.music_library.play_historical_queue,
+                    ctx.music_library.play_historical_queue,
                     serial,
                     device_type,
                     media_owner_id,
@@ -258,6 +263,7 @@ class LibraryCommands(MusicSubCommand):
     def library(self, args: argparse.Namespace) -> bool:
         """Afficher la bibliothèque."""
         try:
+            ctx = getattr(self, "context", None)
             # Pour les options Prime, un appareil est requis
             if (args.prime_playlists or args.prime_stations) and not args.device:
                 self.error("L'option --device est requise pour les listes Prime")
@@ -265,7 +271,7 @@ class LibraryCommands(MusicSubCommand):
 
             # Pour imported/purchased/playlists, utiliser MusicLibraryService
             if args.imported or args.purchased or args.playlists:
-                if not hasattr(self.context, "music_library"):
+                if not ctx or not getattr(ctx, "music_library", None):
                     self.error("MusicLibraryService non disponible")
                     return False
 
@@ -291,7 +297,7 @@ class LibraryCommands(MusicSubCommand):
                     self.info("📚 Playlists bibliothèque...")
 
                 items = self.call_with_breaker(
-                    self.context.music_library.get_library_playlists,
+                    ctx.music_library.get_library_playlists,
                     serial,
                     device_type,
                     media_owner_id,
@@ -323,8 +329,12 @@ class LibraryCommands(MusicSubCommand):
 
                 self.info("📚 Playlists Prime Music...")
 
+                if not ctx or not getattr(ctx, "music_library", None):
+                    self.error("MusicLibraryService non disponible")
+                    return False
+
                 playlists = self.call_with_breaker(
-                    self.context.music_library.get_prime_playlists,
+                    ctx.music_library.get_prime_playlists,
                     serial,
                     device_type,
                     media_owner_id,
@@ -357,8 +367,12 @@ class LibraryCommands(MusicSubCommand):
 
                 self.info("📻 Stations Prime Music...")
 
+                if not ctx or not getattr(ctx, "music_library", None):
+                    self.error("MusicLibraryService non disponible")
+                    return False
+
                 stations = self.call_with_breaker(
-                    self.context.music_library.get_prime_stations,
+                    ctx.music_library.get_prime_stations,
                     serial,
                     device_type,
                     media_owner_id,

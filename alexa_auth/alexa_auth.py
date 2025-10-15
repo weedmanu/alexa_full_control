@@ -15,6 +15,8 @@ from typing import Any, Dict, Optional
 
 import requests
 from loguru import logger
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 class AlexaAuth:
@@ -40,7 +42,14 @@ class AlexaAuth:
         ...     devices = response.json()
     """
 
-    def __init__(self, data_dir: Optional[Path] = None, cache_service=None):
+    # Annotations de classe pour les analyseurs statiques
+    session: requests.Session
+    amazon_domain: str
+    csrf: Optional[str]
+    refresh_token: Optional[str]
+    cookies_loaded: bool
+
+    def __init__(self, data_dir: Optional[Path] = None, cache_service: Optional[Any] = None):
         """
         Initialise le gestionnaire d'authentification.
 
@@ -55,10 +64,11 @@ class AlexaAuth:
         else:
             self.data_dir = Path(data_dir)
 
+        # Session HTTP et champs d'état
         self.session = requests.Session()
         self.amazon_domain = "amazon.fr"  # Défaut
-        self.csrf: Optional[str] = None
-        self.refresh_token: Optional[str] = None
+        self.csrf = None
+        self.refresh_token = None
         self.cookies_loaded = False
         # Note: cache_service n'est plus utilisé pour l'authentification
         # Les données d'auth restent uniquement dans alexa_auth/data/
@@ -71,6 +81,23 @@ class AlexaAuth:
                 "Accept-Language": "fr-FR,fr;q=0.9",
             }
         )
+
+        # Résilience réseau: retries avec backoff (429/5xx)
+        try:
+            retry = Retry(
+                total=3,
+                connect=3,
+                read=3,
+                backoff_factor=0.5,
+                status_forcelist=(429, 500, 502, 503, 504),
+                allowed_methods=("HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"),
+                raise_on_status=False,
+            )
+            adapter = HTTPAdapter(max_retries=retry)
+            self.session.mount("https://", adapter)
+            self.session.mount("http://", adapter)
+        except Exception as e:  # pragma: no cover - environnement sans urllib3 Retry
+            logger.debug(f"Configuration Retry ignorée: {e}")
 
         logger.debug(f"AlexaAuth initialisé (data_dir={self.data_dir})")
 
@@ -227,7 +254,7 @@ class AlexaAuth:
         # Pas besoin de cache supplémentaire
         pass
 
-    def get(self, url: str, **kwargs) -> requests.Response:
+    def get(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Effectue une requête GET avec la session authentifiée.
 
@@ -248,10 +275,14 @@ class AlexaAuth:
         if not self.cookies_loaded:
             logger.warning("GET sans cookies chargés")
 
+        params: Dict[str, Any] = dict(kwargs)
+        params.setdefault("timeout", 15)
         logger.debug(f"GET {url}")
-        return self.session.get(url, **kwargs)
+        resp: requests.Response = self.session.get(url, **params)
+        logger.debug(f"GET {url} -> {resp.status_code}")
+        return resp
 
-    def post(self, url: str, **kwargs) -> requests.Response:
+    def post(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Effectue une requête POST avec la session authentifiée.
 
@@ -280,10 +311,14 @@ class AlexaAuth:
         if self.csrf:
             kwargs.setdefault("headers", {})["csrf"] = self.csrf
 
+        params: Dict[str, Any] = dict(kwargs)
+        params.setdefault("timeout", 15)
         logger.debug(f"POST {url}")
-        return self.session.post(url, **kwargs)
+        resp: requests.Response = self.session.post(url, **params)
+        logger.debug(f"POST {url} -> {resp.status_code}")
+        return resp
 
-    def put(self, url: str, **kwargs) -> requests.Response:
+    def put(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Effectue une requête PUT avec la session authentifiée.
 
@@ -300,10 +335,14 @@ class AlexaAuth:
         if self.csrf:
             kwargs.setdefault("headers", {})["csrf"] = self.csrf
 
+        params: Dict[str, Any] = dict(kwargs)
+        params.setdefault("timeout", 15)
         logger.debug(f"PUT {url}")
-        return self.session.put(url, **kwargs)
+        resp: requests.Response = self.session.put(url, **params)
+        logger.debug(f"PUT {url} -> {resp.status_code}")
+        return resp
 
-    def delete(self, url: str, **kwargs) -> requests.Response:
+    def delete(self, url: str, **kwargs: Any) -> requests.Response:
         """
         Effectue une requête DELETE avec la session authentifiée.
 
@@ -320,8 +359,12 @@ class AlexaAuth:
         if self.csrf:
             kwargs.setdefault("headers", {})["csrf"] = self.csrf
 
+        params: Dict[str, Any] = dict(kwargs)
+        params.setdefault("timeout", 15)
         logger.debug(f"DELETE {url}")
-        return self.session.delete(url, **kwargs)
+        resp: requests.Response = self.session.delete(url, **params)
+        logger.debug(f"DELETE {url} -> {resp.status_code}")
+        return resp
 
     def is_authenticated(self) -> bool:
         """
@@ -347,12 +390,14 @@ class AlexaAuth:
             >>> info = auth.get_cookie_info()
             >>> print(f"Domain: {info['domain']}, Cookies: {info['count']}")
         """
+        # Ne pas exposer les valeurs sensibles (csrf, cookies) dans les logs/retours
         return {
             "loaded": self.cookies_loaded,
             "domain": self.amazon_domain,
             "count": len(self.session.cookies),
-            "has_csrf": self.csrf is not None,
-            "has_refresh_token": self.refresh_token is not None,
+            "has_csrf": bool(self.csrf),
+            "has_refresh_token": bool(self.refresh_token),
+            "csrf_present": self.csrf is not None,
         }
 
     def __repr__(self) -> str:

@@ -8,13 +8,13 @@ Date: 8 octobre 2025
 import argparse
 
 from cli.command_parser import UniversalHelpFormatter
+from cli.commands.timers.base import TimeSubCommand
 from cli.help_texts.reminder_help import (
     COMPLETE_HELP,
     CREATE_HELP,
     DELETE_HELP,
     LIST_HELP,
 )
-from cli.commands.timers.base import TimeSubCommand
 
 
 class RemindersCommands(TimeSubCommand):
@@ -43,7 +43,8 @@ class RemindersCommands(TimeSubCommand):
             if not serial:
                 return False
 
-            if not self.context.reminder_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "reminder_mgr", None):
                 self.error("ReminderManager non disponible")
                 return False
 
@@ -55,7 +56,7 @@ class RemindersCommands(TimeSubCommand):
                 self.info(f"   Date: {args.datetime}")
 
                 result = self.call_with_breaker(
-                    self.context.reminder_mgr.create_reminder, serial, args.label, args.datetime
+                    ctx.reminder_mgr.create_reminder, serial, args.label, args.datetime
                 )
             else:
                 # Rappel récurrent
@@ -67,7 +68,7 @@ class RemindersCommands(TimeSubCommand):
                 self.info(f"   Heure: {time_val}")
 
                 result = self.call_with_breaker(
-                    self.context.reminder_mgr.create_recurring_reminder,
+                    ctx.reminder_mgr.create_recurring_reminder,
                     serial,
                     args.label,
                     recurrence,
@@ -100,11 +101,12 @@ class RemindersCommands(TimeSubCommand):
                 self.info("📋 Récupération de tous les rappels...")
                 serial = None
 
-            if not self.context.reminder_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "reminder_mgr", None):
                 self.error("ReminderManager non disponible")
                 return False
 
-            reminders = self.call_with_breaker(self.context.reminder_mgr.list_reminders)
+            reminders = self.call_with_breaker(ctx.reminder_mgr.list_reminders)
 
             if not reminders:
                 self.warning("Aucun rappel trouvé")
@@ -136,11 +138,12 @@ class RemindersCommands(TimeSubCommand):
 
             self.info(f"🗑️  Suppression rappel '{args.id}'...")
 
-            if not self.context.reminder_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "reminder_mgr", None):
                 self.error("ReminderManager non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.reminder_mgr.delete_reminder, args.id)
+            result = self.call_with_breaker(ctx.reminder_mgr.delete_reminder, args.id)
 
             if result:
                 self.success(f"✅ Rappel '{args.id}' supprimé")
@@ -158,11 +161,12 @@ class RemindersCommands(TimeSubCommand):
         try:
             self.info(f"✅ Marquage rappel '{args.id}' comme complété...")
 
-            if not self.context.reminder_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "reminder_mgr", None):
                 self.error("ReminderManager non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.reminder_mgr.complete_reminder, args.id)
+            result = self.call_with_breaker(ctx.reminder_mgr.complete_reminder, args.id)
 
             if result:
                 self.success(f"✅ Rappel '{args.id}' marqué comme complété")

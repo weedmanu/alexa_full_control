@@ -12,7 +12,10 @@ import argparse
 import json
 import sys
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from .types import ContextProtocol
 
 from loguru import logger
 
@@ -51,15 +54,20 @@ class BaseCommand(ABC):
             context: Objet Context contenant auth, config, state_machine, etc.
                     Peut être None lors de l'initialisation temporaire pour setup_parser()
         """
-        self.context = context
+        # store private reference to the shared context
+        self._context = context
         self.logger = logger.bind(command=self.__class__.__name__)
 
-        # Attributs de commodité (None si context est None)
-        self.auth = context.auth if context else None
-        self.config = context.config if context else None
-        self.state_machine = context.state_machine if context else None
-        self.device_mgr = context.device_mgr if context else None
-        self.breaker = context.breaker if context else None
+        # Note: instead of copying attributes from context (which causes
+        # mypy Protocol/settable conflicts when the concrete Context exposes
+        # properties), we keep only the reference to context and expose
+        # accessors as properties below.
+        # This preserves runtime behaviour and is friendlier to static typing.
+        #
+        # Access via self.auth, self.device_mgr, etc. will delegate to
+        # self.context when available.
+        #
+        # Keep a typed reference for mypy
 
     @abstractmethod
     def setup_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -147,7 +155,45 @@ class BaseCommand(ABC):
 
         return True
 
-    def call_with_breaker(self, func, *args, **kwargs) -> Optional[Any]:
+    # ------------------------------------------------------------------
+    # Convenience properties that delegate to the underlying context
+    # ------------------------------------------------------------------
+    @property
+    def context(self) -> Optional["ContextProtocol"]:
+        return self._context
+
+    @property
+    def auth(self) -> Optional[Any]:
+        return self._context.auth if self._context else None
+
+    @property
+    def config(self) -> Optional[Any]:
+        return self._context.config if self._context else None
+
+    @property
+    def state_machine(self) -> Optional[Any]:
+        return self._context.state_machine if self._context else None
+
+    @property
+    def device_mgr(self) -> Optional[Any]:
+        return self._context.device_mgr if self._context else None
+
+    @property
+    def breaker(self) -> Optional[Any]:
+        return self._context.breaker if self._context else None
+
+    def require_context(self) -> "ContextProtocol":
+        """Return the context cast to ContextProtocol or raise RuntimeError.
+
+        Use this in command implementations when the context must be present
+        (for example after authentication). This helps mypy narrow Optional
+        types in command methods.
+        """
+        if not self._context:
+            raise RuntimeError("Context is required for this operation")
+        return self._context
+
+    def call_with_breaker(self, func: Callable[..., Any], *args, **kwargs) -> Optional[Any]:
         """
         Exécute une fonction avec protection du circuit breaker.
 

@@ -75,7 +75,7 @@ class CircuitBreaker:
         self._lock = threading.RLock()
 
         logger.info(
-            f"🔧 Circuit Breaker initialisé: " f"threshold={failure_threshold}, timeout={timeout}s"
+            f"🔧 Circuit Breaker initialisé: threshold={failure_threshold}, timeout={timeout}s"
         )
 
     @property
@@ -159,9 +159,7 @@ class CircuitBreaker:
                 return
 
             if self._failure_count >= self._failure_threshold:
-                logger.error(
-                    f"❌ Circuit CLOSED → OPEN " f"({self._failure_count} échecs consécutifs)"
-                )
+                logger.error(f"❌ Circuit CLOSED → OPEN ({self._failure_count} échecs consécutifs)")
                 self._state = CircuitState.OPEN
 
     def reset(self) -> None:

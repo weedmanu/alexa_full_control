@@ -1,4 +1,4 @@
-﻿"""
+"""
 Help text constants for the `music` command.
 
 This file contains the long description used by the music command parser.
@@ -463,4 +463,3 @@ QUEUE_HELP = """
   � File d'attente doit contenir au moins un morceau
   � Appareil cible doit �tre connect� et accessible
 """
-

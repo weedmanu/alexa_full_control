@@ -7,7 +7,7 @@ Date: 8 octobre 2025
 
 import re
 from datetime import timedelta
-from typing import Optional
+from typing import Optional, Callable, Any
 
 from loguru import logger
 
@@ -166,7 +166,7 @@ class TimeSubCommand:
 
         return " ".join(parts) if parts else "0s"
 
-    def call_with_breaker(self, func, *args, **kwargs):
+    def call_with_breaker(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """
         Appelle une fonction avec le circuit breaker.
 
@@ -178,6 +178,7 @@ class TimeSubCommand:
         Returns:
             Résultat de la fonction
         """
-        if self.context and hasattr(self.context, "breaker"):
-            return self.context.breaker.call(func, *args, **kwargs)
+        ctx = getattr(self, "context", None)
+        if ctx and getattr(ctx, "breaker", None):
+            return ctx.breaker.call(func, *args, **kwargs)
         return func(*args, **kwargs)

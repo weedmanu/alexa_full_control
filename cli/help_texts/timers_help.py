@@ -1,4 +1,4 @@
-﻿"""
+"""
 Help text constants for the `timer` command.
 
 Contains the long description displayed for the timer category.
@@ -526,4 +526,3 @@ REMINDER_DELETE_HELP = """
   ? Connexion internet requise pour la synchronisation
   ? Action d?finitive et irr?versible
 """
-

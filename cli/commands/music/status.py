@@ -70,7 +70,8 @@ class StatusCommands(MusicSubCommand):
 
             self.info(f"📊 État de la lecture sur '{args.device}'...")
 
-            if not self.context.playback_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "playback_mgr", None):
                 self.error("PlaybackManager non disponible")
                 return False
 
@@ -78,7 +79,7 @@ class StatusCommands(MusicSubCommand):
             parent_id, parent_type = self._get_parent_multiroom(args.device)
 
             # Récupérer l'état complet (3 endpoints API comme le shell)
-            state = self.context.playback_mgr.get_state(
+            state = ctx.playback_mgr.get_state(
                 serial,
                 device_type,
                 parent_id,

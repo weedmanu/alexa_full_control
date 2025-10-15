@@ -12,6 +12,7 @@ import threading
 from typing import TYPE_CHECKING, Optional
 
 from loguru import logger
+
 from utils.logger import SharedIcons
 
 if TYPE_CHECKING:
@@ -56,7 +57,7 @@ class VoiceCommandService:
         self._lock = threading.RLock()
         self._customer_id = None
 
-        logger.info(f"{SharedIcons.SUCCESS} VoiceCommandService initialisé")
+        logger.info(f"{SharedIcons.GEAR} VoiceCommandService initialisé")
 
     def speak(
         self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
@@ -78,7 +79,7 @@ class VoiceCommandService:
         """
         with self._lock:
             if not self.state_machine.can_execute_commands:
-                logger.warning(f"{SharedIcons.ERROR} État système ne permet pas l'exécution")
+                logger.warning("❌ État système ne permet pas l'exécution")
                 return False
 
             try:
@@ -89,7 +90,7 @@ class VoiceCommandService:
                     # Retirer "Alexa," si présent
                     text_clean = text_clean[6:].strip(",").strip()
 
-                logger.debug(f"{SharedIcons.DOCUMENT} Commande nettoyée: '{text_clean}'")
+                logger.debug(f"📝 Commande nettoyée: '{text_clean}'")
 
                 # Récupérer customer_id si nécessaire
                 if not self._customer_id:
@@ -157,7 +158,7 @@ class VoiceCommandService:
 
                 logger.debug(f"📤 Envoi commande vocale: '{text_clean}'")
                 logger.debug(f"📦 Device: {dtype} / {dsn}")
-                logger.debug(f"📋 Payload type: Alexa.TextCommand")
+                logger.debug("📋 Payload type: Alexa.TextCommand")
                 logger.debug(f"📋 Payload text: '{text_clean}'")
                 # Envoyer la requête avec les headers COMPLETS (comme alexa_advanced_control-main)
                 # URL en dur comme alexa_advanced_control.py
@@ -196,11 +197,11 @@ class VoiceCommandService:
     ) -> bool:
         """
         Simule une commande vocale avec Alexa.Speak (comme si on parlait au micro).
-        
+
         Différence avec speak():
         - speak() utilise TextCommand (traité comme texte)
         - speak_as_voice() utilise Alexa.Speak (traité comme voix)
-        
+
         Args:
             text: Commande vocale (ex: "donne-moi la liste des choses à faire")
             device_serial: Serial du device (si None, utilise ALEXA_CURRENT_DSN)
@@ -231,6 +232,7 @@ class VoiceCommandService:
                 # Device serial et type
                 if device_serial:
                     from services.cache_service import CacheService
+
                     cache = CacheService()
                     devices_data = cache.get("devices") or {}
                     devices = devices_data.get("devices", [])
@@ -244,7 +246,9 @@ class VoiceCommandService:
                     if not dtype:
                         logger.error(f"❌ Device {device_serial} introuvable dans le cache")
                         return False
-                    logger.debug(f"🔊 Device: {device_name} (serial={device_serial}, deviceType={dtype})")
+                    logger.debug(
+                        f"🔊 Device: {device_name} (serial={device_serial}, deviceType={dtype})"
+                    )
                 else:
                     default_device = self._get_default_echo_device()
                     if not default_device:
@@ -252,7 +256,9 @@ class VoiceCommandService:
                         return False
                     device_serial = default_device["serial"]
                     dtype = default_device["type"]
-                    logger.debug(f"🔊 Device: {default_device['name']} (serial={device_serial}, type={dtype})")
+                    logger.debug(
+                        f"🔊 Device: {default_device['name']} (serial={device_serial}, type={dtype})"
+                    )
 
                 # Construire le payload avec Alexa.Speak au lieu de TextCommand
                 # Cela simule une VRAIE commande vocale (comme si on parlait au micro)
@@ -452,144 +458,175 @@ class VoiceCommandService:
         return self.speak(f"mets {light_name} en {color}", device_serial)
 
     def ask_and_get_response(
-        self, 
-        question: str, 
-        device_serial: Optional[str] = None,
-        wait_seconds: float = 2.0
+        self, question: str, device_serial: Optional[str] = None, wait_seconds: float = 2.0
     ) -> Optional[str]:
         """
         Pose une question vocale à Alexa et récupère la réponse.
-        
+
         Utilise TextCommand pour poser la question, puis récupère
         la réponse d'Alexa via l'API Privacy (historique vocal).
-        
+
         Args:
             question: Question à poser (ex: "lis ma liste de courses")
             device_serial: Serial du device (optionnel)
             wait_seconds: Temps d'attente avant de récupérer la réponse (défaut: 2s)
-            
+
         Returns:
             Réponse vocale d'Alexa ou None si échec
-            
+
         Exemples:
             >>> response = service.ask_and_get_response("lis ma liste de courses")
             >>> print(response)  # "Voici votre liste de courses : lait, pain, ..."
         """
         import time
-        
+
         with self._lock:
             if not self.state_machine.can_execute_commands:
                 logger.warning("❌ État système ne permet pas l'exécution")
                 return None
-            
+
             try:
                 # 1. Enregistrer le timestamp avant l'envoi
                 from datetime import datetime
+
                 timestamp_before = datetime.now()
-                
+
                 # 2. Envoyer la commande vocale
                 logger.info(f"📤 Envoi commande à Alexa: '{question}'")
                 success = self.speak(question, device_serial)
-                
+
                 if not success:
                     logger.error("❌ Échec de l'envoi de la commande")
                     return None
-                
+
                 logger.success("✅ Commande envoyée avec succès")
-                
+
                 # 3. Attendre que Alexa traite et réponde
                 logger.info(f"⏳ Attente de {wait_seconds}s pour que Alexa réponde...")
                 for i in range(int(wait_seconds)):
                     time.sleep(1)
-                    logger.debug(f"   {i+1}/{int(wait_seconds)}s...")
-                
+                    logger.debug(f"   {i + 1}/{int(wait_seconds)}s...")
+
                 # Attendre le reste (décimales)
                 remaining = wait_seconds - int(wait_seconds)
                 if remaining > 0:
                     time.sleep(remaining)
-                
+
                 # 4. Récupérer la dernière réponse via l'API Privacy
                 logger.info("🔍 Récupération de la réponse d'Alexa...")
-                
+
                 from core.activity_manager import ActivityManager
-                
+
                 activity_mgr = ActivityManager(self.auth, self.config, self.state_machine)
-                
+
                 # Récupérer les activités depuis le timestamp d'envoi
                 activities = activity_mgr.get_activities(limit=20, start_time=timestamp_before)
-                
+
                 if not activities:
-                    logger.warning("⚠️ Aucune nouvelle activité trouvée après l'envoi de la commande")
+                    logger.warning(
+                        "⚠️ Aucune nouvelle activité trouvée après l'envoi de la commande"
+                    )
                     logger.info("💡 Cela peut signifier que:")
                     logger.info("   - La commande n'a pas été exécutée par Alexa")
                     logger.info("   - Le délai d'attente est trop court")
                     logger.info("   - L'appareil Alexa n'est pas connecté")
                     return None
-                
+
                 logger.debug(f"📊 {len(activities)} nouvelle(s) activité(s) depuis l'envoi")
-                
+
                 # Chercher la réponse d'Alexa qui correspond à notre commande
                 # Chercher des réponses qui semblent être des réponses à des questions sur les listes
                 # et qui sont suffisamment récentes (moins de 30 secondes)
                 import datetime
+
                 current_time = datetime.datetime.now().timestamp() * 1000
-                
+
                 list_related_responses = []
-                
+
                 for idx, activity in enumerate(activities):
                     # Vérifier que c'est une interaction vocale avec réponse Alexa
                     if activity.get("type") == "voice":
                         alexa_response = activity.get("alexaResponse")
                         timestamp_str = activity.get("timestamp", "")
-                        
+
                         # Convertir le timestamp string en millisecondes
                         try:
                             if isinstance(timestamp_str, str) and timestamp_str:
                                 # Le timestamp est au format ISO, le convertir en timestamp Unix
-                                dt = datetime.datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                                dt = datetime.datetime.fromisoformat(
+                                    timestamp_str.replace("Z", "+00:00")
+                                )
                                 timestamp = dt.timestamp() * 1000
                             else:
                                 timestamp = float(timestamp_str) if timestamp_str else 0
                         except (ValueError, TypeError):
                             logger.debug(f"Impossible de convertir le timestamp: {timestamp_str}")
                             continue
-                        
+
                         # Vérifier que l'activité est récente (moins de 30 secondes)
                         if current_time - timestamp > 30000:  # 30 secondes en millisecondes
                             continue
-                            
+
                         customer_transcript = activity.get("utterance")
                         device_name = activity.get("deviceName", "N/A")
-                        
+
                         logger.info(f"\n🔍 Activité #{idx + 1} (depuis {timestamp_str}):")
                         logger.info(f"   Appareil: {device_name}")
-                        logger.info(f"   Votre commande: {customer_transcript if customer_transcript else '(TextCommand - non enregistré)'}")
-                        logger.info(f"   Réponse Alexa: {alexa_response[:150] if alexa_response else 'Aucune'}...")
-                        
+                        logger.info(
+                            f"   Votre commande: {customer_transcript if customer_transcript else '(TextCommand - non enregistré)'}"
+                        )
+                        logger.info(
+                            f"   Réponse Alexa: {alexa_response[:150] if alexa_response else 'Aucune'}..."
+                        )
+
                         # Collecter les réponses qui semblent liées aux listes
                         if alexa_response:
                             response_lower = alexa_response.lower()
                             # Mots-clés indiquant une réponse sur une liste
                             list_keywords = [
-                                "liste", "courses", "achat", "shopping", "tâche", "todo", 
-                                "faire", "vide", "rien", "élément", "article", "pain", "lait", 
-                                "œuf", "farine", "beurre", "fromage", "viande", "légume",
-                                "fruit", "boisson", "produit", "marché", "supermarché"
+                                "liste",
+                                "courses",
+                                "achat",
+                                "shopping",
+                                "tâche",
+                                "todo",
+                                "faire",
+                                "vide",
+                                "rien",
+                                "élément",
+                                "article",
+                                "pain",
+                                "lait",
+                                "œuf",
+                                "farine",
+                                "beurre",
+                                "fromage",
+                                "viande",
+                                "légume",
+                                "fruit",
+                                "boisson",
+                                "produit",
+                                "marché",
+                                "supermarché",
                             ]
-                            
+
                             # Si la réponse contient des mots-clés liés aux listes, la garder
                             if any(keyword in response_lower for keyword in list_keywords):
                                 list_related_responses.append((activity, alexa_response))
-                                logger.debug(f"   📋 Réponse potentiellement liée à une liste détectée")
-                
+                                logger.debug(
+                                    "   📋 Réponse potentiellement liée à une liste détectée"
+                                )
+
                 # Si on a trouvé des réponses liées aux listes, prendre la plus récente
                 if list_related_responses:
                     # Trier par timestamp (le plus récent en premier)
-                    list_related_responses.sort(key=lambda x: x[0].get("timestamp", ""), reverse=True)
+                    list_related_responses.sort(
+                        key=lambda x: x[0].get("timestamp", ""), reverse=True
+                    )
                     best_activity, best_response = list_related_responses[0]
-                    logger.success(f"✅ Réponse Alexa liée à une liste trouvée")
+                    logger.success("✅ Réponse Alexa liée à une liste trouvée")
                     return best_response
-                
+
                 # Fallback: si on n'a pas de réponse liée aux listes, mais qu'on a des réponses récentes,
                 # prendre la plus récente (elle pourrait être notre réponse même si elle ne contient pas de mots-clés)
                 recent_responses = []
@@ -598,32 +635,41 @@ class VoiceCommandService:
                         timestamp_str = activity.get("timestamp", "")
                         try:
                             if isinstance(timestamp_str, str) and timestamp_str:
-                                dt = datetime.datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                                dt = datetime.datetime.fromisoformat(
+                                    timestamp_str.replace("Z", "+00:00")
+                                )
                                 timestamp = dt.timestamp() * 1000
                             else:
                                 timestamp = float(timestamp_str) if timestamp_str else 0
                         except (ValueError, TypeError):
                             continue
-                            
+
                         if current_time - timestamp <= 30000:  # 30 secondes
                             recent_responses.append(activity)
-                
+
                 if recent_responses:
                     # Trier par timestamp et prendre la plus récente
                     recent_responses.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
                     best_recent = recent_responses[0]
-                    logger.success(f"✅ Réponse Alexa récente trouvée (possible réponse à notre commande)")
+                    logger.success(
+                        "✅ Réponse Alexa récente trouvée (possible réponse à notre commande)"
+                    )
                     return best_recent.get("alexaResponse")
-                
-                logger.warning(f"⚠️ Aucune réponse correspondante trouvée dans les {len(activities)} activités récentes")
+
+                logger.warning(
+                    f"⚠️ Aucune réponse récente trouvée dans les {len(activities)} activités"
+                )
+                return None
+
+                logger.warning(
+                    f"⚠️ Aucune réponse correspondante trouvée dans les {len(activities)} activités récentes"
+                )
                 logger.info("💡 Assurez-vous que:")
                 logger.info("   1. Votre appareil Alexa est allumé et connecté")
                 logger.info("   2. La commande a bien été exécutée (vérifiez dans l'app Alexa)")
                 logger.info("   3. Augmentez le délai d'attente si nécessaire")
                 return None
-                
+
             except Exception as e:
                 logger.exception(f"❌ Erreur lors de la récupération de la réponse: {e}")
                 return None
-
-

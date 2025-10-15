@@ -1,4 +1,4 @@
-﻿"""
+"""
 Module de gestion de l'aide pour Alexa CLI.
 
 Ce module centralise toute la logique d'affichage et de génération
@@ -12,112 +12,137 @@ ARCHITECTURE:
     une cohérence visuelle parfaite et éviter la duplication de code.
 """
 
-from typing import Optional
-import sys
 import os
+import sys
+from typing import Optional
 
 # Ajouter le répertoire parent au PYTHONPATH pour l'import
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from utils.help_formatter import (
-    format_header,
-    format_features,
-    format_usage,
-    format_global_options,
-    format_categories,
-    format_subcategories,
     format_actions,
+    format_categories,
     format_examples,
+    format_features,
+    format_global_options,
+    format_header,
     format_more_help_main,
-    format_prerequisites
+    format_prerequisites,
+    format_subcategories,
+    format_usage,
 )
-
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 📋 AIDE PRINCIPALE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+
 def get_main_help() -> str:
     """Génère l'aide principale (alexa -h) en assemblant les sections."""
     sections = []
-    
+
     # Header
     sections.append(format_header("🎙️", "ALEXA ADVANCED CONTROL - CONTRÔLE AVANCÉ D'ALEXA"))
-    
+
     # Fonctionnalités
-    sections.append(format_features([
-        "Contrôle complet des appareils Alexa",
-        "Gestion des médias (musique, playlists, volume)",
-        "Programmation temporelle (minuteurs, alarmes, rappels)",
-        "Contrôle domotique (lumières, thermostats, etc.)",
-        "Notifications et annonces vocales",
-        "Synchronisation multi-appareils"
-    ], show_title=False))
-    
+    sections.append(
+        format_features(
+            [
+                "Contrôle complet des appareils Alexa",
+                "Gestion des médias (musique, playlists, volume)",
+                "Programmation temporelle (minuteurs, alarmes, rappels)",
+                "Contrôle domotique (lumières, thermostats, etc.)",
+                "Notifications et annonces vocales",
+                "Synchronisation multi-appareils",
+            ],
+            show_title=False,
+        )
+    )
+
     # Usage
     sections.append(format_usage(is_main=True))
-    
+
     # Options globales
     sections.append(format_global_options())
-    
+
     # Catégories
-    sections.append(format_categories([
-        {"name": "auth", "desc": "Authentification (create, status)"},
-        {"name": "device", "desc": "Contrôle et gestion des appareils"},
-        {"name": "timers", "desc": "Gestion du temps (minuteurs, alarmes, rappels)"},
-        {"name": "music", "desc": "Contrôle musical et médias"},
-        {"name": "smarthome", "desc": "Domotique et appareils connectés"},
-        {"name": "notification", "desc": "Gestion des notifications"},
-        {"name": "routine", "desc": "Automatisations et routines"},
-        {"name": "activity", "desc": "Historique d'activité"},
-        {"name": "calendar", "desc": "Gestion du calendrier"},
-        {"name": "cache", "desc": "Gestion du cache local"}
-    ]))
-    
+    sections.append(
+        format_categories(
+            [
+                {"name": "auth", "desc": "Authentification (create, status)"},
+                {"name": "device", "desc": "Contrôle et gestion des appareils"},
+                {"name": "timers", "desc": "Gestion du temps (minuteurs, alarmes, rappels)"},
+                {"name": "music", "desc": "Contrôle musical et médias"},
+                {"name": "smarthome", "desc": "Domotique et appareils connectés"},
+                {"name": "notification", "desc": "Gestion des notifications"},
+                {"name": "routine", "desc": "Automatisations et routines"},
+                {"name": "activity", "desc": "Historique d'activité"},
+                {"name": "calendar", "desc": "Gestion du calendrier"},
+                {"name": "cache", "desc": "Gestion du cache local"},
+            ]
+        )
+    )
+
     # Sous-catégories
-    sections.append(format_subcategories([
-        {"name": "countdown", "desc": "Minuteurs et compteurs de temps"},
-        {"name": "alarm", "desc": "Gestion des alarmes programmées"},
-        {"name": "reminder", "desc": "Rappels et notifications"},
-        {"name": "playback", "desc": "Contrôle de lecture musicale"},
-        {"name": "volume", "desc": "Gestion du volume audio"},
-        {"name": "equalizer", "desc": "Égaliseur et réglages audio"},
-        {"name": "light", "desc": "Contrôle de l'éclairage"},
-        {"name": "thermostat", "desc": "Gestion de la température"},
-        {"name": "security", "desc": "Sécurité et surveillance"},
-        {"name": "camera", "desc": "Contrôle des caméras"}
-    ]))
-    
+    sections.append(
+        format_subcategories(
+            [
+                {"name": "countdown", "desc": "Minuteurs et compteurs de temps"},
+                {"name": "alarm", "desc": "Gestion des alarmes programmées"},
+                {"name": "reminder", "desc": "Rappels et notifications"},
+                {"name": "playback", "desc": "Contrôle de lecture musicale"},
+                {"name": "volume", "desc": "Gestion du volume audio"},
+                {"name": "equalizer", "desc": "Égaliseur et réglages audio"},
+                {"name": "light", "desc": "Contrôle de l'éclairage"},
+                {"name": "thermostat", "desc": "Gestion de la température"},
+                {"name": "security", "desc": "Sécurité et surveillance"},
+                {"name": "camera", "desc": "Contrôle des caméras"},
+            ]
+        )
+    )
+
     # Actions
-    sections.append(format_actions([
-        {"name": "create", "desc": "Créer un nouvel élément (minuteur, alarme, etc.)"},
-        {"name": "list", "desc": "Lister les éléments existants"},
-        {"name": "delete", "desc": "Supprimer un élément"},
-        {"name": "update", "desc": "Modifier un élément existant"},
-        {"name": "play/pause/stop", "desc": "Contrôler la lecture média"},
-        {"name": "on/off", "desc": "Contrôler l'état des appareils"}
-    ]))
-    
+    sections.append(
+        format_actions(
+            [
+                {"name": "create", "desc": "Créer un nouvel élément (minuteur, alarme, etc.)"},
+                {"name": "list", "desc": "Lister les éléments existants"},
+                {"name": "delete", "desc": "Supprimer un élément"},
+                {"name": "update", "desc": "Modifier un élément existant"},
+                {"name": "play/pause/stop", "desc": "Contrôler la lecture média"},
+                {"name": "on/off", "desc": "Contrôler l'état des appareils"},
+            ]
+        )
+    )
+
     # Exemples
-    sections.append(format_examples([
-        "alexa device list",
-        "alexa timers countdown create --duration 10m",
-        'alexa music play --playlist "Ma playlist"',
-        'alexa smarthome light on --name "Salon"',
-        'alexa --verbose device list                       # Avec option globale'
-    ]))
-    
+    sections.append(
+        format_examples(
+            [
+                "alexa device list",
+                "alexa timers countdown create --duration 10m",
+                'alexa music play --playlist "Ma playlist"',
+                'alexa smarthome light on --name "Salon"',
+                "alexa --verbose device list                       # Avec option globale",
+            ]
+        )
+    )
+
     # Pour plus d'aide
     sections.append(format_more_help_main())
-    
+
     # Prérequis
-    sections.append(format_prerequisites([
-        "Authentification Alexa configurée (alexa auth create)",
-        "Appareils Alexa connectés et accessibles",
-        "Connexion internet stable",
-        "Cookies d'authentification valides"
-    ]))
-    
+    sections.append(
+        format_prerequisites(
+            [
+                "Authentification Alexa configurée (alexa auth create)",
+                "Appareils Alexa connectés et accessibles",
+                "Connexion internet stable",
+                "Cookies d'authentification valides",
+            ]
+        )
+    )
+
     return "\n\n".join(sections) + "\n"
 
 
@@ -131,6 +156,7 @@ MAIN_HELP_TEMPLATE = get_main_help()
 
 from utils.help_formatter import create_category_help
 
+
 def _get_timers_help() -> str:
     """Génère l'aide de la catégorie TIMERS avec le système modulaire."""
     return create_category_help(
@@ -142,27 +168,27 @@ def _get_timers_help() -> str:
             "Création et gestion des rappels",
             "Contrôle précis du temps (pause, reprise, annulation)",
             "Notifications et alertes programmées",
-            "Synchronisation multi-appareils"
+            "Synchronisation multi-appareils",
         ],
         subcategories=[
             {"name": "countdown", "desc": "Minuteurs et compteurs de temps"},
             {"name": "alarm", "desc": "Gestion des alarmes programmées"},
-            {"name": "reminder", "desc": "Rappels et notifications"}
+            {"name": "reminder", "desc": "Rappels et notifications"},
         ],
         examples=[
             'alexa timers countdown create --duration 10m --label "Pâtes"',
-            'alexa timers countdown list',
-            'alexa timers countdown cancel --id 123',
+            "alexa timers countdown list",
+            "alexa timers countdown cancel --id 123",
             'alexa timers alarm create --time 07:30 --label "Réveil"',
-            'alexa timers alarm list',
-            'alexa timers reminder create --label "Réunion équipe"'
+            "alexa timers alarm list",
+            'alexa timers reminder create --label "Réunion équipe"',
         ],
         prerequisites=[
             "Authentification requise pour la synchronisation",
             "Connexion internet obligatoire pour les rappels",
             "Appareil cible doit être spécifié (-d)",
-            "Programmations synchronisées entre appareils"
-        ]
+            "Programmations synchronisées entre appareils",
+        ],
     )
 
 
@@ -177,26 +203,26 @@ def _get_music_help() -> str:
             "Gestion des playlists et stations",
             "Contrôle du volume et égaliseur",
             "Recherche et découverte musicale",
-            "Synchronisation multi-room"
+            "Synchronisation multi-room",
         ],
         subcategories=[
             {"name": "playback", "desc": "Contrôle de lecture musicale"},
             {"name": "volume", "desc": "Gestion du volume audio"},
             {"name": "equalizer", "desc": "Égaliseur et réglages audio"},
-            {"name": "library", "desc": "Bibliothèque musicale"}
+            {"name": "library", "desc": "Bibliothèque musicale"},
         ],
         examples=[
             'alexa music playback play --song "Bohemian Rhapsody"',
-            'alexa music volume set --level 75',
-            'alexa music playback pause',
-            'alexa music equalizer bass --level 5'
+            "alexa music volume set --level 75",
+            "alexa music playback pause",
+            "alexa music equalizer bass --level 5",
         ],
         prerequisites=[
             "Service musical configuré (Amazon Music, Spotify)",
             "Appareil cible avec capacités audio",
             "Connexion internet pour le streaming",
-            "Authentification du service musical"
-        ]
+            "Authentification du service musical",
+        ],
     )
 
 
@@ -206,7 +232,7 @@ class AlexaHelp:
 
     Fournit des méthodes pour générer différents types d'aide
     avec une interface unifiée.
-    
+
     NOUVEAU: Utilise le système modulaire de utils.help_formatter
     pour garantir cohérence et réduire la duplication de code.
     """
@@ -235,10 +261,10 @@ class AlexaHelp:
             Aide de catégorie ou None si non trouvé
         """
         category_generators = {
-            'timers': _get_timers_help,
-            'music': _get_music_help,
+            "timers": _get_timers_help,
+            "music": _get_music_help,
         }
-        
+
         generator = category_generators.get(category)
         return generator() if generator else None
 
@@ -256,7 +282,9 @@ class AlexaHelp:
         # Pour l'instant, retourner None - à implémenter avec le système modulaire
         return None
 
-    def get_action_help(self, category: str, subcategory: Optional[str], action: str) -> Optional[str]:
+    def get_action_help(
+        self, category: str, subcategory: Optional[str], action: str
+    ) -> Optional[str]:
         """
         Retourne l'aide d'une action spécifique.
 

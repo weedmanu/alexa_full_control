@@ -1,0 +1,12 @@
+[Installer les dépendances nécessaires en exécutant]
+```bash
+pip install -r requirements.txt
+```
+[Désinstaller les dépendances avec venv]
+```bash
+python -m pip uninstall -y --force-reinstall package1 package2...
+```
+[Désinstaller les dépendances sans venv]
+```bash
+pip uninstall -y --force-reinstall package1 package2...
+```

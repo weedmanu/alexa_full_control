@@ -13,17 +13,17 @@ Date: 12 octobre 2025
 
 import argparse
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.calendar_help import (
-    CALENDAR_DESCRIPTION,
-    LIST_HELP,
     ADD_HELP,
+    CALENDAR_DESCRIPTION,
     DELETE_HELP,
     INFO_HELP,
+    LIST_HELP,
 )
 
 
@@ -187,8 +187,9 @@ class CalendarCommand(BaseCommand):
         Returns:
             True si succès, False sinon
         """
+        ctx = self.require_context()
         # Vérifier l'authentification
-        if not self.context.auth:
+        if not ctx.auth:
             self.error("Authentification requise. Exécutez 'alexa auth create' d'abord.")
             return False
 
@@ -218,14 +219,15 @@ class CalendarCommand(BaseCommand):
             True si succès
         """
         try:
-            if not self.context.calendar_manager:
+            ctx = self.require_context()
+            if not ctx.calendar_manager:
                 self.error("CalendarManager non disponible")
                 return False
 
             self.info("🔍 Test des endpoints Privacy API pour le calendrier...")
 
             results = self.call_with_breaker(
-                self.context.calendar_manager.test_privacy_api_endpoints
+                ctx.calendar_manager.test_privacy_api_endpoints
             )
 
             if not results:
@@ -240,7 +242,7 @@ class CalendarCommand(BaseCommand):
                 else:
                     status = data.get("status", "?")
                     size = data.get("size", 0)
-                    
+
                     if status == 200:
                         self.success(f"  ✅ {endpoint}: {status} ({size} bytes)")
                     elif status == 404:
@@ -299,7 +301,9 @@ class CalendarCommand(BaseCommand):
                                         if "error" not in data and data.get("status") == 200:
                                             self.success(f"    ✅ {endpoint}: {data['status']}")
                                         elif "error" not in data:
-                                            self.warning(f"    ⚠️ {endpoint}: {data.get('status', '?')}")
+                                            self.warning(
+                                                f"    ⚠️ {endpoint}: {data.get('status', '?')}"
+                                            )
                         else:
                             self.warning("    ⚠️ Aucun port HTTP/HTTPS ouvert")
             else:
@@ -322,7 +326,8 @@ class CalendarCommand(BaseCommand):
             True si succès
         """
         try:
-            if not self.context.calendar_manager:
+            ctx = self.require_context()
+            if not ctx.calendar_manager:
                 self.error("CalendarManager non disponible")
                 return False
 
@@ -340,9 +345,9 @@ class CalendarCommand(BaseCommand):
 
             # Appel via TextCommand
             result = self.call_with_breaker(
-                self.context.calendar_manager.query_events,
+                ctx.calendar_manager.query_events,
                 timeframe=timeframe,
-                device_name=args.device
+                device_name=args.device,
             )
 
             if result:
@@ -372,22 +377,19 @@ class CalendarCommand(BaseCommand):
         for event in events:
             event_id = event.get("id", "N/A")[:12] + "..."
             title = event.get("title", "Sans titre")
-            
+
             # Format de la date
             start_ms = event.get("startTime", 0)
             start_dt = datetime.fromtimestamp(start_ms / 1000) if start_ms else None
             start_str = start_dt.strftime("%d/%m/%Y %H:%M") if start_dt else "N/A"
-            
+
             location = event.get("location", "-")
             status = "🟢 Actif" if event.get("status") == "active" else "⚪ Inactif"
 
             table_data.append([event_id, title[:30], start_str, location[:20], status])
 
         # Afficher le tableau
-        table = self.format_table(
-            table_data,
-            ["ID", "Titre", "Début", "Lieu", "Statut"]
-        )
+        table = self.format_table(table_data, ["ID", "Titre", "Début", "Lieu", "Statut"])
         print(table)
 
     def _add_event(self, args: argparse.Namespace) -> bool:
@@ -401,7 +403,8 @@ class CalendarCommand(BaseCommand):
             True si succès
         """
         try:
-            if not self.context.calendar_manager:
+            ctx = self.require_context()
+            if not ctx.calendar_manager:
                 self.error("CalendarManager non disponible")
                 return False
 
@@ -423,12 +426,12 @@ class CalendarCommand(BaseCommand):
 
             # Appel API
             event = self.call_with_breaker(
-                self.context.calendar_manager.add_event,
+                ctx.calendar_manager.add_event,
                 title=args.title,
                 start_time=start_time,
                 end_time=end_time,
                 location=args.location,
-                description=args.description
+                description=args.description,
             )
 
             if event:
@@ -455,15 +458,15 @@ class CalendarCommand(BaseCommand):
             True si succès
         """
         try:
-            if not self.context.calendar_manager:
+            ctx = self.require_context()
+            if not ctx.calendar_manager:
                 self.error("CalendarManager non disponible")
                 return False
 
             self.info(f"🗑️ Suppression de l'événement {args.id}...")
 
             success = self.call_with_breaker(
-                self.context.calendar_manager.delete_event,
-                event_id=args.id
+                ctx.calendar_manager.delete_event, event_id=args.id
             )
 
             if success:
@@ -489,15 +492,15 @@ class CalendarCommand(BaseCommand):
             True si succès
         """
         try:
-            if not self.context.calendar_manager:
+            ctx = self.require_context()
+            if not ctx.calendar_manager:
                 self.error("CalendarManager non disponible")
                 return False
 
             self.info(f"ℹ️ Récupération de l'événement {args.id}...")
 
             event = self.call_with_breaker(
-                self.context.calendar_manager.get_event_details,
-                event_id=args.id
+                ctx.calendar_manager.get_event_details, event_id=args.id
             )
 
             if not event:
@@ -524,7 +527,7 @@ class CalendarCommand(BaseCommand):
         Args:
             event: Données de l'événement
         """
-        self.success(f"ℹ️ Détails de l'événement:\n")
+        self.success("ℹ️ Détails de l'événement:\n")
 
         print(f"  ID:          {event.get('id', 'N/A')}")
         print(f"  Titre:       {event.get('title', 'Sans titre')}")

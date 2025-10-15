@@ -20,15 +20,15 @@ from datetime import time
 from typing import Optional
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.alarm_help import (
     ALARM_DESCRIPTION,
     CREATE_HELP,
-    LIST_HELP,
     DELETE_HELP,
-    UPDATE_HELP,
-    ENABLE_HELP,
     DISABLE_HELP,
+    ENABLE_HELP,
+    LIST_HELP,
+    UPDATE_HELP,
 )
 
 
@@ -98,7 +98,7 @@ class AlarmCommand(BaseCommand):
             help="Créer une alarme",
             description=CREATE_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         create_parser.add_argument(
             "-d",
@@ -132,8 +132,11 @@ class AlarmCommand(BaseCommand):
 
         # Action: list
         list_parser = subparsers.add_parser(
-            "list", help="Lister les alarmes", description=LIST_HELP, formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            "list",
+            help="Lister les alarmes",
+            description=LIST_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         list_parser.add_argument(
             "-d",
@@ -148,8 +151,11 @@ class AlarmCommand(BaseCommand):
 
         # Action: delete
         delete_parser = subparsers.add_parser(
-            "delete", help="Supprimer une alarme", description=DELETE_HELP, formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            "delete",
+            help="Supprimer une alarme",
+            description=DELETE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         delete_parser.add_argument(
             "-d",
@@ -165,8 +171,11 @@ class AlarmCommand(BaseCommand):
 
         # Action: update
         update_parser = subparsers.add_parser(
-            "update", help="Modifier une alarme", description=UPDATE_HELP, formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            "update",
+            help="Modifier une alarme",
+            description=UPDATE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         update_parser.add_argument(
             "-d",
@@ -198,8 +207,11 @@ class AlarmCommand(BaseCommand):
 
         # Action: enable
         enable_parser = subparsers.add_parser(
-            "enable", help="Activer une alarme", description=ENABLE_HELP, formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            "enable",
+            help="Activer une alarme",
+            description=ENABLE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         enable_parser.add_argument(
             "-d",
@@ -219,7 +231,7 @@ class AlarmCommand(BaseCommand):
             help="Désactiver une alarme",
             description=DISABLE_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         disable_parser.add_argument(
             "-d",
@@ -284,14 +296,15 @@ class AlarmCommand(BaseCommand):
                 f"⏰ Création alarme{label_text} à {args.time} ({repeat_text}) sur '{args.device}'..."
             )
 
-            if not self.context.alarm_mgr:
+            ctx = self.require_context()
+            if not ctx.alarm_mgr:
                 self.error("AlarmManager non disponible")
                 return False
 
             # Créer l'alarme
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.create_alarm,
+                ctx.alarm_mgr.create_alarm,
                 serial,
                 device_type,
                 alarm_time,
@@ -326,12 +339,13 @@ class AlarmCommand(BaseCommand):
                 self.info("⏰ Alarmes de tous les appareils...")
                 serial = None
 
-            if not self.context.alarm_mgr:
+            ctx = self.require_context()
+            if not ctx.alarm_mgr:
                 self.error("AlarmManager non disponible")
                 return False
 
             # AlarmManager.list_alarms attend device_serial (optionnel)
-            alarms = self.call_with_breaker(self.context.alarm_mgr.list_alarms, serial)
+            alarms = self.call_with_breaker(ctx.alarm_mgr.list_alarms, serial)
 
             if alarms:
                 # Filtrer si nécessaire
@@ -366,13 +380,14 @@ class AlarmCommand(BaseCommand):
 
             self.info(f"🗑️  Suppression alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = self.require_context()
+            if not ctx.alarm_mgr:
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.delete_alarm, serial, device_type, args.id
+                ctx.alarm_mgr.delete_alarm, serial, device_type, args.id
             )
 
             if result:
@@ -419,13 +434,14 @@ class AlarmCommand(BaseCommand):
 
             self.info(f"✏️  Modification alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = self.require_context()
+            if not ctx.alarm_mgr:
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.update_alarm, serial, device_type, args.id, **updates
+                ctx.alarm_mgr.update_alarm, serial, device_type, args.id, **updates
             )
 
             if result:
@@ -448,13 +464,14 @@ class AlarmCommand(BaseCommand):
 
             self.info(f"✅ Activation alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = self.require_context()
+            if not ctx.alarm_mgr:
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, True
+                ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, True
             )
 
             if result:
@@ -477,13 +494,14 @@ class AlarmCommand(BaseCommand):
 
             self.info(f"❌ Désactivation alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = self.require_context()
+            if not ctx.alarm_mgr:
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, False
+                ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, False
             )
 
             if result:
@@ -547,9 +565,9 @@ class AlarmCommand(BaseCommand):
 
             # Résoudre le nom d'appareil
             device_name = "N/A"
-            if device_serial != "N/A" and self.context.device_mgr:
+            if device_serial != "N/A" and self.device_mgr:
                 try:
-                    device = self.context.device_mgr.find_device_by_serial(device_serial)
+                    device = self.device_mgr.find_device_by_serial(device_serial)
                     if device:
                         device_name = device.get("name", device_serial)
                 except Exception:

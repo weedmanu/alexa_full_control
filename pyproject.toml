@@ -170,7 +170,8 @@ exclude = [
 
 
 [tool.pytest.ini_options]
-# Limit discovery to the single combined test file to allow running only it
 testpaths = ["tests"]
-python_files = ["pytest_install.py"]
-addopts = "-q --disable-warnings --maxfail=1"
+# Use conventional pytest discovery
+python_files = ["test_*.py", "*_test.py"]
+# Show extra summary and keep quiet on passing tests; keep maxfail
+addopts = "-q --disable-warnings --maxfail=1 -ra"

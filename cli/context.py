@@ -12,7 +12,29 @@ Date: 7 octobre 2025
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    # Importer uniquement pour annotations afin d'éviter cycles d'import
+    from alexa_auth.alexa_auth import AlexaAuth
+    from core.device_manager import DeviceManager
+    from core.timers import TimerManager
+    from core.alarms import AlarmManager
+    from core.reminders import ReminderManager
+    from core.smart_home import LightController, ThermostatController, SmartDeviceController
+    from core.music import PlaybackManager, TuneInManager, LibraryManager
+    from services.music_library import MusicLibraryService
+    from core.notification_manager import NotificationManager
+    from core.dnd_manager import DNDManager
+    from core.activity_manager import ActivityManager
+    from core.communication import AnnouncementManager
+    from core.calendar import CalendarManager
+    from core.routines import RoutineManager
+    from core.lists.lists_manager import ListsManager
+    from core.audio import EqualizerManager, BluetoothManager
+    from core.settings import DeviceSettingsManager
+    from services.sync_service import SyncService
+    from services.voice_command_service import VoiceCommandService
 
 from loguru import logger
 
@@ -87,32 +109,32 @@ class Context:
         self.cache_service = CacheService()
 
         # Auth et device manager (initialisés à None, créés au login)
-        self.auth = None
-        self._device_mgr_instance = None
-        self._sync_service = None
+        self.auth: Optional["AlexaAuth"] = None
+        self._device_mgr_instance: Optional["DeviceManager"] = None
+        self._sync_service: Optional["SyncService"] = None
 
         # Managers de fonctionnalités (lazy-loaded)
-        self._timer_mgr = None
-        self._alarm_mgr = None
-        self._reminder_mgr = None
-        self._light_ctrl = None
-        self._thermostat_ctrl = None
-        self._smarthome_ctrl = None
-        self._playback_mgr = None
-        self._tunein_mgr = None
-        self._library_mgr = None
-        self._music_library = None  # Service MusicLibrary (nouveau - shell script parity)
-        self._notification_mgr = None
-        self._dnd_mgr = None
-        self._activity_mgr = None
-        self._announcement_mgr = None
-        self._calendar_mgr = None
-        self._routine_mgr = None
-        self._list_mgr = None
-        self._equalizer_mgr = None
-        self._bluetooth_mgr = None
-        self._device_settings_mgr = None
-        self._voice_service = None  # Service de commandes vocales
+        self._timer_mgr: Optional["TimerManager"] = None
+        self._alarm_mgr: Optional["AlarmManager"] = None
+        self._reminder_mgr: Optional["ReminderManager"] = None
+        self._light_ctrl: Optional["LightController"] = None
+        self._thermostat_ctrl: Optional["ThermostatController"] = None
+        self._smarthome_ctrl: Optional["SmartDeviceController"] = None
+        self._playback_mgr: Optional["PlaybackManager"] = None
+        self._tunein_mgr: Optional["TuneInManager"] = None
+        self._library_mgr: Optional["LibraryManager"] = None
+        self._music_library: Optional["MusicLibraryService"] = None  # Service MusicLibrary (nouveau - shell script parity)
+        self._notification_mgr: Optional["NotificationManager"] = None
+        self._dnd_mgr: Optional["DNDManager"] = None
+        self._activity_mgr: Optional["ActivityManager"] = None
+        self._announcement_mgr: Optional["AnnouncementManager"] = None
+        self._calendar_mgr: Optional["CalendarManager"] = None
+        self._routine_mgr: Optional["RoutineManager"] = None
+        self._list_mgr: Optional["ListsManager"] = None
+        self._equalizer_mgr: Optional["EqualizerManager"] = None
+        self._bluetooth_mgr: Optional["BluetoothManager"] = None
+        self._device_settings_mgr: Optional["DeviceSettingsManager"] = None
+        self._voice_service: Optional["VoiceCommandService"] = None  # Service de commandes vocales
 
         logger.debug("Context initialisé")
 
@@ -121,7 +143,7 @@ class Context:
     # ========================================================================
 
     @property
-    def device_mgr(self):
+    def device_mgr(self) -> Optional["DeviceManager"]:
         """Gestionnaire d'appareils (lazy-loaded)."""
         if self._device_mgr_instance is None and self.auth:
             from core.device_manager import DeviceManager
@@ -131,7 +153,7 @@ class Context:
         return self._device_mgr_instance
 
     @property
-    def timer_mgr(self):
+    def timer_mgr(self) -> Optional["TimerManager"]:
         """Gestionnaire de timers (lazy-loaded)."""
         if self._timer_mgr is None and self.auth:
             from core.timers import TimerManager
@@ -141,7 +163,7 @@ class Context:
         return self._timer_mgr
 
     @property
-    def alarm_mgr(self):
+    def alarm_mgr(self) -> Optional["AlarmManager"]:
         """Gestionnaire d'alarmes (lazy-loaded)."""
         if self._alarm_mgr is None and self.auth:
             from core.alarms import AlarmManager
@@ -153,7 +175,7 @@ class Context:
         return self._alarm_mgr
 
     @property
-    def reminder_mgr(self):
+    def reminder_mgr(self) -> Optional["ReminderManager"]:
         """Gestionnaire de rappels (lazy-loaded)."""
         if self._reminder_mgr is None and self.auth:
             from core.reminders import ReminderManager
@@ -165,7 +187,7 @@ class Context:
         return self._reminder_mgr
 
     @property
-    def light_ctrl(self):
+    def light_ctrl(self) -> Optional["LightController"]:
         """Contrôleur de lumières (lazy-loaded)."""
         if self._light_ctrl is None and self.auth:
             from core.smart_home import LightController
@@ -175,7 +197,7 @@ class Context:
         return self._light_ctrl
 
     @property
-    def thermostat_ctrl(self):
+    def thermostat_ctrl(self) -> Optional["ThermostatController"]:
         """Contrôleur de thermostats (lazy-loaded)."""
         if self._thermostat_ctrl is None and self.auth:
             from core.smart_home import ThermostatController
@@ -185,7 +207,7 @@ class Context:
         return self._thermostat_ctrl
 
     @property
-    def smarthome_ctrl(self):
+    def smarthome_ctrl(self) -> Optional["SmartDeviceController"]:
         """Contrôleur smart home général (lazy-loaded)."""
         if self._smarthome_ctrl is None and self.auth:
             from core.smart_home import SmartDeviceController
@@ -200,7 +222,7 @@ class Context:
         return self.smarthome_ctrl
 
     @property
-    def playback_mgr(self):
+    def playback_mgr(self) -> Optional["PlaybackManager"]:
         """Gestionnaire de playback musique (lazy-loaded)."""
         if self._playback_mgr is None and self.auth:
             from core.music import PlaybackManager
@@ -210,7 +232,7 @@ class Context:
         return self._playback_mgr
 
     @property
-    def tunein_mgr(self):
+    def tunein_mgr(self) -> Optional["TuneInManager"]:
         """Gestionnaire TuneIn (lazy-loaded)."""
         if self._tunein_mgr is None and self.auth:
             from core.music import TuneInManager
@@ -220,7 +242,7 @@ class Context:
         return self._tunein_mgr
 
     @property
-    def library_mgr(self):
+    def library_mgr(self) -> Optional["LibraryManager"]:
         """Gestionnaire de bibliothèque musicale (lazy-loaded)."""
         if self._library_mgr is None and self.auth:
             from core.music import LibraryManager
@@ -254,7 +276,7 @@ class Context:
         return self._music_library
 
     @property
-    def notification_mgr(self):
+    def notification_mgr(self) -> Optional["NotificationManager"]:
         """Gestionnaire de notifications (lazy-loaded)."""
         if self._notification_mgr is None and self.auth:
             from core.notification_manager import NotificationManager
@@ -264,7 +286,7 @@ class Context:
         return self._notification_mgr
 
     @property
-    def dnd_mgr(self):
+    def dnd_mgr(self) -> Optional["DNDManager"]:
         """Gestionnaire Do Not Disturb (lazy-loaded)."""
         if self._dnd_mgr is None and self.auth:
             from core.dnd_manager import DNDManager
@@ -274,7 +296,7 @@ class Context:
         return self._dnd_mgr
 
     @property
-    def activity_mgr(self):
+    def activity_mgr(self) -> Optional["ActivityManager"]:
         """Gestionnaire d'activités (lazy-loaded)."""
         if self._activity_mgr is None and self.auth:
             from core.activity_manager import ActivityManager
@@ -284,7 +306,7 @@ class Context:
         return self._activity_mgr
 
     @property
-    def announcement_mgr(self):
+    def announcement_mgr(self) -> Optional["AnnouncementManager"]:
         """Gestionnaire d'annonces (lazy-loaded)."""
         if self._announcement_mgr is None and self.auth:
             from core.communication import AnnouncementManager
@@ -294,7 +316,7 @@ class Context:
         return self._announcement_mgr
 
     @property
-    def calendar_manager(self):
+    def calendar_manager(self) -> Optional["CalendarManager"]:
         """Gestionnaire de calendrier (lazy-loaded)."""
         if self._calendar_mgr is None and self.auth:
             from core.calendar import CalendarManager
@@ -303,13 +325,13 @@ class Context:
                 self.auth,
                 config=self.config,
                 voice_service=self.voice_service,
-                device_manager=self.device_mgr
+                device_manager=self.device_mgr,
             )
             logger.debug("CalendarManager chargé")
         return self._calendar_mgr
 
     @property
-    def routine_mgr(self):
+    def routine_mgr(self) -> Optional["RoutineManager"]:
         """Gestionnaire de routines (lazy-loaded)."""
         if self._routine_mgr is None and self.auth:
             from core.routines import RoutineManager
@@ -321,7 +343,7 @@ class Context:
         return self._routine_mgr
 
     @property
-    def list_mgr(self):
+    def list_mgr(self) -> Optional["ListsManager"]:
         """Gestionnaire de listes (lazy-loaded)."""
         if self._list_mgr is None and self.auth:
             from core.lists.lists_manager import ListsManager
@@ -331,7 +353,7 @@ class Context:
         return self._list_mgr
 
     @property
-    def equalizer_mgr(self):
+    def equalizer_mgr(self) -> Optional["EqualizerManager"]:
         """Gestionnaire égaliseur (lazy-loaded)."""
         if self._equalizer_mgr is None and self.auth:
             from core.audio import EqualizerManager
@@ -341,7 +363,7 @@ class Context:
         return self._equalizer_mgr
 
     @property
-    def bluetooth_mgr(self):
+    def bluetooth_mgr(self) -> Optional["BluetoothManager"]:
         """Gestionnaire Bluetooth (lazy-loaded)."""
         if self._bluetooth_mgr is None and self.auth:
             from core.audio import BluetoothManager
@@ -351,7 +373,7 @@ class Context:
         return self._bluetooth_mgr
 
     @property
-    def device_settings_mgr(self):
+    def device_settings_mgr(self) -> Optional["DeviceSettingsManager"]:
         """Gestionnaire paramètres appareils (lazy-loaded)."""
         if self._device_settings_mgr is None and self.auth:
             from core.settings import DeviceSettingsManager
@@ -370,9 +392,11 @@ class Context:
     @property
     def sync_service(self):
         """Service de synchronisation (lazy-loaded)."""
-        if self._sync_service is None and self.auth:
-            from services.sync_service import SyncService
+        from typing import Optional
 
+        from services.sync_service import SyncService
+
+        if self._sync_service is None and self.auth:
             self._sync_service = SyncService(self.auth, self.config, self.state_machine)
             logger.debug("SyncService chargé")
         return self._sync_service

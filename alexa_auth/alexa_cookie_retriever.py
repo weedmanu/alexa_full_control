@@ -69,7 +69,7 @@ class NodeEnvironment:
     def __init__(self, script_dir: Path):
         self.script_dir = script_dir
         self.node_env_dir = script_dir / "nodejs" / ".nodeenv"
-        
+
         # Chemins des exécutables selon la plateforme
         if sys.platform == "win32":
             self.node_executable = self.node_env_dir / "Scripts" / "node.exe"
@@ -90,7 +90,7 @@ class NodeEnvironment:
         """Récupère la version de Node.js installée"""
         if not self.node_executable.exists():
             return None
-        
+
         try:
             result = subprocess.run(
                 [str(self.node_executable), "--version"],
@@ -106,7 +106,7 @@ class NodeEnvironment:
         """Récupère la version de npm installée"""
         if not self.npm_executable.exists():
             return None
-        
+
         try:
             result = subprocess.run(
                 [str(self.npm_executable), "--version"],
@@ -134,7 +134,7 @@ class NodeEnvironment:
         # Afficher les versions
         node_version = self.get_node_version()
         npm_version = self.get_npm_version()
-        
+
         if node_version:
             print_step(f"Node.js utilisé : {node_version}")
         if npm_version:
@@ -176,7 +176,7 @@ class CookieRetriever:
         self.nodejs_dir = script_dir / "nodejs"
         self.data_dir = script_dir / "data"
         self.cookie_result_file = self.data_dir / "cookie-resultat.json"
-        
+
         # Créer le répertoire data s'il n'existe pas
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -189,7 +189,7 @@ class CookieRetriever:
         try:
             import json
 
-            with open(self.cookie_result_file, "r", encoding="utf-8") as f:
+            with open(self.cookie_result_file, encoding="utf-8") as f:
                 data = json.load(f)
 
             # Vérifier la présence des données essentielles
@@ -225,7 +225,7 @@ class CookieRetriever:
 
     def launch_initial_setup(self, email: str, password: str, mfa_secret: Optional[str] = None):
         """Lance le processus d'authentification initial"""
-        
+
         # Vérifier d'abord le cache
         if self.is_cookie_valid():
             print_step("✓ Cookie valide trouvé en cache, authentification non nécessaire")
@@ -265,7 +265,7 @@ def get_alexa_cookies(amazon_domain: str = "amazon.fr", language: str = "fr-FR")
     node_env = NodeEnvironment(script_dir)
     if not node_env.check_and_prepare():
         return False
-    
+
     # Installer les dépendances npm si nécessaire
     if not node_env.install_npm_dependencies():
         return False
@@ -287,7 +287,7 @@ def main():
     node_env = NodeEnvironment(script_dir)
     if not node_env.check_and_prepare():
         sys.exit(1)
-    
+
     # Installer les dépendances npm si nécessaire
     if not node_env.install_npm_dependencies():
         sys.exit(1)

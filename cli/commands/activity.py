@@ -8,13 +8,13 @@ Ce module fournit une interface CLI pour consulter l'historique :
 """
 
 import argparse
+from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.activity_help import (
     ACTIVITY_DESCRIPTION,
     LIST_HELP,
-    INFO_HELP,
 )
 
 
@@ -59,7 +59,7 @@ class ActivityCommand(BaseCommand):
         """
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
-        
+
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
@@ -74,7 +74,13 @@ class ActivityCommand(BaseCommand):
         )
 
         # Action: list
-        list_parser = subparsers.add_parser("list", help="Lister activités", description=LIST_HELP, formatter_class=ActionHelpFormatter, add_help=False)
+        list_parser = subparsers.add_parser(
+            "list",
+            help="Lister activités",
+            description=LIST_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
         list_parser.add_argument(
             "--type",
             type=str,
@@ -108,7 +114,8 @@ class ActivityCommand(BaseCommand):
             add_help=False,
         )
         lastcommand_parser.add_argument(
-            "-d", "--device",
+            "-d",
+            "--device",
             metavar="DEVICE_NAME",
             help="Filtrer par nom d'appareil (optionnel)",
         )
@@ -122,7 +129,8 @@ class ActivityCommand(BaseCommand):
             add_help=False,
         )
         lastresponse_parser.add_argument(
-            "-d", "--device",
+            "-d",
+            "--device",
             metavar="DEVICE_NAME",
             help="Filtrer par nom d'appareil (optionnel)",
         )
@@ -172,14 +180,15 @@ class ActivityCommand(BaseCommand):
                 self.info("📊 Récupération de toutes les activités...")
                 serial = None
 
-            if not self.context.activity_mgr:
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
                 self.error("ActivityManager non disponible")
                 return False
 
             # L'API Alexa ne filtre pas par serial ou type côté serveur
             # On récupère toutes les activités puis on filtre localement
             activities = self.call_with_breaker(
-                self.context.activity_mgr.get_activities,
+                ctx.activity_mgr.get_activities,
                 limit,
             )
 
@@ -209,11 +218,12 @@ class ActivityCommand(BaseCommand):
         try:
             self.info(f"ℹ️  Récupération activité '{args.id}'...")
 
-            if not self.context.activity_mgr:
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
                 self.error("ActivityManager non disponible")
                 return False
 
-            activity = self.call_with_breaker(self.context.activity_mgr.get_activity, args.id)
+            activity = self.call_with_breaker(ctx.activity_mgr.get_activity, args.id)
 
             if activity:
                 self._display_activity_details(activity)
@@ -231,7 +241,6 @@ class ActivityCommand(BaseCommand):
         """Affiche la liste des activités de manière formatée."""
         print(f"\n📊 Activités ({len(activities)}):")
         print("=" * 80)
-
         for activity in activities:
             activity_id = activity.get("id", "N/A")
             activity_type = activity.get("type", "N/A")
@@ -351,11 +360,12 @@ class ActivityCommand(BaseCommand):
         try:
             self.info("🔊 Récupération du dernier appareil utilisé...")
 
-            if not self.context.activity_mgr:
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
                 self.error("ActivityManager non disponible")
                 return False
 
-            device_name = self.call_with_breaker(self.context.activity_mgr.get_last_device)
+            device_name = self.call_with_breaker(ctx.activity_mgr.get_last_device)
 
             if device_name:
                 print(f"\n📱 Dernier appareil utilisé : {device_name}")
@@ -379,20 +389,20 @@ class ActivityCommand(BaseCommand):
             else:
                 self.info("🔊 Récupération de la dernière commande...")
 
-            if not self.context.activity_mgr:
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
                 self.error("ActivityManager non disponible")
                 return False
 
             last_command = self.call_with_breaker(
-                self.context.activity_mgr.get_last_command,
-                device_filter
+                ctx.activity_mgr.get_last_command, device_filter
             )
 
             if last_command:
                 if device_filter:
                     print(f"\n🎤 Dernière commande sur '{device_filter}' : \"{last_command}\"")
                 else:
-                    print(f"\n🎤 Dernière commande : \"{last_command}\"")
+                    print(f'\n🎤 Dernière commande : "{last_command}"')
                 return True
             else:
                 if device_filter:
@@ -416,20 +426,22 @@ class ActivityCommand(BaseCommand):
             else:
                 self.info("🔊 Récupération de la dernière réponse Alexa...")
 
-            if not self.context.activity_mgr:
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
                 self.error("ActivityManager non disponible")
                 return False
 
             last_response = self.call_with_breaker(
-                self.context.activity_mgr.get_last_response,
-                device_filter
+                ctx.activity_mgr.get_last_response, device_filter
             )
 
             if last_response:
                 if device_filter:
-                    print(f"\n🗣️  Dernière réponse Alexa sur '{device_filter}' : \"{last_response}\"")
+                    print(
+                        f"\n🗣️  Dernière réponse Alexa sur '{device_filter}' : \"{last_response}\""
+                    )
                 else:
-                    print(f"\n🗣️  Dernière réponse Alexa : \"{last_response}\"")
+                    print(f'\n🗣️  Dernière réponse Alexa : "{last_response}"')
                 return True
             else:
                 if device_filter:

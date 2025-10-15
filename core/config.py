@@ -204,15 +204,13 @@ class Config:
         # Le fichier token peut ne pas exister au premier lancement
         if not self.token_file.exists():
             logger.warning(
-                f"⚠️ Fichier token absent: {self.token_file} "
-                f"(sera créé lors de l'authentification)"
+                f"⚠️ Fichier token absent: {self.token_file} (sera créé lors de l'authentification)"
             )
 
         # Le script de refresh doit exister
         if not self.refresh_script.exists():
             raise ConfigurationError(
-                f"Script de refresh manquant: {self.refresh_script}. "
-                f"Veuillez exécuter install.py"
+                f"Script de refresh manquant: {self.refresh_script}. Veuillez exécuter install.py"
             )
 
     def _log_config(self) -> None:

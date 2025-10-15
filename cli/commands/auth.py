@@ -1,4 +1,4 @@
-﻿"""
+"""
 Commandes d'authentification pour la CLI Alexa Voice Control.
 
 Ce module gère toutes les opérations liées à l'authentification:
@@ -14,7 +14,7 @@ import argparse
 from pathlib import Path
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.auth_help import (
     AUTH_DESCRIPTION,
     CREATE_HELP,
@@ -126,7 +126,7 @@ class AuthCommand(BaseCommand):
         """
         try:
             # Gérer les cookies existants selon l'option --force
-            force = getattr(args, 'force', False)
+            force = getattr(args, "force", False)
             if force:
                 # Supprimer les cookies existants si --force est spécifié
                 self._delete_existing_cookies()
@@ -150,9 +150,12 @@ class AuthCommand(BaseCommand):
             # Import des modules d'auth (uniquement si nécessaire)
             from alexa_auth.alexa_cookie_retriever import get_alexa_cookies
 
+            # Obtenir le contexte requis (narrow Optional)
+            ctx = self.require_context()
+
             # Transition state machine seulement si pas déjà connecté
-            if self.state_machine.state != ConnectionState.AUTHENTICATED:
-                self.state_machine.connect()
+            if ctx.state_machine.state != ConnectionState.AUTHENTICATED:
+                ctx.state_machine.connect()
 
             # Lancer le processus d'authentification Node.js
             self.logger.info("🔄 Démarrage du processus d'authentification...")
@@ -165,26 +168,28 @@ class AuthCommand(BaseCommand):
             success = get_alexa_cookies(amazon_domain=amazon_domain, language=language)
 
             if success:
-                if self.state_machine.state != ConnectionState.AUTHENTICATED:
-                    self.state_machine.on_connected()
+                if ctx.state_machine.state != ConnectionState.AUTHENTICATED:
+                    ctx.state_machine.on_connected()
                 self.logger.success("✅ Session créée avec succès !")
                 self.logger.info("💾 Les cookies ont été sauvegardés dans alexa_auth/data/")
-                
+
                 # Invalider le cache d'auth pour forcer rechargement
-                if self.context.cache_service:
-                    self.context.cache_service.invalidate("auth_data")
+                if ctx.cache_service:
+                    ctx.cache_service.invalidate("auth_data")
                     self.logger.debug("🗑️ Cache auth invalidé après création")
-                
+
                 return True
             else:
-                self.state_machine.error()
+                if self.state_machine:
+                    self.state_machine.error()
                 self.logger.error("❌ Échec de la création de session")
                 print("❌ Échec de la création de session")
                 return False
 
         except Exception as e:
             self.logger.exception("💥 Erreur lors de la création de session")
-            self.state_machine.error()
+            if self.state_machine:
+                self.state_machine.error()
             self.logger.error(f"❌ Erreur: {e}")
             return False
 
@@ -201,31 +206,45 @@ class AuthCommand(BaseCommand):
         self.logger.info("ℹ️  État de connexion")
         print()
 
-        # État de la state machine
-        state_name = self.state_machine.state.name if self.state_machine else "UNKNOWN"
-        can_execute = self.state_machine.can_execute_commands if self.state_machine else False
+        # Obtenir le contexte requis pour accéder aux services
+        try:
+            ctx = self.require_context()
+        except RuntimeError:
+            # Si aucun contexte, afficher un état générique
+            state_name = "UNKNOWN"
+            can_execute = False
+        else:
+            # État de la state machine
+            state_name = ctx.state_machine.state.name if ctx.state_machine else "UNKNOWN"
+            can_execute = ctx.state_machine.can_execute_commands if ctx.state_machine else False
 
         # Affichage avec couleurs et style amélioré
         print("\033[1;4;30m🔐 ÉTAT DE CONNEXION\033[0m")  # Gris gras souligné avec emoji
         print()
-        
+
         # Colorer l'état en vert si authentifié
-        state_display = "\033[32mAUTHENTICATED\033[0m" if state_name == "AUTHENTICATED" else state_name
+        state_display = (
+            "\033[32mAUTHENTICATED\033[0m" if state_name == "AUTHENTICATED" else state_name
+        )
         cmd_status = "\033[32mOui\033[0m" if can_execute else "\033[31mNon\033[0m"
         print(f"\033[1;30m  État\033[0m                         {state_display}")
         print(f"\033[1;30m  Peut exécuter commandes\033[0m      {cmd_status}")
-        
+
         # Vérifier existence des fichiers
         auth_data_dir = Path("alexa_auth/data")
         cookie_file = auth_data_dir / "cookie.txt"
         cookie_json = auth_data_dir / "cookie-resultat.json"
 
         cookie_txt_exists = cookie_file.exists()
-        cookie_txt_status = "\033[32mPrésent\033[0m" if cookie_txt_exists else "\033[31mManquant\033[0m"
+        cookie_txt_status = (
+            "\033[32mPrésent\033[0m" if cookie_txt_exists else "\033[31mManquant\033[0m"
+        )
         print(f"\033[1;30m  Fichier cookie.txt\033[0m           {cookie_txt_status}")
 
         cookie_json_exists = cookie_json.exists()
-        cookie_json_status = "\033[32mPrésent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
+        cookie_json_status = (
+            "\033[32mPrésent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
+        )
         print(f"\033[1;30m  Fichier cookie-resultat.json\033[0m {cookie_json_status}")
 
         # Afficher les infos du cookie même sans --verbose
@@ -233,31 +252,31 @@ class AuthCommand(BaseCommand):
             try:
                 import json
                 from datetime import datetime
-                
-                with open(cookie_json, "r", encoding="utf-8") as f:
+
+                with open(cookie_json, encoding="utf-8") as f:
                     data = json.load(f)
-                
+
                 # Domaine Amazon
                 domain = None
                 if "donneesCompletes" in data and "amazonPage" in data["donneesCompletes"]:
                     domain = data["donneesCompletes"]["amazonPage"]
                 elif "recapitulatif" in data and "amazonPage" in data["recapitulatif"]:
                     domain = data["recapitulatif"]["amazonPage"]
-                
+
                 if domain:
                     print(f"\033[1;30m  Domaine Amazon\033[0m               {domain}")
-                
+
                 # Date de création et âge
                 token_date = None
                 if "recapitulatif" in data and "tokenDate" in data["recapitulatif"]:
                     token_date = data["recapitulatif"]["tokenDate"]
                 elif "donneesCompletes" in data and "tokenDate" in data["donneesCompletes"]:
                     token_date = data["donneesCompletes"]["tokenDate"]
-                
+
                 if token_date:
                     dt = datetime.fromtimestamp(token_date / 1000)  # Convertir ms en s
                     date_str = dt.strftime("%d/%m/%Y %H:%M:%S")
-                    
+
                     # Calculer l'âge
                     age_seconds = (datetime.now() - dt).total_seconds()
                     if age_seconds < 3600:
@@ -266,24 +285,24 @@ class AuthCommand(BaseCommand):
                         age_str = f"{int(age_seconds / 3600)} heures"
                     else:
                         age_str = f"{int(age_seconds / 86400)} jours"
-                    
+
                     print(f"\033[1;30m  Date de création\033[0m             {date_str}")
                     print(f"\033[1;30m  Âge du cookie\033[0m                {age_str}")
-                
+
                 # CSRF token (juste indiquer présence)
                 if "recapitulatif" in data and "csrf" in data["recapitulatif"]:
                     csrf_status = "\033[32mPrésent\033[0m"
                     print(f"\033[1;30m  CSRF token\033[0m                   {csrf_status}")
-                
+
             except Exception as e:
                 self.logger.debug(f"Erreur lecture cookie-resultat.json: {e}")
 
         # Utiliser l'option globale --verbose si elle existe
-        verbose = getattr(args, 'verbose', False)
+        verbose = getattr(args, "verbose", False)
         if verbose:
             print()
             print(f"\033[1;30m  Répertoire auth\033[0m              {auth_data_dir}")
-            
+
             if cookie_file.exists():
                 size = cookie_file.stat().st_size
                 size_formatted = f"{size:,}".replace(",", " ")
@@ -308,8 +327,8 @@ class AuthCommand(BaseCommand):
         Returns:
             True si des cookies valides sont présents
         """
-        from pathlib import Path
         import json
+        from pathlib import Path
 
         cookie_file = Path("alexa_auth/data/cookie-resultat.json")
 
@@ -318,7 +337,7 @@ class AuthCommand(BaseCommand):
             return False
 
         try:
-            with open(cookie_file, "r", encoding="utf-8") as f:
+            with open(cookie_file, encoding="utf-8") as f:
                 data = json.load(f)
 
             # Vérifier la présence des données essentielles
@@ -396,15 +415,17 @@ class AuthCommand(BaseCommand):
         import sys
 
         # Vérifier si on est dans un venv
-        in_venv = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+        in_venv = hasattr(sys, "real_prefix") or (
+            hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
+        )
 
         if not in_venv:
             return False
 
         # Vérifier que les packages requis sont installés
         try:
-            import requests
             import nodeenv
+            import requests
         except ImportError:
             return False
 
@@ -413,6 +434,7 @@ class AuthCommand(BaseCommand):
     def _check_nodejs(self) -> bool:
         """Vérifie si Node.js est installé via nodeenv"""
         from pathlib import Path
+
         from alexa_auth.alexa_cookie_retriever import NodeEnvironment
 
         script_dir = Path("alexa_auth").absolute()
@@ -424,7 +446,7 @@ class AuthCommand(BaseCommand):
         # Tester que Node.js fonctionne
         try:
             version = node_env.get_node_version()
-            return version is not None and version.startswith('v')
+            return version is not None and version.startswith("v")
         except:
             return False
 

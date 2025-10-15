@@ -10,13 +10,13 @@ Ce module fournit une interface CLI pour gérer les groupes multi-pièces :
 import argparse
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.multiroom_help import (
-    MULTIROOM_DESCRIPTION,
-    LIST_HELP,
     CREATE_HELP,
     DELETE_HELP,
     INFO_HELP,
+    LIST_HELP,
+    MULTIROOM_DESCRIPTION,
 )
 
 
@@ -58,7 +58,7 @@ class MultiroomCommand(BaseCommand):
         """
         # Utiliser le formatter universel pour l'aide simplifiée
         parser.formatter_class = UniversalHelpFormatter
-        
+
         # Description simplifiée
         parser.description = MULTIROOM_DESCRIPTION
 
@@ -75,12 +75,16 @@ class MultiroomCommand(BaseCommand):
             help="Lister groupes",
             description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
 
         # Action: create
         create_parser = subparsers.add_parser(
-            "create", help="Créer groupe", description=CREATE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "create",
+            help="Créer groupe",
+            description=CREATE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         create_parser.add_argument(
             "--name", type=str, required=True, metavar="GROUP_NAME", help="Nom du groupe à créer"
@@ -101,7 +105,11 @@ class MultiroomCommand(BaseCommand):
 
         # Action: delete
         delete_parser = subparsers.add_parser(
-            "delete", help="Supprimer groupe", description=DELETE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "delete",
+            help="Supprimer groupe",
+            description=DELETE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         delete_parser.add_argument(
             "--name",
@@ -120,7 +128,7 @@ class MultiroomCommand(BaseCommand):
             help="Informations groupe",
             description=INFO_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         info_parser.add_argument(
             "--name", type=str, required=True, metavar="GROUP_NAME", help="Nom du groupe"
@@ -159,11 +167,12 @@ class MultiroomCommand(BaseCommand):
 
             self.info("🔊 Récupération des groupes multiroom...")
 
-            if not self.context.multiroom_mgr:
+            ctx = self.require_context()
+            if not ctx.multiroom_mgr:
                 self.error("MultiroomManager non disponible")
                 return False
 
-            groups = self.call_with_breaker(self.context.multiroom_mgr.get_groups)
+            groups = self.call_with_breaker(ctx.multiroom_mgr.get_groups)
 
             if not groups:
                 self.warning("Aucun groupe multiroom trouvé")
@@ -202,7 +211,8 @@ class MultiroomCommand(BaseCommand):
 
             self.info(f"🔊 Création groupe '{args.name}' avec {len(devices)} appareil(s)...")
 
-            if not self.context.multiroom_mgr:
+            ctx = self.require_context()
+            if not ctx.multiroom_mgr:
                 self.error("MultiroomManager non disponible")
                 return False
 
@@ -219,7 +229,7 @@ class MultiroomCommand(BaseCommand):
             primary_serial = self.get_device_serial(primary_device)
 
             result = self.call_with_breaker(
-                self.context.multiroom_mgr.create_group, args.name, device_serials, primary_serial
+                ctx.multiroom_mgr.create_group, args.name, device_serials, primary_serial
             )
 
             if result:
@@ -248,11 +258,12 @@ class MultiroomCommand(BaseCommand):
 
             self.info(f"🗑️  Suppression groupe '{args.name}'...")
 
-            if not self.context.multiroom_mgr:
+            ctx = self.require_context()
+            if not ctx.multiroom_mgr:
                 self.error("MultiroomManager non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.multiroom_mgr.delete_group, args.name)
+            result = self.call_with_breaker(ctx.multiroom_mgr.delete_group, args.name)
 
             if result:
                 self.success(f"✅ Groupe '{args.name}' supprimé")
@@ -270,11 +281,12 @@ class MultiroomCommand(BaseCommand):
         try:
             self.info(f"ℹ️  Récupération groupe '{args.name}'...")
 
-            if not self.context.multiroom_mgr:
+            ctx = self.require_context()
+            if not ctx.multiroom_mgr:
                 self.error("MultiroomManager non disponible")
                 return False
 
-            group = self.call_with_breaker(self.context.multiroom_mgr.get_group, args.name)
+            group = self.call_with_breaker(ctx.multiroom_mgr.get_group, args.name)
 
             if group:
                 self._display_group_details(group)

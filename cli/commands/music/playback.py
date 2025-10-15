@@ -9,9 +9,9 @@ Date: 8 octobre 2025
 
 import argparse
 
-from cli.commands.music.base import MusicSubCommand
-from cli.help_texts.music_help import PAUSE_HELP, STOP_HELP, CONTROL_HELP, SHUFFLE_HELP, REPEAT_HELP
 from cli.command_parser import ActionHelpFormatter
+from cli.commands.music.base import MusicSubCommand
+from cli.help_texts.music_help import CONTROL_HELP, PAUSE_HELP, REPEAT_HELP, SHUFFLE_HELP, STOP_HELP
 
 
 class PlaybackCommands(MusicSubCommand):
@@ -130,11 +130,12 @@ class PlaybackCommands(MusicSubCommand):
 
             self.info(f"⏸️  Pause sur '{args.device}'...")
 
-            if not self.context.playback_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "playback_mgr", None):
                 self.error("PlaybackManager non disponible")
                 return False
 
-            result = self.context.playback_mgr.pause(serial, device_type)
+            result = ctx.playback_mgr.pause(serial, device_type)
 
             if result:
                 self.success("✅ Lecture mise en pause")
@@ -158,11 +159,12 @@ class PlaybackCommands(MusicSubCommand):
 
             self.info(f"⏹️  Arrêt sur '{args.device}'...")
 
-            if not self.context.playback_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "playback_mgr", None):
                 self.error("PlaybackManager non disponible")
                 return False
 
-            result = self.context.playback_mgr.stop(serial, device_type)
+            result = ctx.playback_mgr.stop(serial, device_type)
 
             if result:
                 self.success("✅ Lecture arrêtée")
@@ -195,17 +197,18 @@ class PlaybackCommands(MusicSubCommand):
             icon = action_icons.get(args.action_type, "🎵")
             self.info(f"{icon} {args.action_type.title()} sur '{args.device}'...")
 
-            if not self.context.playback_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "playback_mgr", None):
                 self.error("PlaybackManager non disponible")
                 return False
 
             # Mapper l'action à la méthode
             method_map = {
-                "play": self.context.playback_mgr.play,
-                "pause": self.context.playback_mgr.pause,
-                "next": self.context.playback_mgr.next_track,
-                "prev": self.context.playback_mgr.previous_track,
-                "stop": self.context.playback_mgr.stop,
+                "play": ctx.playback_mgr.play,
+                "pause": ctx.playback_mgr.pause,
+                "next": ctx.playback_mgr.next_track,
+                "prev": ctx.playback_mgr.previous_track,
+                "stop": ctx.playback_mgr.stop,
             }
 
             result = method_map[args.action_type](serial, device_type)
@@ -235,11 +238,12 @@ class PlaybackCommands(MusicSubCommand):
 
             self.info(f"🔀 Mode aléatoire {mode_text} sur '{args.device}'...")
 
-            if not self.context.playback_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "playback_mgr", None):
                 self.error("PlaybackManager non disponible")
                 return False
 
-            result = self.context.playback_mgr.set_shuffle(serial, device_type, enabled)
+            result = ctx.playback_mgr.set_shuffle(serial, device_type, enabled)
 
             if result:
                 self.success(f"✅ Mode aléatoire {mode_text}")
@@ -269,11 +273,12 @@ class PlaybackCommands(MusicSubCommand):
 
             self.info(f"🔁 Mode répétition: {mode_text[args.mode]} sur '{args.device}'...")
 
-            if not self.context.playback_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "playback_mgr", None):
                 self.error("PlaybackManager non disponible")
                 return False
 
-            result = self.context.playback_mgr.set_repeat(serial, device_type, args.mode.upper())
+            result = ctx.playback_mgr.set_repeat(serial, device_type, args.mode.upper())
 
             if result:
                 self.success(f"✅ Mode répétition: {mode_text[args.mode]}")

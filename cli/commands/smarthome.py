@@ -17,15 +17,15 @@ import argparse
 import json
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.smarthome_help import (
-    SMARTHOME_DESCRIPTION,
-    LIST_HELP,
-    INFO_HELP,
     CONTROL_HELP,
+    INFO_HELP,
+    LIST_HELP,
     LOCK_HELP,
-    UNLOCK_HELP,
+    SMARTHOME_DESCRIPTION,
     STATUS_HELP,
+    UNLOCK_HELP,
 )
 
 
@@ -95,7 +95,7 @@ class SmartHomeCommand(BaseCommand):
             help="Lister les appareils",
             description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         list_parser.add_argument(
             "--filter", type=str, metavar="KEYWORD", help="Filtrer par nom ou type"
@@ -113,7 +113,7 @@ class SmartHomeCommand(BaseCommand):
             help="Informations détaillées",
             description=INFO_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         info_parser.add_argument(
             "--entity",
@@ -129,7 +129,7 @@ class SmartHomeCommand(BaseCommand):
             help="Allumer/éteindre",
             description=CONTROL_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         control_parser.add_argument(
             "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité"
@@ -144,7 +144,11 @@ class SmartHomeCommand(BaseCommand):
 
         # Action: lock
         lock_parser = subparsers.add_parser(
-            "lock", help="Verrouiller", description=LOCK_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "lock",
+            help="Verrouiller",
+            description=LOCK_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         lock_parser.add_argument(
             "--entity",
@@ -159,7 +163,11 @@ class SmartHomeCommand(BaseCommand):
 
         # Action: unlock
         unlock_parser = subparsers.add_parser(
-            "unlock", help="Déverrouiller", description=UNLOCK_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "unlock",
+            help="Déverrouiller",
+            description=UNLOCK_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         unlock_parser.add_argument(
             "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité serrure"
@@ -170,7 +178,11 @@ class SmartHomeCommand(BaseCommand):
 
         # Action: status
         status_parser = subparsers.add_parser(
-            "status", help="État actuel", description=STATUS_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "status",
+            help="État actuel",
+            description=STATUS_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         status_parser.add_argument(
             "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité"
@@ -211,17 +223,18 @@ class SmartHomeCommand(BaseCommand):
         try:
             self.info("🏠 Récupération des appareils Smart Home...")
 
-            if not self.context.device_ctrl:
+            ctx = self.require_context()
+            if not ctx.device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
             # Vérifier si les données smart home sont en cache
-            devices = self.context.device_ctrl.get_smart_home_devices()
+            devices = ctx.device_ctrl.get_smart_home_devices()
 
             # Si pas de données en cache, déclencher le chargement lazy
-            if not devices and self.context.sync_service:
+            if not devices and ctx.sync_service:
                 self.info("🔄 Chargement lazy des appareils Smart Home...")
-                devices = self.context.sync_service.get_smart_home_devices()
+                devices = ctx.sync_service.get_smart_home_devices()
 
             if devices:
                 # Filtrer par type
@@ -261,11 +274,12 @@ class SmartHomeCommand(BaseCommand):
         try:
             self.info(f"📋 Informations de '{args.entity}'...")
 
-            if not self.context.device_ctrl:
+            ctx = self.require_context()
+            if not ctx.device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
-            info = self.call_with_breaker(self.context.device_ctrl.get_device_info, args.entity)
+            info = self.call_with_breaker(ctx.device_ctrl.get_device_info, args.entity)
 
             if info:
                 if hasattr(args, "json_output") and args.json_output:
@@ -294,16 +308,17 @@ class SmartHomeCommand(BaseCommand):
 
             self.info(f"{action_text} de '{args.entity}'...")
 
-            if not self.context.device_ctrl:
+            ctx = self.require_context()
+            if not ctx.device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
             if args.operation == "on":
-                result = self.call_with_breaker(self.context.device_ctrl.turn_on, args.entity)
+                result = self.call_with_breaker(ctx.device_ctrl.turn_on, args.entity)
             elif args.operation == "off":
-                result = self.call_with_breaker(self.context.device_ctrl.turn_off, args.entity)
+                result = self.call_with_breaker(ctx.device_ctrl.turn_off, args.entity)
             else:  # toggle
-                result = self.call_with_breaker(self.context.device_ctrl.toggle, args.entity)
+                result = self.call_with_breaker(ctx.device_ctrl.toggle, args.entity)
 
             if result:
                 self.success(f"✅ {action_text} effectué")
@@ -321,13 +336,14 @@ class SmartHomeCommand(BaseCommand):
         try:
             self.info(f"🔒 Verrouillage de '{args.entity}'...")
 
-            if not self.context.device_ctrl:
+            ctx = self.require_context()
+            if not ctx.device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
             code = getattr(args, "code", None)
 
-            result = self.call_with_breaker(self.context.device_ctrl.lock, args.entity, code)
+            result = self.call_with_breaker(ctx.device_ctrl.lock, args.entity, code)
 
             if result:
                 self.success("✅ Serrure verrouillée")
@@ -345,7 +361,8 @@ class SmartHomeCommand(BaseCommand):
         try:
             self.info(f"🔓 Déverrouillage de '{args.entity}'...")
 
-            if not self.context.device_ctrl:
+            ctx = self.require_context()
+            if not ctx.device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
@@ -353,7 +370,7 @@ class SmartHomeCommand(BaseCommand):
                 self.error("Un code de sécurité est requis pour déverrouiller")
                 return False
 
-            result = self.call_with_breaker(self.context.device_ctrl.unlock, args.entity, args.code)
+            result = self.call_with_breaker(ctx.device_ctrl.unlock, args.entity, args.code)
 
             if result:
                 self.success("✅ Serrure déverrouillée")
@@ -371,11 +388,12 @@ class SmartHomeCommand(BaseCommand):
         try:
             self.info(f"📊 État de '{args.entity}'...")
 
-            if not self.context.device_ctrl:
+            ctx = self.require_context()
+            if not ctx.device_ctrl:
                 self.error("DeviceController non disponible")
                 return False
 
-            status = self.call_with_breaker(self.context.device_ctrl.get_status, args.entity)
+            status = self.call_with_breaker(ctx.device_ctrl.get_status, args.entity)
 
             if status:
                 if hasattr(args, "json_output") and args.json_output:
@@ -437,9 +455,7 @@ class SmartHomeCommand(BaseCommand):
                     # Filtrer les propriétés importantes
                     important_props = [
                         p for p in supported_props if not p.startswith("Alexa.Operation.")
-                    ][
-                        :3
-                    ]  # Limiter à 3
+                    ][:3]  # Limiter à 3
                     if important_props:
                         print(f"     Actions: {', '.join(important_props)}")
                 print()

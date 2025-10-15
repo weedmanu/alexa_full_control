@@ -4,8 +4,19 @@
 vulture:
 	vulture . --config .vulture.toml
 
+lint:
+	# lint with ruff and check formatting with black/isort (checks only)
+	ruff check .
+	black --check .
+	isort --check-only .
+
+typecheck:
+	# static typing checks
+	mypy core/ cli/ services/ --strict
+
 test:
-	python -m pytest --cov=scripts --cov-report=term-missing
+	# Run pytest covering core, cli and services
+	python -m pytest --cov=core --cov=cli --cov=services --cov-report=term-missing
 
 bench:
 	python -m pytest --benchmark-only

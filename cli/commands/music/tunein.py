@@ -50,14 +50,15 @@ class TuneInCommands(MusicSubCommand):
 
             serial, device_type = device_info
 
-            if not hasattr(self.context, "music_library"):
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "music_library", None):
                 self.error("MusicLibraryService non disponible")
                 return False
 
             self.info(f"📻 Lecture station TuneIn {args.station_id} sur '{args.device}'...")
 
             result = self.call_with_breaker(
-                self.context.music_library.play_tunein_radio,
+                ctx.music_library.play_tunein_radio,
                 serial,
                 device_type,
                 args.station_id,

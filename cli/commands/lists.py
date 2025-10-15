@@ -3,12 +3,10 @@ Commande CLI pour gérer les listes (courses, tâches) - Thread-safe.
 """
 
 import argparse
-from typing import Any, Dict, List, Optional
-
-from loguru import logger
+from typing import Optional
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 from cli.help_texts.lists_help import LISTS_DESCRIPTION
 
 
@@ -49,14 +47,14 @@ class ListsCommand(BaseCommand):
             "--list",
             choices=["shopping", "todo"],
             default="shopping",
-            help="Type de liste (défaut: shopping)"
+            help="Type de liste (défaut: shopping)",
         )
 
         # Option pour spécifier l'appareil Alexa
         parser.add_argument(
             "--device",
             metavar="DEVICE_NAME",
-            help="Nom de l'appareil Alexa à utiliser (optionnel, utilise un Echo par défaut)"
+            help="Nom de l'appareil Alexa à utiliser (optionnel, utilise un Echo par défaut)",
         )
 
         subparsers = parser.add_subparsers(
@@ -68,46 +66,36 @@ class ListsCommand(BaseCommand):
 
         # Action: add
         add_parser = subparsers.add_parser(
-            "add",
-            help="Ajouter un élément",
-            description="Ajouter un nouvel élément à une liste"
+            "add", help="Ajouter un élément", description="Ajouter un nouvel élément à une liste"
         )
+        add_parser.add_argument("text", help="Texte de l'élément à ajouter")
         add_parser.add_argument(
-            "text",
-            help="Texte de l'élément à ajouter"
-        )
-        add_parser.add_argument(
-            "-p", "--priority",
+            "-p",
+            "--priority",
             choices=["low", "medium", "high"],
             default="medium",
-            help="Priorité de la tâche (uniquement pour todo, défaut: medium)"
+            help="Priorité de la tâche (uniquement pour todo, défaut: medium)",
         )
         add_parser.add_argument(
-            "-d", "--due-date",
-            help="Date d'échéance (uniquement pour todo, format: YYYY-MM-DD)"
+            "-d", "--due-date", help="Date d'échéance (uniquement pour todo, format: YYYY-MM-DD)"
         )
 
         # Action: remove
         remove_parser = subparsers.add_parser(
-            "remove",
-            help="Supprimer un élément",
-            description="Supprimer un élément de la liste"
+            "remove", help="Supprimer un élément", description="Supprimer un élément de la liste"
         )
-        remove_parser.add_argument(
-            "text",
-            help="Texte de l'élément à supprimer"
-        )
+        remove_parser.add_argument("text", help="Texte de l'élément à supprimer")
 
         # Action: clear
         clear_parser = subparsers.add_parser(
             "clear",
             help="Vider la liste",
-            description="Vider complètement la liste ou supprimer uniquement les éléments complétés"
+            description="Vider complètement la liste ou supprimer uniquement les éléments complétés",
         )
         clear_parser.add_argument(
             "--completed-only",
             action="store_true",
-            help="Supprimer uniquement les éléments complétés (uniquement pour todo)"
+            help="Supprimer uniquement les éléments complétés (uniquement pour todo)",
         )
 
     def execute(self, args: argparse.Namespace) -> bool:
@@ -138,7 +126,7 @@ class ListsCommand(BaseCommand):
         """Ajoute un nouvel élément."""
         try:
             list_type = args.list
-            device_name = getattr(args, 'device', None)
+            device_name = getattr(args, "device", None)
 
             # Validation du texte
             if not args.text or not args.text.strip():
@@ -149,16 +137,21 @@ class ListsCommand(BaseCommand):
 
             # Validation de la priorité pour les tâches
             if list_type == "todo" and args.priority not in ["low", "medium", "high"]:
-                self.error(f"❌ Priorité invalide '{args.priority}'. Valeurs possibles: low, medium, high")
+                self.error(
+                    f"❌ Priorité invalide '{args.priority}'. Valeurs possibles: low, medium, high"
+                )
                 return False
 
             # Validation de la date d'échéance pour les tâches
             if list_type == "todo" and args.due_date:
                 try:
                     from datetime import datetime
+
                     datetime.strptime(args.due_date, "%Y-%m-%d")
                 except ValueError:
-                    self.error(f"❌ Format de date invalide '{args.due_date}'. Utilisez le format YYYY-MM-DD")
+                    self.error(
+                        f"❌ Format de date invalide '{args.due_date}'. Utilisez le format YYYY-MM-DD"
+                    )
                     return False
 
             # Récupérer le serial du device si spécifié
@@ -174,12 +167,13 @@ class ListsCommand(BaseCommand):
             else:
                 self.info(f"📝 Ajout de la tâche: '{args.text}' (priorité: {args.priority})")
 
-            if not self.context.list_mgr:
+            ctx = self.require_context()
+            if not ctx.list_mgr:
                 self.error("ListManager non disponible")
                 return False
 
             # Utiliser les vraies commandes vocales
-            success = self.context.list_mgr.add_item(list_type, text, device_serial=device_serial)
+            success = ctx.list_mgr.add_item(list_type, text, device_serial=device_serial)
 
             if success:
                 if list_type == "shopping":
@@ -203,7 +197,7 @@ class ListsCommand(BaseCommand):
         """Supprime un élément."""
         try:
             list_type = args.list
-            device_name = getattr(args, 'device', None)
+            device_name = getattr(args, "device", None)
 
             # Validation du texte
             if not args.text or not args.text.strip():
@@ -225,12 +219,15 @@ class ListsCommand(BaseCommand):
             else:
                 self.info(f"🗑️ Suppression de la tâche: '{args.text}'")
 
-            if not self.context.list_mgr:
+            ctx = self.require_context()
+            if not ctx.list_mgr:
                 self.error("ListManager non disponible")
                 return False
 
             # Utiliser les vraies commandes vocales
-            success = self.context.list_mgr.remove_item(list_type, text, device_serial=device_serial)
+            success = ctx.list_mgr.remove_item(
+                list_type, text, device_serial=device_serial
+            )
 
             if success:
                 if list_type == "shopping":
@@ -254,7 +251,7 @@ class ListsCommand(BaseCommand):
         """Affiche le contenu d'une liste."""
         try:
             list_type = args.list
-            device_name = getattr(args, 'device', None)
+            device_name = getattr(args, "device", None)
 
             # Récupérer le serial du device si spécifié
             device_serial = None
@@ -269,12 +266,15 @@ class ListsCommand(BaseCommand):
             else:
                 self.info("📝 Demande du contenu de la liste de tâches...")
 
-            if not hasattr(self.context, 'voice_service') or not self.context.voice_service:
+            ctx = self.require_context()
+            if not hasattr(ctx, "voice_service") or not ctx.voice_service:
                 self.error("VoiceCommandService non disponible")
                 return False
 
             # Utiliser get_list_content pour récupérer le contenu via commande vocale
-            content = self.context.voice_service.get_list_content(list_type, device_serial, wait_seconds=5.0)
+            content = ctx.voice_service.get_list_content(
+                list_type, device_serial, wait_seconds=5.0
+            )
 
             # La commande vocale a été envoyée, considérer cela comme un succès
             # même si on ne peut pas récupérer la réponse textuelle
@@ -295,7 +295,7 @@ class ListsCommand(BaseCommand):
         """Vide la liste des éléments."""
         try:
             list_type = args.list
-            device_name = getattr(args, 'device', None)
+            device_name = getattr(args, "device", None)
 
             # Récupérer le serial du device si spécifié
             device_serial = None
@@ -305,7 +305,8 @@ class ListsCommand(BaseCommand):
                     self.error(f"❌ Appareil '{device_name}' non trouvé")
                     return False
 
-            if not self.context.list_mgr:
+            ctx = self.require_context()
+            if not ctx.list_mgr:
                 self.error("ListManager non disponible")
                 return False
 
@@ -319,28 +320,34 @@ class ListsCommand(BaseCommand):
                     return True
                 self.info("🗑️ Vidage de la liste de courses...")
                 import sys
+
                 sys.stdout.flush()
                 self.info("📝 Envoi de la commande de vidage...")
                 sys.stdout.flush()
 
                 # Utiliser les vraies commandes vocales pour vider la liste
-                success = self.context.list_mgr.clear_list(list_type, completed_only=args.completed_only, device_serial=device_serial)
+                success = ctx.list_mgr.clear_list(
+                    list_type, completed_only=args.completed_only, device_serial=device_serial
+                )
 
                 if success:
                     # Attendre 4 secondes pour que Alexa réponde (au lieu de 3)
                     import time
+
                     self.info("⏳ Attente de confirmation...")
                     sys.stdout.flush()
                     time.sleep(4.0)
 
-                    self.logger.info(f"🔍 Voice service check: hasattr={hasattr(self.context, 'voice_service')}, value={getattr(self.context, 'voice_service', None)}")
-                    if hasattr(self.context, 'voice_service') and self.context.voice_service:
+                    self.logger.info(
+                        f"🔍 Voice service check: hasattr={hasattr(ctx, 'voice_service')}, value={getattr(ctx, 'voice_service', None)}"
+                    )
+                    if hasattr(ctx, "voice_service") and ctx.voice_service:
                         # Puisque la liste n'est pas vide, on s'attend à une confirmation
                         # Répondre automatiquement "oui" après un délai raisonnable
                         self.info("🤖 Réponse automatique (liste non vide)...")
                         sys.stdout.flush()
                         time.sleep(1.0)  # Attendre 1 seconde avant de répondre (au lieu de 2)
-                        self.context.voice_service.speak("oui", device_serial)
+                        ctx.voice_service.speak("oui", device_serial)
                         time.sleep(1.0)
                         self.success("✅ Liste vidée avec succès")
                         return True
@@ -353,7 +360,9 @@ class ListsCommand(BaseCommand):
                     return False
 
             # Pour les tâches ou si completed_only, pas de confirmation spéciale
-            success = self.context.list_mgr.clear_list(list_type, completed_only=args.completed_only, device_serial=device_serial)
+            success = ctx.list_mgr.clear_list(
+                list_type, completed_only=args.completed_only, device_serial=device_serial
+            )
             if success:
                 if list_type == "shopping":
                     self.success("✅ Liste de courses vidée")
@@ -389,10 +398,9 @@ class ListsCommand(BaseCommand):
             # On utilise la page d'activité qui peut contenir des informations sur les interactions récentes
             url = "https://www.amazon.fr/alexa-privacy/apd/activity?ref=activityHistory"
 
-            response = self.context.auth.session.get(
-                url,
-                headers={"csrf": self.context.auth.csrf},
-                timeout=5
+            ctx = self.require_context()
+            response = ctx.auth.session.get(
+                url, headers={"csrf": ctx.auth.csrf}, timeout=5
             )
 
             if response.status_code != 200:
@@ -407,6 +415,7 @@ class ListsCommand(BaseCommand):
                 self.logger.debug(f"Extrait HTML (500 premiers caractères): {html_content[:500]}")
                 # Chercher des patterns spécifiques dans le HTML
                 import re
+
                 csrf_matches = re.findall(r'csrf[^"]*"([^"]+)"', html_content, re.IGNORECASE)
                 if csrf_matches:
                     self.logger.debug(f"Tokens CSRF trouvés: {csrf_matches[:3]}")
@@ -416,10 +425,17 @@ class ListsCommand(BaseCommand):
             # Mots-clés spécifiques indiquant une vraie demande de confirmation
             # Plus spécifiques que les mots-clés généraux pour éviter les faux positifs
             confirmation_patterns = [
-                "voulez-vous vraiment", "êtes-vous sûr", "sure you want",
-                "cela supprimera", "this will delete", "confirmer la suppression",
-                "confirm deletion", "tous les éléments", "all items",
-                "liste n'est pas vide", "list is not empty"
+                "voulez-vous vraiment",
+                "êtes-vous sûr",
+                "sure you want",
+                "cela supprimera",
+                "this will delete",
+                "confirmer la suppression",
+                "confirm deletion",
+                "tous les éléments",
+                "all items",
+                "liste n'est pas vide",
+                "list is not empty",
             ]
 
             # Vérifier si le HTML contient des patterns spécifiques de confirmation
@@ -461,11 +477,12 @@ class ListsCommand(BaseCommand):
             True si la liste est vide ou si on ne peut pas déterminer, False si elle contient des éléments
         """
         try:
-            if not self.context.list_mgr:
+            ctx = self.require_context()
+            if not ctx.list_mgr:
                 return True  # Considérer comme vide si pas de manager
 
             # Essayer de récupérer la liste via l'API
-            list_data = self.context.list_mgr.get_list(list_type)
+            list_data = ctx.list_mgr.get_list(list_type)
             if list_data:
                 items = list_data.get("items", [])
                 if isinstance(items, list):
@@ -477,28 +494,38 @@ class ListsCommand(BaseCommand):
                     return False
 
             # Si on ne peut pas récupérer la liste, utiliser une commande vocale pour vérifier
-            if hasattr(self.context, 'voice_service') and self.context.voice_service:
+            if hasattr(ctx, "voice_service") and ctx.voice_service:
                 # Demander à Alexa de lire la liste et analyser la réponse
-                response = self.context.voice_service.ask_and_get_response(
+                response = ctx.voice_service.ask_and_get_response(
                     f"lis ma liste de {'courses' if list_type == 'shopping' else 'tâches'}",
-                    wait_seconds=3.0
+                    wait_seconds=3.0,
                 )
 
                 if response:
                     response_lower = response.lower()
                     # Mots-clés indiquant que la liste est vide
                     empty_keywords = [
-                        "vide", "rien", "aucun élément", "pas d'élément",
-                        "empty", "no items", "nothing"
+                        "vide",
+                        "rien",
+                        "aucun élément",
+                        "pas d'élément",
+                        "empty",
+                        "no items",
+                        "nothing",
                     ]
 
                     for keyword in empty_keywords:
                         if keyword in response_lower:
-                            self.logger.debug(f"Liste {list_type} détectée comme vide via réponse vocale")
+                            self.logger.debug(
+                                f"Liste {list_type} détectée comme vide via réponse vocale"
+                            )
                             return True
 
                     # Si la réponse contient des éléments spécifiques, la liste n'est pas vide
-                    if any(word in response_lower for word in ["pain", "lait", "œuf", "farine", "beurre", "fromage"]):
+                    if any(
+                        word in response_lower
+                        for word in ["pain", "lait", "œuf", "farine", "beurre", "fromage"]
+                    ):
                         self.logger.debug(f"Liste {list_type} contient des éléments")
                         return False
 
@@ -508,4 +535,3 @@ class ListsCommand(BaseCommand):
         except Exception as e:
             self.logger.debug(f"Erreur lors de la vérification si liste vide: {e}")
             return False  # Considérer comme non vide par sécurité
-

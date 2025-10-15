@@ -13,6 +13,7 @@ from threading import RLock
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
+
 from utils.logger import SharedIcons
 
 
@@ -34,7 +35,12 @@ class CacheService:
         >>> cache.invalidate("devices")  # Force suppression
     """
 
-    def __init__(self, cache_dir: Optional[Path] = None, use_compression: bool = True, save_json_copy: bool = True):
+    def __init__(
+        self,
+        cache_dir: Optional[Path] = None,
+        use_compression: bool = True,
+        save_json_copy: bool = True,
+    ):
         """
         Initialise le service de cache.
 
@@ -72,7 +78,9 @@ class CacheService:
 
         compression_status = "avec compression" if use_compression else "sans compression"
         json_copy_status = "avec copie JSON" if save_json_copy else "sans copie JSON"
-        logger.debug(f"CacheService initialisé: {self.cache_dir} ({compression_status}, {json_copy_status})")
+        logger.debug(
+            f"CacheService initialisé: {self.cache_dir} ({compression_status}, {json_copy_status})"
+        )
 
     def get(self, key: str, ignore_ttl: bool = False) -> Optional[Dict[str, Any]]:
         """

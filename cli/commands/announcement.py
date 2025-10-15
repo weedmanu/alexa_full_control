@@ -15,13 +15,13 @@ import argparse
 import json
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.announcement_help import (
     ANNOUNCE_DESCRIPTION,
-    SEND_HELP,
-    LIST_HELP,
     CLEAR_HELP,
+    LIST_HELP,
     READ_HELP,
+    SEND_HELP,
 )
 
 
@@ -54,7 +54,7 @@ class AnnouncementCommand(BaseCommand):
         """
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
-        
+
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
@@ -97,7 +97,7 @@ class AnnouncementCommand(BaseCommand):
             help="Lister les annonces",
             description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         list_parser.add_argument(
             "--limit",
@@ -116,7 +116,7 @@ class AnnouncementCommand(BaseCommand):
             help="Supprimer annonces",
             description=CLEAR_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         clear_parser.add_argument(
             "--device", type=str, required=True, metavar="DEVICE_NAME", help="Nom de l'appareil"
@@ -126,7 +126,13 @@ class AnnouncementCommand(BaseCommand):
         )
 
         # Action: read
-        read_parser = subparsers.add_parser("read", help="Marquer comme lu", description=READ_HELP, formatter_class=ActionHelpFormatter, add_help=False)
+        read_parser = subparsers.add_parser(
+            "read",
+            help="Marquer comme lu",
+            description=READ_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
         read_parser.add_argument(
             "--id", type=str, required=True, metavar="ANNOUNCEMENT_ID", help="ID de l'annonce"
         )
@@ -169,12 +175,13 @@ class AnnouncementCommand(BaseCommand):
 
             self.info(f"� Envoi annonce à '{args.device}'...")
 
-            if not self.context.notification_mgr:
+            ctx = self.require_context()
+            if not ctx.notification_mgr:
                 self.error("Gestionnaire d'annonces non disponible")
                 return False
 
             result = self.call_with_breaker(
-                self.context.notification_mgr.send_notification, serial, args.message, title
+                ctx.notification_mgr.send_notification, serial, args.message, title
             )
 
             if result:
@@ -193,13 +200,14 @@ class AnnouncementCommand(BaseCommand):
         try:
             self.info("� Récupération des annonces...")
 
-            if not self.context.notification_mgr:
+            ctx = self.require_context()
+            if not ctx.notification_mgr:
                 self.error("Gestionnaire d'annonces non disponible")
                 return False
 
             # Récupérer toutes les annonces
             announcements = self.call_with_breaker(
-                self.context.notification_mgr.list_notifications, args.limit
+                ctx.notification_mgr.list_notifications, args.limit
             )
 
             # Filtrer par appareil si spécifié
@@ -236,12 +244,13 @@ class AnnouncementCommand(BaseCommand):
 
             self.info(f"🗑️  Suppression annonces de '{args.device}'...")
 
-            if not self.context.notification_mgr:
+            ctx = self.require_context()
+            if not ctx.notification_mgr:
                 self.error("Gestionnaire d'annonces non disponible")
                 return False
 
             result = self.call_with_breaker(
-                self.context.notification_mgr.clear_notifications, serial
+                ctx.notification_mgr.clear_notifications, serial
             )
 
             if result:
@@ -260,11 +269,12 @@ class AnnouncementCommand(BaseCommand):
         try:
             self.info(f"✓ Marquage annonce '{args.id}' comme lue...")
 
-            if not self.context.notification_mgr:
+            ctx = self.require_context()
+            if not ctx.notification_mgr:
                 self.error("Gestionnaire d'annonces non disponible")
                 return False
 
-            result = self.call_with_breaker(self.context.notification_mgr.mark_as_read, args.id)
+            result = self.call_with_breaker(ctx.notification_mgr.mark_as_read, args.id)
 
             if result:
                 self.success("✅ Annonce marquée comme lue")

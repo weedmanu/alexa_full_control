@@ -1,33 +1,13 @@
-"""
-Module de parsing des commandes CLI avec architecture modulaire à sous-commandes.
+"""cli.command_parser
+=================================
 
-Ce module gère l'analyse des arguments de ligne de commande en utilisant
-argparse avec des subparsers pour créer une architecture modulaire et extensible.
+Parser principal pour la CLI avec subparsers modulaires.
 
-Architec            # Ajouter de la couleur au titre de l'architecture (bleu comme OPTIONS_GLOBALES)
-            for i, line in enumerate(architecture_section):
-                if '🏗️  Architecture modulaire:' in line or '🏗️  Architecture:' in line:
-                    architecture_section[i] = '\033[1;34m🏗️  Architecture modulaire:\033[0m'
-                    break
-    python alexa_voice_control.py <CATEGORY> <ACTION> [OPTIONS]
-
-Catégories supportées:
-    - auth: Authentification (create, status)
-    - device: Gestion appareils (list, info, control, volume)
-    - music: Contrôle musique (play, radio, control, queue)
-    - timer: Gestion timers (create, list, cancel, pause, resume)
-    - alarm: Gestion alarmes (create, list, delete, update)
-    - reminder: Gestion rappels (create, list, delete)
-    - smarthome: Contrôle appareils smart home (lock, unlock, state, lights, thermostats)
-    - notification: Gestion notifications (list, delete, read)
-    - dnd: Mode Ne Pas Déranger (status, enable, disable, schedule)
-    - announcement: Annonces (send, dropin)
-    - list: Listes courses/tâches (add, remove, clear)
-    - activity: Historique activités (list, delete, voice-history)
-    - audio: Paramètres audio (equalizer, bluetooth)
-    - settings: Paramètres appareils (get, wake-word, timezone, locale)
-    - routine: Routines (list, execute, info)
-    - multiroom: Groupes multi-pièces (create, delete, list)
+Principales remarques:
+- Ce module utilise argparse et expose `create_parser()` qui retourne
+    une instance de `CommandParser`.
+- La CLI supporte une option globale `--no-color` pour forcer la sortie
+    sans ANSI/émoticônes (utile pour redirections ou Windows legacy).
 
 Auteur: M@nu
 Date: 7 octobre 2025
@@ -95,7 +75,9 @@ class ColoredHelpFormatter(argparse.RawDescriptionHelpFormatter):
         # Ajouter des couleurs aux sections principales
         help_text = help_text.replace("usage:", "\033[1;36mUsage:\033[0m")
         help_text = help_text.replace("options:", "\033[1;35mOptions:\033[0m")
-        help_text = help_text.replace("positional arguments:", "\033[1;35mArguments positionnels:\033[0m")
+        help_text = help_text.replace(
+            "positional arguments:", "\033[1;35mArguments positionnels:\033[0m"
+        )
 
         return help_text
 
@@ -144,7 +126,7 @@ class ActionHelpFormatter(argparse.RawDescriptionHelpFormatter):
     def format_help(self) -> str:
         help_text = super().format_help()
         # Supprimer la section 'options:' vide
-        cleaned = help_text.replace('options:\n', '').strip()
+        cleaned = help_text.replace("options:\n", "").strip()
         return f"{cleaned}\n"
 
 
@@ -158,34 +140,34 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         """Override pour contrôler l'ordre d'affichage selon la structure de l'usage."""
         # Utiliser le formatage standard mais réorganiser
         help_text = super().format_help()
-        
+
         # Si la description contient déjà notre format modulaire (détecté par les séparateurs colorés),
         # supprimer les sections argparse automatiques et retourner
-        if '\033[1;90m━━━━━━━' in help_text or '\033[1;32m━━━━━━━' in help_text:
+        if "\033[1;90m━━━━━━━" in help_text or "\033[1;32m━━━━━━━" in help_text:
             # Supprimer les sections "positional arguments" et "options" ajoutées par argparse
-            lines = help_text.split('\n')
+            lines = help_text.split("\n")
             filtered_lines = []
             skip_section = False
-            
+
             for line in lines:
                 # Détecter le début des sections argparse à ignorer
-                if line.strip() in ['positional arguments:', 'options:', 'optional arguments:']:
+                if line.strip() in ["positional arguments:", "options:", "optional arguments:"]:
                     skip_section = True
                     continue
-                
+
                 # Arrêter d'ignorer si on rencontre une ligne vide après la section
                 if skip_section and not line.strip():
                     skip_section = False
                     continue
-                
+
                 # Ajouter la ligne si on n'est pas dans une section à ignorer
                 if not skip_section:
                     filtered_lines.append(line)
-            
-            return '\n'.join(filtered_lines)
+
+            return "\n".join(filtered_lines)
 
         # Diviser en lignes et réorganiser (ancien système)
-        lines = help_text.split('\n')
+        lines = help_text.split("\n")
         reordered_lines: List[str] = []
 
         # Variables pour stocker les sections
@@ -213,18 +195,18 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
             #     continue
 
             # Ignorer complètement les lignes usage automatiques (non colorées)
-            if line.startswith('usage:'):
+            if line.startswith("usage:"):
                 continue
 
             # Ignorer les lignes qui contiennent des arguments positionnels parasites
-            if '[--config' in line or 'CATEGORY ...' in line:
+            if "[--config" in line or "CATEGORY ..." in line:
                 continue
 
             # Détecter le titre (entouré de caractères spéciaux)
-            if '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' in line:
+            if "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" in line:
                 if not in_title:
                     in_title = True
-                    current_section = 'title'
+                    current_section = "title"
                     title_section.append(line)
                 else:
                     in_title = False
@@ -236,78 +218,87 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
                 continue
 
             # Détecter les autres sections
-            if '\033[1;36mUsage:\033[0m' in line or ('Usage:' in line and 'alexa [OPTIONS_GLOBALES]' in line):
-                current_section = 'usage'
+            if "\033[1;36mUsage:\033[0m" in line or (
+                "Usage:" in line and "alexa [OPTIONS_GLOBALES]" in line
+            ):
+                current_section = "usage"
                 # Colorer les parties de la ligne usage comme dans l'aide principale
-                line = line.replace('Usage:', '\033[1;36mUsage:\033[0m')
-                line = line.replace('alexa', '\033[1;37malexa\033[0m')
-                line = line.replace('[OPTIONS_GLOBALES]', '[\033[1;34mOPTIONS_GLOBALES\033[0m]')
-                line = line.replace('auth', '\033[1;32mauth\033[0m')
-                line = line.replace('[<ACTION>]', '[\033[1;33m<ACTION>\033[0m]')
-                line = line.replace('[OPTIONS_ACTION]', '[\033[1;35mOPTIONS_ACTION\033[0m]')
-                line = line.replace('<CATEGORY>', '\033[1;32m<CATEGORY>\033[0m')
+                line = line.replace("Usage:", "\033[1;36mUsage:\033[0m")
+                line = line.replace("alexa", "\033[1;37malexa\033[0m")
+                line = line.replace("[OPTIONS_GLOBALES]", "[\033[1;34mOPTIONS_GLOBALES\033[0m]")
+                line = line.replace("auth", "\033[1;32mauth\033[0m")
+                line = line.replace("[<ACTION>]", "[\033[1;33m<ACTION>\033[0m]")
+                line = line.replace("[OPTIONS_ACTION]", "[\033[1;35mOPTIONS_ACTION\033[0m]")
+                line = line.replace("<CATEGORY>", "\033[1;32m<CATEGORY>\033[0m")
                 usage_section.append(line)
-            elif line == '\033[1;35mOptions:\033[0m' or line == 'options:':
-                current_section = 'options'
+            elif line == "\033[1;35mOptions:\033[0m" or line == "options:":
+                current_section = "options"
                 options_section.append(line)
-            elif line == '\033[1;35mArguments positionnels:\033[0m' or line == 'positional arguments:':
-                current_section = 'positionals'
+            elif (
+                line == "\033[1;35mArguments positionnels:\033[0m"
+                or line == "positional arguments:"
+            ):
+                current_section = "positionals"
                 positionals_section.append(line)
-            elif '\033[1;32m🎯 Fonctionnalités principales:\033[0m' in line:
-                current_section = 'description'
+            elif "\033[1;32m🎯 Fonctionnalités principales:\033[0m" in line:
+                current_section = "description"
                 description_section.append(line)
-            elif '\033[1;34m🏗️  Architecture modulaire:\033[0m' in line:
-                current_section = 'architecture'
+            elif "\033[1;34m🏗️  Architecture modulaire:\033[0m" in line:
+                current_section = "architecture"
                 architecture_section.append(line)
-            elif '🏗️  Architecture:' in line:
-                current_section = 'architecture'
+            elif "🏗️  Architecture:" in line:
+                current_section = "architecture"
                 # Ajouter la couleur à la section architecture
-                line = '\033[1;34m' + line + '\033[0m'
+                line = "\033[1;34m" + line + "\033[0m"
                 architecture_section.append(line)
-            elif '\033[1;32m🎯 Catégories principales:\033[0m' in line:
-                current_section = 'categories'
+            elif "\033[1;32m🎯 Catégories principales:\033[0m" in line:
+                current_section = "categories"
                 categories_section.append(line)
-            elif '\033[1;33m🎯 Catégories avec sous-catégories:\033[0m' in line:
-                current_section = 'subcategories'
+            elif "\033[1;33m🎯 Catégories avec sous-catégories:\033[0m" in line:
+                current_section = "subcategories"
                 subcategories_section.append(line)
-            elif '\033[1;33m🎯 Actions par catégorie:\033[0m' in line or '\033[1;33m🎯 Actions disponibles:\033[0m' in line or '\033[1;34m🎯 Actions disponibles:\033[0m' in line:
-                current_section = 'actions'
+            elif (
+                "\033[1;33m🎯 Actions par catégorie:\033[0m" in line
+                or "\033[1;33m🎯 Actions disponibles:\033[0m" in line
+                or "\033[1;34m🎯 Actions disponibles:\033[0m" in line
+            ):
+                current_section = "actions"
                 actions_section.append(line)
-            elif '\033[1;35m⚙️  Options d\'action:\033[0m' in line:
-                current_section = 'action_options'
+            elif "\033[1;35m⚙️  Options d'action:\033[0m" in line:
+                current_section = "action_options"
                 action_options_section.append(line)
-            elif '\033[1;36m💡 Exemples d\'utilisation:\033[0m' in line:
-                current_section = 'examples'
+            elif "\033[1;36m💡 Exemples d'utilisation:\033[0m" in line:
+                current_section = "examples"
                 examples_section.append(line)
-            elif '\033[1;37m💡 Pour plus d\'aide:\033[0m' in line:
-                current_section = 'help'
+            elif "\033[1;37m💡 Pour plus d'aide:\033[0m" in line:
+                current_section = "help"
                 help_section.append(line)
-            elif '\033[1;31m⚠️  Important:\033[0m' in line:
-                current_section = 'note'
+            elif "\033[1;31m⚠️  Important:\033[0m" in line:
+                current_section = "note"
                 note_section.append(line)
-            elif current_section == 'usage':
+            elif current_section == "usage":
                 usage_section.append(line)
-            elif current_section == 'options':
+            elif current_section == "options":
                 options_section.append(line)
-            elif current_section == 'positionals':
+            elif current_section == "positionals":
                 positionals_section.append(line)
-            elif current_section == 'description':
+            elif current_section == "description":
                 description_section.append(line)
-            elif current_section == 'architecture':
+            elif current_section == "architecture":
                 architecture_section.append(line)
-            elif current_section == 'categories':
+            elif current_section == "categories":
                 categories_section.append(line)
-            elif current_section == 'subcategories':
+            elif current_section == "subcategories":
                 subcategories_section.append(line)
-            elif current_section == 'action_options':
+            elif current_section == "action_options":
                 action_options_section.append(line)
-            elif current_section == 'examples':
+            elif current_section == "examples":
                 examples_section.append(line)
-            elif current_section == 'help':
+            elif current_section == "help":
                 help_section.append(line)
-            elif current_section == 'note':
+            elif current_section == "note":
                 note_section.append(line)
-            elif current_section == 'actions':
+            elif current_section == "actions":
                 actions_section.append(line)
             else:
                 # Si pas de section identifiée, mettre dans actions par défaut
@@ -315,20 +306,20 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
 
         # Nettoyer les sections : supprimer les \n mais PRESERVER les lignes vides pour l'espacement
         for _, section in [
-            ('title', title_section),
-            ('description', description_section),
-            ('architecture', architecture_section),
-            ('usage', usage_section),
-            ('options', options_section),
-            ('categories', categories_section),
-            ('subcategories', subcategories_section),
-            ('actions', actions_section),
-            ('action_options', action_options_section),
-            ('examples', examples_section),
-            ('help', help_section),
-            ('note', note_section),
+            ("title", title_section),
+            ("description", description_section),
+            ("architecture", architecture_section),
+            ("usage", usage_section),
+            ("options", options_section),
+            ("categories", categories_section),
+            ("subcategories", subcategories_section),
+            ("actions", actions_section),
+            ("action_options", action_options_section),
+            ("examples", examples_section),
+            ("help", help_section),
+            ("note", note_section),
         ]:
-            section[:] = [line.rstrip('\n') for line in section]
+            section[:] = [line.rstrip("\n") for line in section]
 
         # Réorganiser dans l'ordre souhaité selon la structure de l'usage :
         # alexa [OPTIONS_GLOBALES] auth <ACTION> [OPTIONS_ACTION]
@@ -339,8 +330,8 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         if description_section:
             # Ajouter de la couleur au titre des fonctionnalités (vert comme <CATEGORY>)
             for i, line in enumerate(description_section):
-                if '🎯 Fonctionnalités principales:' in line:
-                    description_section[i] = '\033[1;32m🎯 Fonctionnalités principales:\033[0m'
+                if "🎯 Fonctionnalités principales:" in line:
+                    description_section[i] = "\033[1;32m🎯 Fonctionnalités principales:\033[0m"
                     break
             reordered_lines.extend(description_section)
             reordered_lines.append("")  # Ligne vide après les fonctionnalités
@@ -349,8 +340,8 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         if architecture_section:
             # Ajouter de la couleur au titre de l'architecture (bleu comme OPTIONS_GLOBALES)
             for i, line in enumerate(architecture_section):
-                if '🏗️  ARCHITECTURE MODULAIRE:' in line or '🏗️  ARCHITECTURE:' in line:
-                    architecture_section[i] = '\033[1;34m🏗️  ARCHITECTURE MODULAIRE:\033[0m'
+                if "🏗️  ARCHITECTURE MODULAIRE:" in line or "🏗️  ARCHITECTURE:" in line:
+                    architecture_section[i] = "\033[1;34m🏗️  ARCHITECTURE MODULAIRE:\033[0m"
                     break
             reordered_lines.extend(architecture_section)
             reordered_lines.append("")  # Ligne vide après l'architecture
@@ -368,13 +359,23 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         # 3. Catégories disponibles
         if categories_section:
             # Compter le nombre de catégories listées (lignes non vides après le titre)
-            category_count = sum(1 for line in categories_section[1:] if line.strip() and not line.startswith('\033['))
+            category_count = sum(
+                1
+                for line in categories_section[1:]
+                if line.strip() and not line.startswith("\033[")
+            )
             # Si une seule catégorie, c'est une aide de catégorie spécifique
-            title_text = '🎯 Catégorie actuelle:' if category_count == 1 else '🎯 Catégories disponibles:'
+            title_text = (
+                "🎯 Catégorie actuelle:" if category_count == 1 else "🎯 Catégories disponibles:"
+            )
             # Ajouter de la couleur au titre des catégories (vert comme <CATEGORY>)
             for i, line in enumerate(categories_section):
-                if '🎯 Catégories disponibles:' in line or '🎯 Catégorie:' in line or '🎯 Catégorie actuelle:' in line:
-                    categories_section[i] = f'\033[1;32m{title_text}\033[0m'
+                if (
+                    "🎯 Catégories disponibles:" in line
+                    or "🎯 Catégorie:" in line
+                    or "🎯 Catégorie actuelle:" in line
+                ):
+                    categories_section[i] = f"\033[1;32m{title_text}\033[0m"
                     break
             reordered_lines.extend(categories_section)
             reordered_lines.append("")  # Ligne vide après les catégories
@@ -388,8 +389,8 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         if actions_section:
             # Ajouter de la couleur au titre des actions (bleu comme <ACTION>)
             for i, line in enumerate(actions_section):
-                if '🎯 Actions par catégorie:' in line or '🎯 Actions disponibles:' in line:
-                    actions_section[i] = '\033[1;34m🎯 Actions disponibles:\033[0m'
+                if "🎯 Actions par catégorie:" in line or "🎯 Actions disponibles:" in line:
+                    actions_section[i] = "\033[1;34m🎯 Actions disponibles:\033[0m"
                     break
             reordered_lines.extend(actions_section)
             reordered_lines.append("")  # Ligne vide après les actions
@@ -398,8 +399,8 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         if action_options_section:
             # Ajouter de la couleur au titre des options d'action (magenta comme OPTIONS_ACTION)
             for i, line in enumerate(action_options_section):
-                if '⚙️  Options d\'action:' in line or '⚙️  Options d\'action:' in line:
-                    action_options_section[i] = '\033[1;35m⚙️  Options d\'action:\033[0m'
+                if "⚙️  Options d'action:" in line or "⚙️  Options d'action:" in line:
+                    action_options_section[i] = "\033[1;35m⚙️  Options d'action:\033[0m"
                     break
             reordered_lines.extend(action_options_section)
             reordered_lines.append("")  # Ligne vide après les options d'action
@@ -408,8 +409,8 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         if examples_section:
             # Ajouter de la couleur au titre des exemples (cyan comme dans l'epilog)
             for i, line in enumerate(examples_section):
-                if '💡 Exemples d\'utilisation:' in line or '💡 Exemples d\'utilisation:' in line:
-                    examples_section[i] = '\033[1;36m💡 Exemples d\'utilisation:\033[0m'
+                if "💡 Exemples d'utilisation:" in line or "💡 Exemples d'utilisation:" in line:
+                    examples_section[i] = "\033[1;36m💡 Exemples d'utilisation:\033[0m"
                     break
             reordered_lines.extend(examples_section)
             reordered_lines.append("")  # Ligne vide après les exemples
@@ -418,8 +419,8 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         if help_section:
             # Ajouter de la couleur au titre de l'aide (blanc comme dans l'epilog)
             for i, line in enumerate(help_section):
-                if '💡 Pour plus d\'aide:' in line or '💡 Pour plus d\'aide:' in line:
-                    help_section[i] = '\033[1;37m💡 Pour plus d\'aide:\033[0m'
+                if "💡 Pour plus d'aide:" in line or "💡 Pour plus d'aide:" in line:
+                    help_section[i] = "\033[1;37m💡 Pour plus d'aide:\033[0m"
                     break
             reordered_lines.extend(help_section)
             reordered_lines.append("")  # Ligne vide après l'aide
@@ -428,8 +429,8 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         if note_section:
             # Ajouter de la couleur au titre de la note (rouge pour les avertissements)
             for i, line in enumerate(note_section):
-                if '⚠️  Important:' in line or '⚠️  Important:' in line:
-                    note_section[i] = '\033[1;31m⚠️  Important:\033[0m'
+                if "⚠️  Important:" in line or "⚠️  Important:" in line:
+                    note_section[i] = "\033[1;31m⚠️  Important:\033[0m"
                     break
             reordered_lines.extend(note_section)
 
@@ -442,7 +443,7 @@ class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
         while reordered_lines and reordered_lines[-1] == "":
             reordered_lines.pop()
 
-        return '\n'.join(reordered_lines) + '\n'
+        return "\n".join(reordered_lines) + "\n"
 
 
 class CommandParser:
@@ -481,17 +482,18 @@ class CommandParser:
     def _get_main_help_description(self) -> str:
         """
         Retourne la description principale de l'aide en utilisant le template personnalisé.
-        
+
         Returns:
             Description formatée avec le template principal
         """
         from cli.help_texts.alexa_help import get_main_help
+
         return get_main_help()
 
     def _get_main_help_epilog(self) -> str:
         """
         Retourne l'epilog de l'aide principale.
-        
+
         Returns:
             Epilog vide car tout est dans la description
         """
@@ -535,10 +537,15 @@ class CommandParser:
             help="Sortie au format JSON (pour scripts)",
         )
 
-        # Ajouter manuellement l'option help
         parser.add_argument(
-            "-h", "--help", action="help", help="Afficher l'aide contextuelle"
+            "--no-color",
+            action="store_true",
+            dest="no_color",
+            help="Désactiver la coloration ANSI (utile pour redirections/CI)",
         )
+
+        # Ajouter manuellement l'option help
+        parser.add_argument("-h", "--help", action="help", help="Afficher l'aide contextuelle")
 
         return parser
 
@@ -561,9 +568,7 @@ class CommandParser:
         # automatiquement pour tous les subparsers
 
         # Créer le sous-parser pour cette catégorie
-        category_parser = self.subparsers.add_parser(
-            name, help=f"Commandes {name}"
-        )
+        category_parser = self.subparsers.add_parser(name, help=f"Commandes {name}")
 
         # Stocker la classe de commande
         self.commands[name] = command_class
@@ -574,9 +579,9 @@ class CommandParser:
 
         # Détecter automatiquement si cette commande utilise des sous-catégories
         # en vérifiant si le parser a un sous-parser avec dest="subcategory"
-        if hasattr(category_parser, '_subparsers') and category_parser._subparsers:
+        if hasattr(category_parser, "_subparsers") and category_parser._subparsers:
             for action in category_parser._actions:
-                if hasattr(action, 'dest') and action.dest == 'subcategory':
+                if hasattr(action, "dest") and action.dest == "subcategory":
                     self.subcategory_commands.add(name)
                     logger.debug(f"Commande '{name}' dtecte comme utilisant des sous-catgories")
                     break
@@ -597,12 +602,12 @@ class CommandParser:
             SystemExit: Si erreur de parsing ou --help
         """
         actual_args = args if args is not None else sys.argv[1:]
-        
+
         # Vérifier si --help ou -h est demandé - dans ce cas, laisser argparse gérer normalement
-        if '--help' in actual_args or '-h' in actual_args:
+        if "--help" in actual_args or "-h" in actual_args:
             # argparse va afficher l'aide et faire sys.exit, c'est normal
             return self.parser.parse_args(args)
-        
+
         try:
             parsed_args = self.parser.parse_args(args)
         except SystemExit as e:
@@ -628,7 +633,7 @@ class CommandParser:
                             break
             else:
                 # Pas de catégorie valide, afficher l'aide générale
-                print(f"\n💡 Pour voir toutes les catégories disponibles:", file=sys.stderr)
+                print("\n💡 Pour voir toutes les catégories disponibles:", file=sys.stderr)
                 self.print_help()
             # Re-lever l'exception pour terminer le programme
             raise

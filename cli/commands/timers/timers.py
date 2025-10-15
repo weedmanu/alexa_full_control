@@ -9,9 +9,15 @@ import argparse
 import json
 from typing import Optional
 
-from cli.commands.timers.base import TimeSubCommand
-from cli.help_texts.timers_help import TIMER_CREATE_HELP, TIMER_LIST_HELP, TIMER_CANCEL_HELP, TIMER_PAUSE_HELP, TIMER_RESUME_HELP
 from cli.command_parser import UniversalHelpFormatter
+from cli.commands.timers.base import TimeSubCommand
+from cli.help_texts.timers_help import (
+    TIMER_CANCEL_HELP,
+    TIMER_CREATE_HELP,
+    TIMER_LIST_HELP,
+    TIMER_PAUSE_HELP,
+    TIMER_RESUME_HELP,
+)
 
 
 class TimersCommands(TimeSubCommand):
@@ -47,7 +53,8 @@ class TimersCommands(TimeSubCommand):
 
             self.info(f"⏱️  Création minuteur{label_text} ({duration_text}) sur '{args.device}'...")
 
-            if not self.context.voice_service:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "voice_service", None):
                 self.error("VoiceCommandService non disponible")
                 return False
 
@@ -58,7 +65,7 @@ class TimersCommands(TimeSubCommand):
 
             # Envoyer via VoiceCommandService
             result = self.call_with_breaker(
-                self.context.voice_service.speak,
+                ctx.voice_service.speak,
                 command,
                 serial,
             )
@@ -79,7 +86,8 @@ class TimersCommands(TimeSubCommand):
     def list(self, args: argparse.Namespace) -> bool:
         """Lister les minuteurs."""
         try:
-            if not self.context.timer_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "timer_mgr", None):
                 self.error("TimerManager non disponible")
                 return False
 
@@ -90,11 +98,11 @@ class TimersCommands(TimeSubCommand):
                     return False
 
                 self.info(f"⏱️  Minuteurs de '{args.device}'...")
-                timers = self.call_with_breaker(self.context.timer_mgr.list_timers, serial)
+                timers = self.call_with_breaker(ctx.timer_mgr.list_timers, serial)
             else:
                 # Aucun device spécifié, lister tous les timers
                 self.info("⏱️  Minuteurs de tous les appareils...")
-                timers = self.call_with_breaker(self.context.timer_mgr.list_timers)
+                timers = self.call_with_breaker(ctx.timer_mgr.list_timers)
 
             if timers:
                 # Filtrer si nécessaire
@@ -127,7 +135,8 @@ class TimersCommands(TimeSubCommand):
             if not serial:
                 return False
 
-            if not self.context.timer_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "timer_mgr", None):
                 self.error("TimerManager non disponible")
                 return False
 
@@ -137,7 +146,7 @@ class TimersCommands(TimeSubCommand):
                 self.info(f"🗑️  Annulation de tous les minuteurs de '{args.device}'...")
 
                 result = self.call_with_breaker(
-                    self.context.timer_mgr.cancel_all_timers, serial, device_type
+                    ctx.timer_mgr.cancel_all_timers, serial, device_type
                 )
 
                 if result:
@@ -148,7 +157,7 @@ class TimersCommands(TimeSubCommand):
                 self.info(f"🗑️  Annulation minuteur {args.id} sur '{args.device}'...")
 
                 result = self.call_with_breaker(
-                    self.context.timer_mgr.cancel_timer, serial, device_type, args.id
+                    ctx.timer_mgr.cancel_timer, serial, device_type, args.id
                 )
 
                 if result:
@@ -171,13 +180,14 @@ class TimersCommands(TimeSubCommand):
 
             self.info(f"⏸️  Pause minuteur {args.id} sur '{args.device}'...")
 
-            if not self.context.timer_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "timer_mgr", None):
                 self.error("TimerManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.timer_mgr.pause_timer, serial, device_type, args.id
+                ctx.timer_mgr.pause_timer, serial, device_type, args.id
             )
 
             if result:
@@ -200,13 +210,14 @@ class TimersCommands(TimeSubCommand):
 
             self.info(f"▶️  Reprise minuteur {args.id} sur '{args.device}'...")
 
-            if not self.context.timer_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "timer_mgr", None):
                 self.error("TimerManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.timer_mgr.resume_timer, serial, device_type, args.id
+                ctx.timer_mgr.resume_timer, serial, device_type, args.id
             )
 
             if result:

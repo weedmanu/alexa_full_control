@@ -1,4 +1,4 @@
-﻿"""Help text constants for the `smarthome` command.
+"""Help text constants for the `smarthome` command.
 
 Contains the long description and short per-action descriptions used by the
 smarthome command parser.
@@ -297,4 +297,3 @@ SMARTHOME_CONTROL_DESC = "Contrôle l'état d'un appareil (on/off/toggle)."
 SMARTHOME_LOCK_DESC = "Verrouille une serrure connectée."
 SMARTHOME_UNLOCK_DESC = "Déverrouille une serrure connectée."
 SMARTHOME_STATUS_DESC = "Affiche l'état actuel d'un appareil."
-

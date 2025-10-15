@@ -7,14 +7,23 @@ Logging utilities for Alexa Advanced Control - Module unique centralisé
 import logging
 import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import Any, List, Optional
 
+from utils.term import should_colorize
+
+# Pre-declare logger so type checkers have a stable name and type for it.
+logger: Any = None
+LOGURU_AVAILABLE = False
 try:
-    from loguru import logger
+    # Import into a temporary name then assign to the pre-declared symbol to
+    # avoid redefining the name from an import (which mypy flags).
+    from loguru import logger as _loguru_logger  # type: ignore
+
+    logger = _loguru_logger
     LOGURU_AVAILABLE = True
-except ImportError:
+except Exception:
+    # Best-effort: leave logger as None when Loguru is not available.
     LOGURU_AVAILABLE = False
-    logger = None
 
 
 # Map émojis par niveau (défini une seule fois, réutilisé partout)
@@ -31,20 +40,20 @@ _EMOJI_MAP = {
 }
 
 # Calculer la largeur maximale pour l'alignement
-_MAX_LEVEL_WIDTH = max(len(level) for level in _EMOJI_MAP.keys())
+_MAX_LEVEL_WIDTH = max(len(level) for level in _EMOJI_MAP)
 
 
 # --- Système centralisé d'icônes partagées ---
 class SharedIcons:
     """Distributeur centralisé d'icônes pour tout le projet.
-    
+
     Toutes les icônes utilisées dans l'application doivent être définies ici
     pour éviter la duplication et faciliter la maintenance.
     """
-    
+
     # Icônes de statut/opérations
     SUCCESS = "✅"
-    ERROR = "❌" 
+    ERROR = "❌"
     WARNING = "⚠️"
     INFO = "ℹ️"
     DEBUG = "🐞"
@@ -54,33 +63,55 @@ class SharedIcons:
     INSTALL = "🔧"
     STEP = "⚡"
     PROGRESS = "⏳"
-    
+
     # Icônes spécialisées
     ROCKET = "🚀"  # Installation
     PACKAGE = "📦"  # Dépendances
-    PYTHON = "🐍"   # Python
-    NODEJS = "🟢"   # Node.js
-    DOCUMENT = "📖" # Documentation
-    TRASH = "🗑️"   # Suppression
-    CELEBRATION = "🎉" # Succès final
-    GEAR = "⚙️"     # Configuration
-    SYNC = "🔄"     # Synchronisation
-    SAVE = "💾"     # Sauvegarde
-    FILE = "📄"     # Fichier
-    DEVICE = "📱"   # Appareil
-    
+    PYTHON = "🐍"  # Python
+    NODEJS = "🟢"  # Node.js
+    DOCUMENT = "📖"  # Documentation
+    TRASH = "🗑️"  # Suppression
+    CELEBRATION = "🎉"  # Succès final
+    GEAR = "⚙️"  # Configuration
+    SYNC = "🔄"  # Synchronisation
+    SAVE = "💾"  # Sauvegarde
+    FILE = "📄"  # Fichier
+    DEVICE = "📱"  # Appareil
+    MUSIC = "🎵"  # Musique
+
     # Tuple des icônes partagées (pour référence)
     SHARED_ICONS = (
-        SUCCESS, ERROR, WARNING, INFO, DEBUG, SEARCH, CRITICAL, 
-        AUTH, INSTALL, STEP, PROGRESS, ROCKET, PACKAGE, PYTHON, 
-        NODEJS, DOCUMENT, TRASH, CELEBRATION, GEAR, SYNC, SAVE, FILE, DEVICE
+        SUCCESS,
+        ERROR,
+        WARNING,
+        INFO,
+        DEBUG,
+        SEARCH,
+        CRITICAL,
+        AUTH,
+        INSTALL,
+        STEP,
+        PROGRESS,
+        ROCKET,
+        PACKAGE,
+        PYTHON,
+        NODEJS,
+        DOCUMENT,
+        TRASH,
+        CELEBRATION,
+        GEAR,
+        SYNC,
+        SAVE,
+        FILE,
+        DEVICE,
+        MUSIC,
     )
-    
+
     @classmethod
     def get_all_icons(cls) -> tuple[str, ...]:
         """Retourne toutes les icônes définies."""
         return cls.SHARED_ICONS
-    
+
     @classmethod
     def get_icon_map(cls) -> dict[str, str]:
         """Retourne un mapping nom -> icône pour référence."""
@@ -108,47 +139,59 @@ class SharedIcons:
             "save": cls.SAVE,
             "file": cls.FILE,
             "device": cls.DEVICE,
+            "music": cls.MUSIC,
         }
 
 
 def _ensure_utf8_stdout() -> None:
     """Force stdout/stderr à utiliser UTF-8 (best-effort, Windows principalement)."""
+    # Some streams (especially when mocked in tests or older Python) may not
+    # implement `reconfigure`. Use hasattr/try to remain robust and avoid
+    # static type complaints about missing attributes.
     try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
+        return
     except Exception:
+        # Fallback: wrap binary buffer if available
         try:
             import io
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
-            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", line_buffering=True)
+
+            if hasattr(sys.stdout, "buffer"):
+                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
+            if hasattr(sys.stderr, "buffer"):
+                sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", line_buffering=True)
         except Exception:
-            pass
+            # Give up silently; UTF-8 is best-effort only
+            return
 
 
 def _get_format_record():
     """Retourne une fonction de formatage Loguru réutilisable."""
+
     def format_record(record):
         """Formateur personnalisé pour injecter l'émoji."""
         level_name = record["level"].name
         level_no = record["level"].no
         emoji = _EMOJI_MAP.get(level_name, "📋")
         record["extra"]["emoji"] = emoji
-        
+
         # Afficher la localisation seulement pour les erreurs ou en mode debug
         show_location = level_name in ["ERROR", "CRITICAL"] or level_no <= 10  # DEBUG level
-        
+
         if show_location:
             location_part = " | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan>"
         else:
             location_part = ""
-        
+
         return (
             "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
             "{extra[emoji]} <level>{level: <" + str(_MAX_LEVEL_WIDTH) + "}</level> | "
-            "<level>{message}</level>" +
-            location_part +
-            "\n{exception}"
+            "<level>{message}</level>" + location_part + "\n{exception}"
         )
+
     return format_record
 
 
@@ -156,14 +199,14 @@ def _register_custom_levels(custom_levels: Optional[List[str]] = None) -> None:
     """Enregistre les niveaux personnalisés Loguru (AUTH, INSTALL, etc.)."""
     if not LOGURU_AVAILABLE or logger is None:
         return
-    
+
     levels_to_register = custom_levels or ["AUTH", "INSTALL"]
     for level_name in levels_to_register:
         try:
             # Vérifier si le niveau existe déjà
             if hasattr(logger, "_core") and level_name in str(logger._core.levels):
                 continue
-            
+
             # Enregistrer le niveau avec icône depuis _EMOJI_MAP
             icon = _EMOJI_MAP.get(level_name, "📋")
             logger.level(level_name, no=25, color="<cyan>", icon=icon)
@@ -179,6 +222,7 @@ def setup_loguru_logger(
     enable_stderr: bool = False,
     custom_levels: Optional[List[str]] = None,
     ensure_utf8: bool = True,
+    no_color: bool = False,
 ) -> None:
     """Configure Loguru avec format émoji et couleurs - Fonction centrale unique.
 
@@ -212,11 +256,12 @@ def setup_loguru_logger(
     format_record = _get_format_record()
 
     # Handler console (stdout)
+    colorize = should_colorize(no_color=no_color)
     logger.add(
         sys.stdout,
         format=format_record,
         level=level,
-        colorize=True,
+        colorize=colorize,
         backtrace=True,
         diagnose=True,
     )

@@ -7,19 +7,18 @@ Ce module fournit une interface CLI pour gérer les routines Alexa :
 - Activer/désactiver des routines
 """
 
-from cli.help_texts.routine_help import (
-    ROUTINE_DESCRIPTION,
-    LIST_HELP,
-    INFO_HELP,
-    EXECUTE_HELP,
-    ENABLE_HELP,
-    DISABLE_HELP,
-)
-
 import argparse
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.help_texts.routine_help import (
+    DISABLE_HELP,
+    ENABLE_HELP,
+    EXECUTE_HELP,
+    INFO_HELP,
+    LIST_HELP,
+    ROUTINE_DESCRIPTION,
+)
 
 
 class RoutineCommand(BaseCommand):
@@ -60,7 +59,7 @@ class RoutineCommand(BaseCommand):
         """
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
-        
+
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
@@ -75,13 +74,25 @@ class RoutineCommand(BaseCommand):
         )
 
         # Action: list
-        list_parser = subparsers.add_parser("list", help="Lister routines", description=LIST_HELP, formatter_class=ActionHelpFormatter, add_help=False)
+        list_parser = subparsers.add_parser(
+            "list",
+            help="Lister routines",
+            description=LIST_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
         list_parser.add_argument(
             "--only-active", action="store_true", help="Afficher uniquement les routines activées"
         )
 
         # Action: info
-        info_parser = subparsers.add_parser("info", help="Détails routine", description=INFO_HELP, formatter_class=ActionHelpFormatter, add_help=False)
+        info_parser = subparsers.add_parser(
+            "info",
+            help="Détails routine",
+            description=INFO_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
         info_parser.add_argument(
             "--name", type=str, required=True, metavar="ROUTINE_NAME", help="Nom de la routine"
         )
@@ -95,7 +106,11 @@ class RoutineCommand(BaseCommand):
 
         # Action: execute
         exec_parser = subparsers.add_parser(
-            "execute", help="Exécuter routine", description=EXECUTE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "execute",
+            help="Exécuter routine",
+            description=EXECUTE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         exec_parser.add_argument(
             "--name",
@@ -114,10 +129,18 @@ class RoutineCommand(BaseCommand):
 
         # Action: enable
         enable_parser = subparsers.add_parser(
-            "enable", help="Activer routine", description=ENABLE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "enable",
+            help="Activer routine",
+            description=ENABLE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         enable_parser.add_argument(
-            "--name", type=str, required=True, metavar="ROUTINE_NAME", help="Nom de la routine à activer"
+            "--name",
+            type=str,
+            required=True,
+            metavar="ROUTINE_NAME",
+            help="Nom de la routine à activer",
         )
         enable_parser.add_argument(
             "--device",
@@ -129,7 +152,11 @@ class RoutineCommand(BaseCommand):
 
         # Action: disable
         disable_parser = subparsers.add_parser(
-            "disable", help="Désactiver routine", description=DISABLE_HELP, formatter_class=ActionHelpFormatter, add_help=False
+            "disable",
+            help="Désactiver routine",
+            description=DISABLE_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
         )
         disable_parser.add_argument(
             "--name",
@@ -179,13 +206,14 @@ class RoutineCommand(BaseCommand):
         try:
             only_active = getattr(args, "only_active", False)
 
-            self.info("📋 Récupération des routines...")
+            self.info("� Récupération des routines...")
 
-            if not self.context.routine_mgr:
+            ctx = self.require_context()
+            if not ctx.routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
-            routines = self.call_with_breaker(self.context.routine_mgr.get_routines)
+            routines = self.call_with_breaker(ctx.routine_mgr.get_routines)
 
             if not routines:
                 self.warning("Aucune routine trouvée")
@@ -210,7 +238,8 @@ class RoutineCommand(BaseCommand):
         try:
             self.info(f"📋 Récupération détails routine '{args.name}'...")
 
-            if not self.context.routine_mgr:
+            ctx = self.require_context()
+            if not ctx.routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -234,7 +263,8 @@ class RoutineCommand(BaseCommand):
         try:
             self.info(f"▶️  Exécution routine '{args.name}'...")
 
-            if not self.context.routine_mgr:
+            ctx = self.require_context()
+            if not ctx.routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -253,8 +283,9 @@ class RoutineCommand(BaseCommand):
             # L'option --device est au niveau global du parser, pas au niveau routine
             if hasattr(args, "device") and args.device:
                 # Utiliser le DeviceManager du contexte pour récupérer le device
-                if self.context.device_mgr:
-                    devices = self.call_with_breaker(self.context.device_mgr.get_devices) or []
+                ctx2 = self.require_context()
+                if ctx2.device_mgr:
+                    devices = self.call_with_breaker(ctx2.device_mgr.get_devices) or []
                     device_name_lower = args.device.lower().strip()
 
                     for dev in devices:
@@ -272,7 +303,7 @@ class RoutineCommand(BaseCommand):
                         )
 
             result = self.call_with_breaker(
-                self.context.routine_mgr.execute_routine,
+                ctx.routine_mgr.execute_routine,
                 routine_id,
                 device_serial=device_serial,
                 device_type=device_type,
@@ -294,7 +325,8 @@ class RoutineCommand(BaseCommand):
         try:
             self.info(f"✓ Activation routine '{args.name}'...")
 
-            if not self.context.routine_mgr:
+            ctx = self.require_context()
+            if not ctx.routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -307,7 +339,7 @@ class RoutineCommand(BaseCommand):
             routine_id = routine.get("automationId")
 
             result = self.call_with_breaker(
-                self.context.routine_mgr.set_routine_enabled, routine_id, True
+                ctx.routine_mgr.set_routine_enabled, routine_id, True
             )
 
             if result:
@@ -326,7 +358,8 @@ class RoutineCommand(BaseCommand):
         try:
             self.info(f"✗ Désactivation routine '{args.name}'...")
 
-            if not self.context.routine_mgr:
+            ctx = self.require_context()
+            if not ctx.routine_mgr:
                 self.error("RoutineManager non disponible")
                 return False
 
@@ -339,7 +372,7 @@ class RoutineCommand(BaseCommand):
             routine_id = routine.get("automationId")
 
             result = self.call_with_breaker(
-                self.context.routine_mgr.set_routine_enabled, routine_id, False
+                ctx.routine_mgr.set_routine_enabled, routine_id, False
             )
 
             if result:
@@ -356,28 +389,29 @@ class RoutineCommand(BaseCommand):
     def _find_routine_by_name(self, name: str) -> dict | None:
         """
         Trouve une routine par son nom.
-        
+
         Args:
             name: Nom de la routine à chercher
-            
+
         Returns:
             Dict de la routine ou None si non trouvée
         """
         try:
-            routines = self.call_with_breaker(self.context.routine_mgr.get_routines)
+            ctx = self.require_context()
+            routines = self.call_with_breaker(ctx.routine_mgr.get_routines)
             if not routines:
                 return None
-                
+
             # Recherche exacte (insensible à la casse)
             name_lower = name.lower().strip()
             for routine in routines:
                 routine_name = routine.get("name", "").lower().strip()
                 if routine_name == name_lower:
                     return routine
-                    
+
             return None
-            
-        except Exception as e:
+
+        except Exception:
             self.logger.exception(f"Erreur lors de la recherche de la routine '{name}'")
             return None
 
@@ -396,13 +430,13 @@ class RoutineCommand(BaseCommand):
             routine_id = routine.get("automationId", "N/A")
             # Une routine est activée si status != "DISABLED"
             enabled = routine.get("status") != "DISABLED"
-            
+
             status = "🟢 Activée" if enabled else "🔴 Désactivée"
 
             # Afficher trigger si disponible
             trigger = routine.get("trigger", {})
             trigger_type = trigger.get("type", "N/A")
-            
+
             # Tronquer l'ID pour l'affichage
             short_id = routine_id.split(".")[-1][:20] if "." in routine_id else routine_id[:20]
 

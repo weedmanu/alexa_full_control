@@ -5,7 +5,7 @@ Auteur: M@nu
 Date: 8 octobre 2025
 """
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable, Any
 
 from loguru import logger
 
@@ -54,6 +54,26 @@ class MusicSubCommand:
     def info(self, message: str):
         """Affiche un message d'information."""
         self.logger.info(message)
+
+    def warning(self, message: str):
+        """Affiche un message d'avertissement."""
+        self.logger.warning(message)
+
+    def debug(self, message: str):
+        """Affiche un message de debug."""
+        self.logger.debug(message)
+
+    def call_with_breaker(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+        """
+        Appelle une fonction via le circuit breaker si disponible.
+
+        Cette méthode est utile pour les sous-commandes qui ne dérivent pas de
+        BaseCommand mais qui ont néanmoins accès au `context`.
+        """
+        ctx = getattr(self, "context", None)
+        if ctx and getattr(ctx, "breaker", None):
+            return ctx.breaker.call(func, *args, **kwargs)
+        return func(*args, **kwargs)
 
     def get_device_info(self, device_name: str) -> Optional[Tuple[str, str]]:
         """

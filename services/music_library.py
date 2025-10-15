@@ -15,14 +15,12 @@ from typing import Any, Dict, List, Optional
 from pybreaker import CircuitBreaker
 
 from config import Config
-from services.auth import AuthenticationService
+from services.auth import AuthClient
 from utils.logger import SharedIcons, setup_loguru_logger
 
-# Configuration du logger Loguru pour ce service
-logger = setup_loguru_logger(
-    level="INFO",
-    custom_levels=["MUSIC"]
-)
+# Initialiser le logger avec Loguru
+setup_loguru_logger()
+from loguru import logger
 
 
 class MusicLibraryService:
@@ -30,7 +28,7 @@ class MusicLibraryService:
 
     def __init__(
         self,
-        auth: AuthenticationService,
+        auth: AuthClient,
         config: Config,
         breaker: Optional[CircuitBreaker] = None,
     ):
@@ -47,6 +45,8 @@ class MusicLibraryService:
         self.breaker = breaker or CircuitBreaker(fail_max=3, reset_timeout=60)
         self._lock = RLock()
 
+        logger.info(f"{SharedIcons.MUSIC} Service bibliothèque musicale initialisé")
+
     def play_tunein_radio(self, device_serial: str, device_type: str, station_id: str) -> bool:
         """
         Joue une station TuneIn radio.
@@ -60,7 +60,6 @@ class MusicLibraryService:
             True si succès
         """
         with self._lock:
-            logger.debug(f"{SharedIcons.SEARCH} Préparation lecture TuneIn station {station_id} sur {device_serial}")
             try:
                 # Encoder le content token comme le shell script
                 content_data = f'["music/tuneIn/stationId","{station_id}"]|{{"previousPageId":"TuneIn_SEARCH"}}'
@@ -93,11 +92,13 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                logger.success(f"{SharedIcons.SUCCESS} Station TuneIn {station_id} lancée sur {device_serial}")
+                logger.success(
+                    f"{SharedIcons.MUSIC} Station TuneIn {station_id} lancée sur {device_serial}"
+                )
                 return True
 
             except Exception as e:
-                logger.error(f"{SharedIcons.ERROR} Erreur lecture TuneIn station {station_id}: {e}")
+                logger.error(f"{SharedIcons.ERROR} Erreur lecture TuneIn {station_id}: {e}")
                 return False
 
     def play_library_track(
@@ -126,17 +127,14 @@ class MusicLibraryService:
             True si succès
         """
         with self._lock:
-            logger.debug(f"{SharedIcons.SEARCH} Préparation lecture bibliothèque sur {device_serial}")
             try:
                 # Payload différent selon track_id ou album
                 if track_id:
                     payload = {"trackId": track_id, "playQueuePrime": True}
-                    logger.debug(f"{SharedIcons.FILE} Lecture morceau {track_id}")
                 elif artist and album:
                     payload = {"albumArtistName": artist, "albumName": album}
-                    logger.debug(f"{SharedIcons.FILE} Lecture album '{album}' de {artist}")
                 else:
-                    logger.error(f"{SharedIcons.ERROR} track_id ou (artist+album) requis pour la lecture")
+                    logger.error("track_id ou (artist+album) requis")
                     return False
 
                 headers = {
@@ -164,10 +162,8 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                if shuffle:
-                    logger.success(f"{SharedIcons.SUCCESS} Morceau bibliothèque lancé (shuffle activé) sur {device_serial}")
-                else:
-                    logger.success(f"{SharedIcons.SUCCESS} Morceau bibliothèque lancé sur {device_serial}")
+                track_info = f"morceau {track_id}" if track_id else f"album '{album}' de {artist}"
+                logger.success(f"{SharedIcons.MUSIC} {track_info} lancé sur {device_serial}")
                 return True
 
             except Exception as e:
@@ -196,7 +192,6 @@ class MusicLibraryService:
             True si succès
         """
         with self._lock:
-            logger.debug(f"{SharedIcons.SEARCH} Préparation lecture playlist {playlist_id} sur {device_serial}")
             try:
                 payload = {"playlistId": playlist_id, "playQueuePrime": True}
 
@@ -225,10 +220,9 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                if shuffle:
-                    logger.success(f"{SharedIcons.SUCCESS} Playlist {playlist_id} lancée (shuffle activé) sur {device_serial}")
-                else:
-                    logger.success(f"{SharedIcons.SUCCESS} Playlist {playlist_id} lancée sur {device_serial}")
+                logger.success(
+                    f"{SharedIcons.MUSIC} Playlist {playlist_id} lancée sur {device_serial}"
+                )
                 return True
 
             except Exception as e:
@@ -251,7 +245,6 @@ class MusicLibraryService:
             True si succès
         """
         with self._lock:
-            logger.debug(f"{SharedIcons.SEARCH} Préparation lecture playlist Prime {asin} sur {device_serial}")
             try:
                 payload = {"asin": asin}
 
@@ -279,11 +272,11 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                logger.success(f"{SharedIcons.SUCCESS} Playlist Prime {asin} lancée sur {device_serial}")
+                logger.info(f"Playlist Prime {asin} lancée")
                 return True
 
             except Exception as e:
-                logger.error(f"{SharedIcons.ERROR} Erreur lecture Prime playlist {asin}: {e}")
+                logger.error(f"Erreur lecture Prime playlist: {e}")
                 return False
 
     def play_prime_station(
@@ -302,7 +295,6 @@ class MusicLibraryService:
             True si succès
         """
         with self._lock:
-            logger.debug(f"{SharedIcons.SEARCH} Préparation lecture station Prime {seed_id} sur {device_serial}")
             try:
                 # Format du seed comme le shell script
                 seed_data = {"type": "KEY", "seedId": seed_id}
@@ -336,11 +328,11 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                logger.success(f"{SharedIcons.SUCCESS} Station Prime {seed_id} lancée sur {device_serial}")
+                logger.info(f"Station Prime {seed_id} lancée")
                 return True
 
             except Exception as e:
-                logger.error(f"{SharedIcons.ERROR} Erreur lecture Prime station {seed_id}: {e}")
+                logger.error(f"Erreur lecture Prime station: {e}")
                 return False
 
     def play_historical_queue(
@@ -363,7 +355,6 @@ class MusicLibraryService:
             True si succès
         """
         with self._lock:
-            logger.debug(f"{SharedIcons.SEARCH} Préparation lecture queue historique {queue_id} sur {device_serial}")
             try:
                 payload = {
                     "deviceType": device_type,
@@ -393,11 +384,11 @@ class MusicLibraryService:
                 )
 
                 response.raise_for_status()
-                logger.success(f"{SharedIcons.SUCCESS} Queue historique {queue_id} lancée sur {device_serial}")
+                logger.success(f"Queue historique {queue_id} lancée")
                 return True
 
             except Exception as e:
-                logger.error(f"{SharedIcons.ERROR} Erreur lecture queue historique {queue_id}: {e}")
+                logger.error(f"Erreur lecture queue historique: {e}")
                 return False
 
     def get_library_playlists(
@@ -468,11 +459,15 @@ class MusicLibraryService:
 
                     offset = next_token
 
-                logger.success(f"{SharedIcons.SUCCESS} {len(all_tracks)} entrées bibliothèque récupérées")
+                logger.success(
+                    f"{SharedIcons.MUSIC} {len(all_tracks)} entrées bibliothèque récupérées pour {device_serial}"
+                )
                 return all_tracks
 
             except Exception as e:
-                logger.error(f"Erreur récupération bibliothèque: {e}")
+                logger.error(
+                    f"{SharedIcons.ERROR} Erreur récupération bibliothèque pour {device_serial}: {e}"
+                )
                 return []
 
     def get_prime_playlists(
@@ -543,11 +538,15 @@ class MusicLibraryService:
                         pl_data = pl_response.json()
                         all_playlists.extend(pl_data.get("playlists", []))
 
-                logger.success(f"{SharedIcons.SUCCESS} {len(all_playlists)} playlists Prime récupérées")
+                logger.success(
+                    f"{SharedIcons.MUSIC} {len(all_playlists)} playlists Prime récupérées pour {device_serial}"
+                )
                 return all_playlists
 
             except Exception as e:
-                logger.error(f"Erreur récupération Prime playlists: {e}")
+                logger.error(
+                    f"{SharedIcons.ERROR} Erreur récupération Prime playlists pour {device_serial}: {e}"
+                )
                 return []
 
     def get_prime_stations(
@@ -591,9 +590,13 @@ class MusicLibraryService:
                 response.raise_for_status()
                 data = response.json()
 
-                logger.success(f"{SharedIcons.SUCCESS} Stations Prime récupérées")
+                logger.success(
+                    f"{SharedIcons.MUSIC} Stations Prime récupérées pour {device_serial}"
+                )
                 return data.get("primeMusicSections", [])
 
             except Exception as e:
-                logger.error(f"Erreur récupération Prime stations: {e}")
+                logger.error(
+                    f"{SharedIcons.ERROR} Erreur récupération Prime stations pour {device_serial}: {e}"
+                )
                 return []

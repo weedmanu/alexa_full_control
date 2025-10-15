@@ -8,13 +8,13 @@ Auteur: M@nu
 Date: 8 octobre 2025
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Mapping des codes de type Amazon vers les noms de produits réels
 DEVICE_TYPE_MAPPING = {
     # Echo Show Series
     "A2UONLFQW0PADH": "Echo Show 8 (Gen3)",
-    "A15996VY63BQ2D": "Echo Show 8 (Gen2)", 
+    "A15996VY63BQ2D": "Echo Show 8 (Gen2)",
     "A1Z88NGR2BK6A2": "Echo Show 8 (Gen1)",
     "A4ZP7ZC4PI6TO": "Echo Show 5 (Gen1)",
     "A1XWJRHALS1REP": "Echo Show 5 (Gen2)",
@@ -23,7 +23,6 @@ DEVICE_TYPE_MAPPING = {
     "A1EIANJ7PNB0Q7": "Echo Show 15 (Gen1)",
     "A1NL4BVLQ4L3N3": "Echo Show (Gen1)",
     "AWZZ5CVHX2CD": "Echo Show (Gen2)",
-    
     # Echo Dot Series
     "A1RABVCI4QCIKC": "Echo Dot (Gen3)",
     "A32DDESGESSHZA": "Echo Dot (Gen3)",
@@ -35,17 +34,14 @@ DEVICE_TYPE_MAPPING = {
     "A2DS1Q2TPDJ48U": "Echo Dot Clock (Gen5)",
     "A3S5BH2HU6VAYF": "Echo Dot (Gen2)",
     "AKNO1N0KSFN8L": "Echo Dot (Gen1)",
-    
     # Echo Standard Series
     "AB72C64C86AW2": "Echo (Gen1)",
     "A7WXQPH584YP": "Echo (Gen2)",
     "A30YDR2MK8HMRV": "Echo (Gen3)",
     "A3FX4UWTP28V1P": "Echo (Gen3)",
-    
     # Echo Plus Series
     "A2M35JJZWCQOMZ": "Echo Plus (Gen1)",
     "A18O6U1UQFJ0XK": "Echo Plus (Gen2)",
-    
     # Echo Studio & Special
     "A3RBAYBE7VM004": "Echo Studio",
     "A3SSG6GR8UU7SN": "Echo Sub",
@@ -54,21 +50,17 @@ DEVICE_TYPE_MAPPING = {
     "A3VRME03NAXFUB": "Echo Flex",
     "ASQZWP4GPYUT7": "Echo Pop",
     "A38949IHXHRQ5P": "Echo Tap",
-    
     # Echo Auto
     "A13W6HQIHKEN3Z": "Echo Auto",
     "A195TXHV1M5D4A": "Echo Auto",
     "A303PJF6ISQ7IC": "Echo Auto",
     "ALT9P69K6LORD": "Echo Auto",
-    
     # Echo Spot
     "A10A33FOX2NUBK": "Echo Spot (Gen1)",
     "A3EH2E0YZ30OD6": "Echo Spot (Gen2)",
-    
     # Echo Frames & Buds
     "A3IYPH06PH1HRA": "Echo Frames",
     "A15QWUTQ6FSMYX": "Echo Buds (Gen2)",
-    
     # Fire TV Series
     "A12GXV8XMS007S": "Fire TV (Gen1)",
     "A2E0SNTXJVT7WK": "Fire TV (Gen2)",
@@ -83,18 +75,15 @@ DEVICE_TYPE_MAPPING = {
     "A31DTMEEVDDOIV": "Fire TV Stick Lite",
     "AKPGW064GI9HE": "Fire TV Stick 4K (Gen3)",
     "A1WZKXFLI43K86": "Fire TV Stick MAX",
-    
     # Mobile & Apps
     "A2IVLV5VM2W81": "PC Voice Python",
-    "A2TF17PFR55MTB": "Alexa Mobile Voice Android", 
+    "A2TF17PFR55MTB": "Alexa Mobile Voice Android",
     "A1RTAM01W29CUP": "Windows App",
     "A2WN1FJ2HG09UN": "Ultimate Alexa App",
     "A1ETW4IXK2PYBP": "Talk to Alexa",
-    
     # Speaker Groups & Multi-room
     "A3C9PE6TNYLTCH": "Speaker Group",
     "AP1F6KUH00XPV": "Stereo/Subwoofer Pair",
-    
     # TV & Third-party
     "A1LWUC82PS6F7I": "Smart TV (Alexa Built-in)",
     "A1X92YQU8MWAPD": "Third-party Media Display",
@@ -103,10 +92,9 @@ DEVICE_TYPE_MAPPING = {
     "A1QKZ9D0IJY332": "Samsung TV 2020-U",
     "A324YMIUSWQDGE": "Samsung 8K TV",
     "A3GFRGUNIGG1I5": "Samsung TV QN50Q60CAGXZD",
-    
     # Tablets
     "A1J16TEDOYCZTN": "Fire Tablet",
-    "A2M4YX06LWP8WI": "Fire Tablet", 
+    "A2M4YX06LWP8WI": "Fire Tablet",
     "A1C66CX2XD756O": "Fire Tablet HD",
     "A38EHHIB10L47V": "Fire Tablet HD 8",
     "A3L0T0VL9A921N": "Fire Tablet HD 8",
@@ -114,7 +102,6 @@ DEVICE_TYPE_MAPPING = {
     "A2V9UEGZ82H4KZ": "Fire Tablet HD 10",
     "A3R9S4ZZECZ6YL": "Fire Tablet HD 10",
     "A2N49KXGVA18AR": "Fire Tablet HD 10 Plus",
-    
     # Generic/Unknown
     "A12IZU8NMHSY5U": "Generic Device",
     "A39BU42XNMN516": "Generic Device",
@@ -169,17 +156,19 @@ CAPABILITY_DESCRIPTIONS = {
     "ADAPTIVE_LISTENING": "Écoute adaptative",
 }
 
+
 def get_device_type_display_name(device_type: str) -> str:
     """
     Retourne le nom d'affichage lisible pour un type d'appareil.
-    
+
     Args:
         device_type: Code de type Amazon (ex: "A2UONLFQW0PADH")
-        
+
     Returns:
         Nom lisible de l'appareil (ex: "Echo Show 8 (Gen3)")
     """
     return DEVICE_TYPE_MAPPING.get(device_type, f"Unknown ({device_type})")
+
 
 def get_device_display_name(device_family: str, device_type: str) -> str:
     """
@@ -202,53 +191,56 @@ def get_device_display_name(device_family: str, device_type: str) -> str:
     # Sinon utiliser la famille
     return get_family_display_name(device_family)
 
+
 def get_family_display_name(device_family: str) -> str:
     """
     Retourne le nom d'affichage lisible pour une famille d'appareil.
-    
+
     Args:
         device_family: Code de famille Amazon (ex: "KNIGHT")
-        
+
     Returns:
         Nom lisible de la famille (ex: "Echo Standard")
     """
     return DEVICE_FAMILY_MAPPING.get(device_family, f"Unknown ({device_family})")
 
+
 def get_capability_description(capability: str) -> str:
     """
     Retourne la description lisible d'une capacité.
-    
+
     Args:
         capability: Code de capacité Amazon
-        
+
     Returns:
         Description lisible de la capacité
     """
     return CAPABILITY_DESCRIPTIONS.get(capability, capability)
 
+
 def format_device_info(device: Dict[str, Any]) -> Dict[str, Any]:
     """
     Formate les informations d'un appareil avec des noms lisibles.
-    
+
     Args:
         device: Dictionnaire avec les informations brutes de l'appareil
-        
+
     Returns:
         Dictionnaire avec les informations formatées
     """
     formatted = device.copy()
-    
+
     # Ajouter les noms lisibles
-    if 'deviceType' in device:
-        formatted['deviceTypeDisplay'] = get_device_type_display_name(device['deviceType'])
-    
-    if 'deviceFamily' in device:
-        formatted['deviceFamilyDisplay'] = get_family_display_name(device['deviceFamily'])
-    
+    if "deviceType" in device:
+        formatted["deviceTypeDisplay"] = get_device_type_display_name(device["deviceType"])
+
+    if "deviceFamily" in device:
+        formatted["deviceFamilyDisplay"] = get_family_display_name(device["deviceFamily"])
+
     # Formater les capacités si présentes
-    if 'capabilities' in device:
-        formatted['capabilitiesDisplay'] = [
-            get_capability_description(cap) for cap in device['capabilities']
+    if "capabilities" in device:
+        formatted["capabilitiesDisplay"] = [
+            get_capability_description(cap) for cap in device["capabilities"]
         ]
-    
+
     return formatted

@@ -123,7 +123,9 @@ class DeviceManager:
             if not force_refresh:
                 disk_cache = self._cache_service.get("devices", ignore_ttl=True)
                 if disk_cache and "devices" in disk_cache:
-                    logger.debug(f"💾 Cache disque: {len(disk_cache['devices'])} appareils (fallback)")
+                    logger.debug(
+                        f"💾 Cache disque: {len(disk_cache['devices'])} appareils (fallback)"
+                    )
                     self._devices_cache = disk_cache["devices"]
                     self._cache_timestamp = time.time()
                     return self._devices_cache

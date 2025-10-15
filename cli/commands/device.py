@@ -14,11 +14,11 @@ import json
 from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter, ActionHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.help_texts.device_help import (
     DEVICE_DESCRIPTION,
-    LIST_HELP,
     INFO_HELP,
+    LIST_HELP,
     VOLUME_HELP,
 )
 from data.device_family_mapping import get_device_display_name
@@ -48,7 +48,7 @@ class DeviceCommand(BaseCommand):
         """
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
-        
+
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
@@ -68,7 +68,7 @@ class DeviceCommand(BaseCommand):
             help="Lister tous les appareils Alexa",
             description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         list_parser.add_argument(
             "--filter",
@@ -92,7 +92,7 @@ class DeviceCommand(BaseCommand):
             help="Informations détaillées sur un appareil",
             description=INFO_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         info_parser.add_argument(
             "-d",
@@ -112,7 +112,7 @@ class DeviceCommand(BaseCommand):
             help="Gérer le volume d'un appareil",
             description=VOLUME_HELP,
             formatter_class=ActionHelpFormatter,
-                    add_help=False,
+            add_help=False,
         )
         volume_subparsers = volume_parser.add_subparsers(
             dest="volume_action",
@@ -199,12 +199,13 @@ class DeviceCommand(BaseCommand):
 
             # Si --refresh demandé, forcer la resynchronisation
             if hasattr(args, "refresh") and args.refresh:
-                if not self.context.sync_service:
+                ctx = self.require_context()
+                if not ctx.sync_service:
                     self.warning("SyncService non disponible, utilisation du cache existant")
                 else:
                     self.info("🔄 Resynchronisation des appareils...")
                     try:
-                        self.context.sync_service._sync_alexa_devices()
+                        ctx.sync_service._sync_alexa_devices()
                         self.success("✅ Synchronisation terminée")
                     except Exception as e:
                         self.logger.exception("Erreur lors de la resynchronisation")
@@ -397,12 +398,13 @@ class DeviceCommand(BaseCommand):
 
             self.info(f"🔊 Récupération volume de '{args.device}'...")
 
-            if not self.context.settings_mgr:
+            ctx = self.require_context()
+            if not ctx.settings_mgr:
                 self.error("SettingsManager non disponible")
                 return False
 
             volume = self.call_with_breaker(
-                self.context.settings_mgr.get_volume, serial, device_type
+                ctx.settings_mgr.get_volume, serial, device_type
             )
 
             if volume is not None:
@@ -441,12 +443,13 @@ class DeviceCommand(BaseCommand):
 
             self.info(f"🔊 Réglage volume '{args.device}' → {args.level}%...")
 
-            if not self.context.settings_mgr:
+            ctx = self.require_context()
+            if not ctx.settings_mgr:
                 self.error("SettingsManager non disponible")
                 return False
 
             result = self.call_with_breaker(
-                self.context.settings_mgr.set_volume, serial, device_type, args.level
+                ctx.settings_mgr.set_volume, serial, device_type, args.level
             )
 
             if result:

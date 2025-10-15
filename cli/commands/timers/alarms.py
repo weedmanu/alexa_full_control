@@ -12,6 +12,7 @@ from datetime import time
 from typing import Optional
 
 from cli.command_parser import UniversalHelpFormatter
+from cli.commands.timers.base import TimeSubCommand
 from cli.help_texts.alarm_help import (
     CREATE_HELP,
     DELETE_HELP,
@@ -20,7 +21,6 @@ from cli.help_texts.alarm_help import (
     LIST_HELP,
     UPDATE_HELP,
 )
-from cli.commands.timers.base import TimeSubCommand
 
 
 class AlarmsCommands(TimeSubCommand):
@@ -63,14 +63,15 @@ class AlarmsCommands(TimeSubCommand):
                 f"⏰ Création alarme{label_text} à {args.time} ({repeat_text}) sur '{args.device}'..."
             )
 
-            if not self.context.alarm_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "alarm_mgr", None):
                 self.error("AlarmManager non disponible")
                 return False
 
             # Créer l'alarme
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.create_alarm,
+                ctx.alarm_mgr.create_alarm,
                 serial,
                 device_type,
                 alarm_time,
@@ -99,11 +100,12 @@ class AlarmsCommands(TimeSubCommand):
 
             self.info(f"⏰ Alarmes de '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "alarm_mgr", None):
                 self.error("AlarmManager non disponible")
                 return False
 
-            alarms = self.call_with_breaker(self.context.alarm_mgr.list_alarms, serial)
+            alarms = self.call_with_breaker(ctx.alarm_mgr.list_alarms, serial)
 
             if alarms:
                 if not alarms:
@@ -134,13 +136,14 @@ class AlarmsCommands(TimeSubCommand):
 
             self.info(f"🗑️  Suppression alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "alarm_mgr", None):
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.delete_alarm, serial, device_type, args.id
+                ctx.alarm_mgr.delete_alarm, serial, device_type, args.id
             )
 
             if result:
@@ -184,13 +187,14 @@ class AlarmsCommands(TimeSubCommand):
 
             self.info(f"✏️  Modification alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "alarm_mgr", None):
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.update_alarm, serial, device_type, args.id, **updates
+                ctx.alarm_mgr.update_alarm, serial, device_type, args.id, **updates
             )
 
             if result:
@@ -213,13 +217,14 @@ class AlarmsCommands(TimeSubCommand):
 
             self.info(f"✅ Activation alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "alarm_mgr", None):
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, True
+                ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, True
             )
 
             if result:
@@ -242,13 +247,14 @@ class AlarmsCommands(TimeSubCommand):
 
             self.info(f"❌ Désactivation alarme {args.id} sur '{args.device}'...")
 
-            if not self.context.alarm_mgr:
+            ctx = getattr(self, "context", None)
+            if not ctx or not getattr(ctx, "alarm_mgr", None):
                 self.error("AlarmManager non disponible")
                 return False
 
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
-                self.context.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, False
+                ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, False
             )
 
             if result:
