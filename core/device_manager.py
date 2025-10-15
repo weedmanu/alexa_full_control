@@ -24,7 +24,7 @@ from loguru import logger
 from services.cache_service import CacheService
 
 if TYPE_CHECKING:
-    from alexa_auth.alexa_cookie_retriever import AlexaAuth
+    from alexa_auth.alexa_auth import AlexaAuth
     from core.state_machine import AlexaStateMachine
 
 

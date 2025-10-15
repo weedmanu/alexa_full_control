@@ -228,18 +228,16 @@ class SmartCache:
             return entry.value
 
         # Charger depuis disque
-        entry = self._load_entry(key)
-        if entry:
-            if entry.is_expired():
+        loaded_entry = self._load_entry(key)
+        if loaded_entry is not None:
+            if not loaded_entry.is_expired():
+                # Mettre en cache mémoire
+                self._entries[key] = loaded_entry
+                self._stats["hits"] += 1
+                return loaded_entry.value
+            else:
                 self._stats["expirations"] += 1
                 self.invalidate(key)
-                self._stats["misses"] += 1
-                return default
-
-            # Mettre en cache mémoire
-            self._entries[key] = entry
-            self._stats["hits"] += 1
-            return entry.value
 
         self._stats["misses"] += 1
         return default
