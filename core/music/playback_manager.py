@@ -220,7 +220,11 @@ class PlaybackManager:
             return self.voice_service.speak(command, device_serial)
 
     def get_state(
-        self, device_serial: str, device_type: str, parent_id: str = None, parent_type: str = None
+        self,
+        device_serial: str,
+        device_type: str,
+        parent_id: Optional[str] = None,
+        parent_type: Optional[str] = None,
     ) -> Optional[Dict]:
         """Récupère l'état complet de la lecture (comme le script shell).
 
@@ -249,7 +253,8 @@ class PlaybackManager:
                 # Ajouter parent si multiroom (comme le script shell)
                 if parent_id:
                     params["lemurId"] = parent_id
-                    params["lemurDeviceType"] = parent_type
+                    if parent_type is not None:
+                        params["lemurDeviceType"] = parent_type
 
                 # Headers complets comme le script shell - CRITIQUE pour éviter 403
                 headers = {

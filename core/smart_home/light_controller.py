@@ -158,7 +158,7 @@ class LightController:
                 logger.error(f"Erreur température: {e}")
                 return False
 
-    def turn_on(self, entity_id: str, device_serial: str = None) -> bool:
+    def turn_on(self, entity_id: str, device_serial: Optional[str] = None) -> bool:
         """Allume lumière (accepte nom friendly ou entity_id)."""
         light_name = self._resolve_name(entity_id)
         if not light_name:
@@ -167,7 +167,7 @@ class LightController:
         logger.info(f"💡 Allumage '{light_name}' via commande vocale")
         return self._voice_service.turn_on_light(light_name, device_serial)
 
-    def turn_off(self, entity_id: str, device_serial: str = None) -> bool:
+    def turn_off(self, entity_id: str, device_serial: Optional[str] = None) -> bool:
         """Éteint lumière (accepte nom friendly ou entity_id)."""
         light_name = self._resolve_name(entity_id)
         if not light_name:
@@ -207,24 +207,6 @@ class LightController:
             except Exception as e:
                 logger.error(f"Erreur {action}: {e}")
                 return False
-
-    def _resolve_name(self, name_or_id: str) -> Optional[str]:
-        """Résout entity_id ou nom -> friendly name."""
-        lights = self.get_all_lights()
-
-        # 1. Si c'est déjà un nom friendly
-        name_lower = name_or_id.lower().strip()
-        for light in lights:
-            friendly = light.get("friendlyName", "").lower().strip()
-            if friendly == name_lower:
-                return light.get("friendlyName")
-
-        # 2. Si c'est un entity_id
-        for light in lights:
-            if light.get("entityId") == name_or_id:
-                return light.get("friendlyName")
-
-        return None
 
     def _resolve_name(self, name_or_id: str) -> Optional[str]:
         """Résout entity_id ou nom -> friendly name."""
@@ -365,14 +347,15 @@ class LightController:
         saturation = 0 if max_val == 0 else delta / max_val
 
         # Hue
+        hue: float = 0.0
         if delta == 0:
-            hue = 0
+            hue = 0.0
         elif max_val == r_norm:
-            hue = 60 * (((g_norm - b_norm) / delta) % 6)
+            hue = 60.0 * (((g_norm - b_norm) / delta) % 6)
         elif max_val == g_norm:
-            hue = 60 * (((b_norm - r_norm) / delta) + 2)
+            hue = 60.0 * (((b_norm - r_norm) / delta) + 2)
         else:
-            hue = 60 * (((r_norm - g_norm) / delta) + 4)
+            hue = 60.0 * (((r_norm - g_norm) / delta) + 4)
 
         logger.debug(f"RGB {rgb} → HSB ({hue:.1f}, {saturation:.2f}, {brightness:.2f})")
         return self.set_color(entity_id, hue, saturation, brightness)

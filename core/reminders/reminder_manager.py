@@ -238,22 +238,24 @@ class ReminderManager:
                 return []
 
             # Utiliser le cache si valide
+            # Toujours assurer que `cached_reminders` est une liste (pas None)
+            cached_reminders: List[Dict[str, Any]] = []
             if self._is_cache_valid():
                 logger.debug("💾 Cache rappels valide, utilisation du cache mémoire")
-                cached_reminders = self._reminders_cache
+                if self._reminders_cache is not None:
+                    cached_reminders = self._reminders_cache
             else:
                 # Charger depuis le cache disque d'abord
                 cached_data = self.cache_service.get("reminders")
                 if cached_data and isinstance(cached_data, dict):
                     cached_reminders = cached_data.get("reminders", [])
                     logger.debug(f"💾 Cache disque: {len(cached_reminders)} rappel(s)")
-                else:
-                    cached_reminders = None
 
                 # Si pas de cache disque ou expiré, rafraîchir depuis l'API
-                if cached_reminders is None:
-                        cached_reminders = self._refresh_reminders_cache()
+                if not cached_reminders:
+                    cached_reminders = self._refresh_reminders_cache()
                 else:
+                    # Mettre à jour le cache mémoire et le timestamp
                     self._reminders_cache = cached_reminders
                     self._cache_timestamp = time.time()
 

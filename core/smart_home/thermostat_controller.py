@@ -3,7 +3,7 @@ Contrôleur pour thermostats connectés - Thread-safe.
 """
 
 import threading
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from loguru import logger
 
@@ -25,7 +25,7 @@ class ThermostatController:
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
         self.cache_service = cache_service or CacheService()
-        self._thermostats_cache = None
+        self._thermostats_cache: Optional[List[Dict[str, Any]]] = None
         logger.info("ThermostatController initialisé")
 
     def get_all_thermostats(self) -> list:

@@ -3,7 +3,7 @@ Contrôleur générique pour appareils Smart Home - Thread-safe.
 """
 
 import threading
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Any
 
 from loguru import logger
 
@@ -25,9 +25,9 @@ class SmartDeviceController:
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
         self.cache_service = cache_service or CacheService()
-        self._locks_cache = None
-        self._plugs_cache = None
-        self._all_devices_cache = None
+        self._locks_cache: Optional[List[Dict[str, Any]]] = None
+        self._plugs_cache: Optional[List[Dict[str, Any]]] = None
+        self._all_devices_cache: Optional[List[Dict[str, Any]]] = None
         logger.info("SmartDeviceController initialisé")
 
     def get_smart_home_devices(self) -> list:

@@ -113,7 +113,7 @@ class ListsManager:
 
         return None
 
-    def add_item(self, list_name: str, text: str, device_serial: str = None) -> bool:
+    def add_item(self, list_name: str, text: str, device_serial: Optional[str] = None) -> bool:
         """
         Ajoute un élément à une liste via commande vocale.
 
@@ -159,7 +159,7 @@ class ListsManager:
                 logger.error(f"Erreur ajout item: {e}")
                 return False
 
-    def remove_item(self, list_name: str, text: str, device_serial: str = None) -> bool:
+    def remove_item(self, list_name: str, text: str, device_serial: Optional[str] = None) -> bool:
         """
         Supprime un élément d'une liste via commande vocale.
 
@@ -205,7 +205,7 @@ class ListsManager:
                 logger.error(f"Erreur suppression item: {e}")
                 return False
 
-    def complete_item(self, list_name: str, text: str, device_serial: str = None) -> bool:
+    def complete_item(self, list_name: str, text: str, device_serial: Optional[str] = None) -> bool:
         """
         Marque un élément comme complété via commande vocale.
 
@@ -252,7 +252,7 @@ class ListsManager:
                 return False
 
     def clear_list(
-        self, list_name: str, completed_only: bool = False, device_serial: str = None
+        self, list_name: str, completed_only: bool = False, device_serial: Optional[str] = None
     ) -> bool:
         """
         Vide une liste via commande vocale.
@@ -302,7 +302,7 @@ class ListsManager:
                 logger.error(f"Erreur vidage liste: {e}")
                 return False
 
-    def create_list(self, name: str, device_serial: str = None) -> bool:
+    def create_list(self, name: str, device_serial: Optional[str] = None) -> bool:
         """
         Crée une nouvelle liste via commande vocale.
 

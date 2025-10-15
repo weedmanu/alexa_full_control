@@ -126,17 +126,22 @@ class AlarmManager:
                 return None
 
             try:
-                payload = {
-                    "deviceSerialNumber": device_serial,
-                    "deviceType": device_type,
-                    "pattern": [{"type": "alarm", "time": alarm_time, "recurrence": repeat}],
-                }
+                # Construire explicitement le pattern pour que mypy infère bien le type
+                pattern: List[Dict[str, Any]] = [
+                    {"type": "alarm", "time": alarm_time, "recurrence": repeat}
+                ]
 
                 if label:
-                    payload["pattern"][0]["label"] = label
+                    pattern[0]["label"] = label
 
                 if sound:
-                    payload["pattern"][0]["sound"] = {"id": sound}
+                    pattern[0]["sound"] = {"id": sound}
+
+                payload: Dict[str, Any] = {
+                    "deviceSerialNumber": device_serial,
+                    "deviceType": device_type,
+                    "pattern": pattern,
+                }
 
                 logger.debug(f"Création alarme: {payload}")
 
@@ -185,20 +190,21 @@ class AlarmManager:
                 return []
 
             # Utiliser le cache si valide
+            # Toujours assurer que `cached_alarms` est une liste (pas None)
+            cached_alarms: List[Dict[str, Any]] = []
             if self._is_cache_valid():
                 logger.debug("💾 Cache alarmes valide, utilisation du cache mémoire")
-                cached_alarms = self._alarms_cache
+                if self._alarms_cache is not None:
+                    cached_alarms = self._alarms_cache
             else:
                 # Charger depuis le cache disque d'abord
                 cached_data = self.cache_service.get("alarms")
                 if cached_data and isinstance(cached_data, dict):
                     cached_alarms = cached_data.get("alarms", [])
                     logger.debug(f"💾 Cache disque: {len(cached_alarms)} alarme(s)")
-                else:
-                    cached_alarms = None
 
                 # Si pas de cache disque ou expiré, rafraîchir depuis l'API
-                if cached_alarms is None:
+                if not cached_alarms:
                     cached_alarms = self._refresh_alarms_cache()
                 else:
                     self._alarms_cache = cached_alarms
