@@ -17,7 +17,7 @@ Date: 7 octobre 2025
 """
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable, Tuple, cast
 
 from loguru import logger
 
@@ -41,7 +41,7 @@ class SyncService:
         _lazy_loaded: Dictionnaire des données déjà chargées
     """
 
-    def __init__(self, auth, config, state_machine, cache_service: Optional[CacheService] = None):
+    def __init__(self, auth: Any, config: Any, state_machine: Any, cache_service: Optional[CacheService] = None):
         """
         Initialise le service de synchronisation.
 
@@ -51,10 +51,11 @@ class SyncService:
             state_machine: AlexaStateMachine instance
             cache_service: CacheService (optionnel, créé si None)
         """
-        self.auth = auth
-        self.config = config
-        self.state_machine = state_machine
-        self.cache_service = cache_service or CacheService()
+        self.auth: Any = auth
+        self.config: Any = config
+        self.state_machine: Any = state_machine
+        # Assurer un type concret pour le service de cache
+        self.cache_service: CacheService = cache_service or CacheService()
 
         # Statistiques de sync
         self.last_sync_time = 0.0
@@ -305,7 +306,7 @@ class SyncService:
         logger.info(f"{SharedIcons.SYNC} Préchargement de toutes les données...")
 
         start_time = time.time()
-        stats = {
+        stats: Dict[str, Any] = {
             "success": True,
             "timestamp": start_time,
             "preloaded": {},
@@ -313,7 +314,7 @@ class SyncService:
         }
 
         # Précharger toutes les catégories
-        categories = [
+        categories: List[Tuple[str, Callable[..., List[Dict[str, Any]]]]] = [
             ("smart_home", self.get_smart_home_devices),
             ("alarms_and_reminders", self.get_alarms_reminders),
             ("lists", self.get_lists),
@@ -323,16 +324,28 @@ class SyncService:
 
         for category, getter in categories:
             try:
+                data: List[Dict[str, Any]]
                 if callable(getter):
-                    data = getter(force=force)
+                    # getter peut être une méthode bound, on force le typage local
+                    data = getter(force=force)  # type: ignore[assignment]
+                    if data is None:
+                        data = []
                 else:
                     logger.warning(f"Getter for {category} is not callable, skipping")
                     data = []
-                stats["preloaded"][category] = len(data)
+
+                # Mise à jour des préchargés avec types explicites
+                preloaded_raw = stats.get("preloaded", {})
+                preloaded: Dict[str, int] = cast(Dict[str, int], preloaded_raw) if isinstance(preloaded_raw, dict) else {}
+                preloaded[category] = len(data)
+                stats["preloaded"] = preloaded
                 logger.debug(f"✅ {len(data)} {category} préchargés")
             except Exception as e:
                 logger.error(f"❌ Erreur préchargement {category}: {e}")
-                stats["failed"].append({"category": category, "error": str(e)})
+                failed_raw = stats.get("failed", [])
+                failed_list: List[Dict[str, str]] = cast(List[Dict[str, str]], failed_raw) if isinstance(failed_raw, list) else []
+                failed_list.append({"category": category, "error": str(e)})
+                stats["failed"] = failed_list
 
         duration = time.time() - start_time
         stats["duration_seconds"] = round(duration, 2)
