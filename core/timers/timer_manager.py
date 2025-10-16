@@ -39,11 +39,11 @@ class TimerManager(BaseManager[Dict[str, Any]]):
 
     def __init__(
         self,
-        auth,
-        config,
+        auth: Any,
+        config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
-    ):
+    ) -> None:
         """
         Initialise le gestionnaire de timers.
 
@@ -109,7 +109,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
 
     def create_timer(
         self, device_serial: str, device_type: str, duration_minutes: int, label: str = "Timer"
-    ) -> Optional[Dict]:
+    ) -> Optional[Dict[str, Any]]:
         """
         Crée un nouveau timer sur un appareil Alexa.
 
@@ -157,7 +157,9 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 assert response is not None
                 response.raise_for_status()
 
-                timer_data = response.json()
+                from typing import cast
+
+                timer_data = cast(Dict[str, Any], response.json())
                 logger.success(f"Timer '{label}' créé ({duration_minutes} min)")
                 return timer_data
 
@@ -247,7 +249,9 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 logger.info("Aucun timer trouvé (réponse vide)")
                 timers = []
             else:
-                data = response.json()
+                from typing import cast
+
+                data = cast(Dict[str, Any], response.json())
                 # Les timers sont dans la liste des notifications
                 notifications = data.get("notifications", [])
 

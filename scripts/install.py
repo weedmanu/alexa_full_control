@@ -1,28 +1,28 @@
 class Logger:
     @staticmethod
-    def header(msg, emoji):
+    def header(msg: str, emoji: str) -> None:
         print(f"{emoji} {msg}")
 
     @staticmethod
-    def step(msg, emoji):
+    def step(msg: str, emoji: str) -> None:
         print(f"{emoji} {msg}")
 
     @staticmethod
-    def progress(msg):
+    def progress(msg: str) -> None:
         print(f"⏳ {msg}...")
 
     @staticmethod
-    def success(msg, emoji):
+    def success(msg: str, emoji: str) -> None:
         print(f"{emoji} {msg}")
 
     @staticmethod
-    def error(msg, emoji):
+    def error(msg: str, emoji: str) -> None:
         print(f"{emoji} {msg}")
 
     @staticmethod
-    def warning(msg, emoji):
+    def warning(msg: str, emoji: str) -> None:
         print(f"{emoji} {msg}")
 
     @staticmethod
-    def info(msg, emoji):
+    def info(msg: str, emoji: str) -> None:
         print(f"{emoji} {msg}")

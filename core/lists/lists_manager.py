@@ -15,7 +15,9 @@ from ..state_machine import AlexaStateMachine
 class ListsManager:
     """Gestionnaire thread-safe des listes via commandes vocales."""
 
-    def __init__(self, auth, config, state_machine=None, voice_service=None):
+    def __init__(
+        self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, voice_service: Optional[Any] = None
+    ) -> None:
         self.auth = auth
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
@@ -31,7 +33,7 @@ class ListsManager:
         logger.info("ListManager initialisé (mode commandes vocales)")
 
     @property
-    def voice_service(self):
+    def voice_service(self) -> Any:
         """Lazy loading du VoiceCommandService."""
         if self._voice_service is None:
             from services.voice_command_service import VoiceCommandService
@@ -39,7 +41,7 @@ class ListsManager:
             self._voice_service = VoiceCommandService(self.auth, self.config, self.state_machine)
         return self._voice_service
 
-    def get_lists(self) -> List[Dict]:
+    def get_lists(self) -> List[Dict[str, Any]]:
         """
         Récupère toutes les listes via différents endpoints.
 
@@ -71,8 +73,10 @@ class ListsManager:
                         timeout=10,
                     )
                     response.raise_for_status()
-                    data = response.json()
-                    lists = data.get(key, [])
+                    from typing import cast
+
+                    data = cast(Dict[str, Any], response.json())
+                    lists = cast(List[Dict[str, Any]], data.get(key, []))
 
                     if lists:
                         logger.success(f"✅ Listes trouvées via {endpoint} ({len(lists)} liste(s))")
@@ -91,7 +95,7 @@ class ListsManager:
             )
             return []
 
-    def get_list(self, list_name: str) -> Optional[Dict]:
+    def get_list(self, list_name: str) -> Optional[Dict[str, Any]]:
         """Récupère une liste spécifique par nom ou type.
 
         Args:
@@ -152,7 +156,9 @@ class ListsManager:
                 logger.info(f"📝 Commande vocale: '{command}'")
 
                 # Envoyer via VoiceCommandService avec device spécifique
-                success = self.voice_service.speak(command, device_serial=device_serial)
+                from typing import cast
+
+                success = bool(cast(object, self.voice_service.speak(command, device_serial=device_serial)))
 
                 if success:
                     logger.success(f"Élément '{text}' ajouté à '{list_name}'")
@@ -198,7 +204,9 @@ class ListsManager:
                 logger.info(f"📝 Commande vocale: '{command}'")
 
                 # Envoyer via VoiceCommandService avec device spécifique
-                success = self.voice_service.speak(command, device_serial=device_serial)
+                from typing import cast
+
+                success = bool(cast(object, self.voice_service.speak(command, device_serial=device_serial)))
 
                 if success:
                     logger.success(f"Élément '{text}' supprimé de '{list_name}'")
@@ -244,7 +252,9 @@ class ListsManager:
                 logger.info(f"📝 Commande vocale: '{command}'")
 
                 # Envoyer via VoiceCommandService avec device spécifique
-                success = self.voice_service.speak(command, device_serial=device_serial)
+                from typing import cast
+
+                success = bool(cast(object, self.voice_service.speak(command, device_serial=device_serial)))
 
                 if success:
                     logger.success(f"Élément '{text}' marqué complété dans '{list_name}'")
@@ -293,7 +303,9 @@ class ListsManager:
                 logger.info(f"📝 Commande vocale: '{command}'")
 
                 # Envoyer via VoiceCommandService avec device spécifique
-                success = self.voice_service.speak(command, device_serial=device_serial)
+                from typing import cast
+
+                success = bool(cast(object, self.voice_service.speak(command, device_serial=device_serial)))
 
                 if success:
                     logger.success(f"Liste '{list_name}' vidée")
@@ -327,7 +339,9 @@ class ListsManager:
                 logger.info(f"📝 Commande vocale: '{command}'")
 
                 # Envoyer via VoiceCommandService avec device spécifique
-                success = self.voice_service.speak(command, device_serial=device_serial)
+                from typing import cast
+
+                success = bool(cast(object, self.voice_service.speak(command, device_serial=device_serial)))
 
                 if success:
                     logger.success(f"Liste '{name}' créée")

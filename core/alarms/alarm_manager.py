@@ -118,7 +118,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
         repeat: str = "ONCE",
         label: str = "",
         sound: Optional[str] = None,
-    ) -> Optional[Dict]:
+    ) -> Optional[Dict[str, Any]]:
         """
         Crée une nouvelle alarme sur un appareil Alexa.
 
@@ -168,7 +168,9 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
                 )
                 response.raise_for_status()
 
-                result = response.json()
+                from typing import cast
+
+                result = cast(Dict[str, Any], response.json())
                 logger.success(f"Alarme créée pour {device_serial}")
 
                 # Invalider le cache
@@ -257,7 +259,9 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
                 logger.info("Aucune alarme trouvée (réponse vide)")
                 alarms = []
             else:
-                data = response.json()
+                from typing import cast
+
+                data = cast(Dict[str, Any], response.json())
                 # Les alarmes sont dans la liste des notifications
                 notifications = data.get("notifications", [])
 
@@ -332,7 +336,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
                 logger.error(f"Erreur inattendue lors de la suppression de l'alarme: {e}")
                 return False
 
-    def update_alarm(self, device_serial: str, device_type: str, alarm_id: str, **updates) -> bool:
+    def update_alarm(self, device_serial: str, device_type: str, alarm_id: str, **updates: Any) -> bool:
         """
         Modifie une alarme existante.
 

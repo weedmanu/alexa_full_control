@@ -31,7 +31,7 @@ class Config:
     et valeurs par défaut sécurisées.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise la configuration avec validation."""
         self.script_dir = Path(__file__).parent.parent.absolute()
 

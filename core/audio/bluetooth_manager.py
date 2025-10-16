@@ -3,7 +3,7 @@ Gestionnaire Bluetooth - Thread-safe.
 """
 
 import threading
-from typing import Dict, List
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
@@ -14,7 +14,7 @@ from ..state_machine import AlexaStateMachine
 class BluetoothManager:
     """Gestionnaire thread-safe Bluetooth."""
 
-    def __init__(self, auth, config, state_machine=None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         self.auth = auth
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
@@ -28,7 +28,7 @@ class BluetoothManager:
             self.http_client = self.auth
         logger.info("BluetoothManager initialisé")
 
-    def get_paired_devices(self, device_serial: str, device_type: str) -> List[Dict]:
+    def get_paired_devices(self, device_serial: str, device_type: str) -> List[Dict[Any, Any]]:
         """Récupère les appareils Bluetooth appairés."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -42,7 +42,7 @@ class BluetoothManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json().get("bluetoothStates", [])
+                return cast(List[Dict[Any, Any]], response.json().get("bluetoothStates", []))
             except Exception as e:
                 logger.error(f"Erreur récupération Bluetooth: {e}")
                 return []

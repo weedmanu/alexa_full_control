@@ -58,7 +58,7 @@ class DeviceManager:
         state_machine: "AlexaStateMachine",
         cache_ttl: int = 300,
         cache_service: Optional[CacheService] = None,
-    ):
+    ) -> None:
         """
         Initialise le gestionnaire d'appareils.
 
@@ -173,13 +173,15 @@ class DeviceManager:
                 params={"cached": "false"},
             )
 
-            if not response or response.status_code != 200:  # type: ignore[attr-defined]
+            if not response or response.status_code != 200:
                 logger.error(
-                    f"Échec de récupération des appareils (status: {response.status_code if response else 'None'})"  # type: ignore[attr-defined]
+                    f"Échec de récupération des appareils (status: {response.status_code if response else 'None'})"
                 )
                 return None
 
-            data: Dict[str, Any] = response.json()  # type: ignore[attr-defined]
+            from typing import cast
+
+            data = cast(Dict[str, Any], response.json())
             devices: List[Dict[str, Any]] = data.get("devices", [])
 
             # Mise à jour cache mémoire (Niveau 1)

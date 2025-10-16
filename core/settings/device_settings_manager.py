@@ -4,7 +4,7 @@ Gestionnaire des paramètres d'appareils - Thread-safe.
 
 import json
 import threading
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from loguru import logger
 
@@ -20,7 +20,7 @@ class DeviceSettingsManager:
     progressive vers `BaseManager`-style HTTP client.
     """
 
-    def __init__(self, auth_or_http, config, state_machine=None):
+    def __init__(self, auth_or_http: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         # auth_or_http peut être soit l'ancien AuthClient, soit un http_client
         # compatible (ayant get/post/put/delete et attribut csrf)
         self.config = config
@@ -44,7 +44,7 @@ class DeviceSettingsManager:
 
         logger.info("DeviceSettingsManager initialisé")
 
-    def get_device_settings(self, device_serial: str, device_type: str) -> Optional[Dict]:
+    def get_device_settings(self, device_serial: str, device_type: str) -> Optional[Dict[Any, Any]]:
         """Récupère les paramètres d'un appareil."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -57,7 +57,7 @@ class DeviceSettingsManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json()
+                return cast(Optional[Dict[Any, Any]], response.json())
             except Exception as e:
                 logger.error(f"Erreur récupération paramètres: {e}")
                 return None
@@ -221,7 +221,7 @@ class DeviceSettingsManager:
                 if "volumes" in data:
                     for volume_info in data["volumes"]:
                         if volume_info.get("dsn") == device_serial:
-                            return volume_info.get("speakerVolume")
+                            return cast(int | None, volume_info.get("speakerVolume"))
 
                 return None
 
@@ -250,7 +250,7 @@ class DeviceSettingsManager:
             customer_id = data.get("authentication", {}).get("customerId")
             if customer_id:
                 logger.debug(f"Customer ID: {customer_id}")
-                return customer_id
+                return cast(str | None, customer_id)
             else:
                 logger.warning("Customer ID non trouvé dans bootstrap")
                 return None

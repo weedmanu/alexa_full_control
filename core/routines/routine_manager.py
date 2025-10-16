@@ -41,11 +41,11 @@ class RoutineManager:
 
     def __init__(
         self,
-        auth,
-        config,
+        auth: Any,
+        config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
-    ):
+    ) -> None:
         """
         Initialise le gestionnaire de routines.
 
@@ -61,7 +61,7 @@ class RoutineManager:
         self.cache_service = cache_service or CacheService()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
-        self._routines_cache: Optional[List[Dict]] = None
+        self._routines_cache: Optional[List[Dict[str, Any]]] = None
         self._cache_timestamp: float = 0
         self._cache_ttl: int = 300  # 5 minutes mémoire
 
@@ -72,7 +72,7 @@ class RoutineManager:
         enabled_only: bool = False,
         disabled_only: bool = False,
         limit: Optional[int] = None,
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """
         Récupère les routines depuis cache ou API.
 
@@ -111,7 +111,7 @@ class RoutineManager:
         enabled_only: bool = False,
         disabled_only: bool = False,
         limit: Optional[int] = None,
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """
         Rafraîchit les routines depuis API Amazon.
 
@@ -284,7 +284,7 @@ class RoutineManager:
                 logger.error(f"Erreur exécution routine {automation_id}: {e}")
                 return False
 
-    def get_routine_info(self, automation_id: str) -> Optional[Dict]:
+    def get_routine_info(self, automation_id: str) -> Optional[Dict[str, Any]]:
         """
         Récupère les détails d'une routine.
 
@@ -318,11 +318,11 @@ class RoutineManager:
 
     def _filter_routines(
         self,
-        routines: List[Dict],
+        routines: List[Dict[str, Any]],
         enabled_only: bool = False,
         disabled_only: bool = False,
         limit: Optional[int] = None,
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """Filtre routines selon critères."""
         filtered = routines
 
@@ -336,7 +336,7 @@ class RoutineManager:
 
         return filtered
 
-    def _update_memory_cache(self, routines: List[Dict]) -> None:
+    def _update_memory_cache(self, routines: List[Dict[str, Any]]) -> None:
         """Met à jour le cache mémoire avec timestamp."""
         import time
 
@@ -349,7 +349,7 @@ class RoutineManager:
 
         return (time.time() - self._cache_timestamp) > self._cache_ttl
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """
         Récupère statistiques routines.
 

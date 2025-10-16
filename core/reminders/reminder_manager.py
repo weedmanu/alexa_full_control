@@ -40,11 +40,11 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
     def __init__(
         self,
-        auth,
-        config,
+        auth: Any,
+        config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
-    ):
+    ) -> None:
         """
         Initialise le gestionnaire de rappels.
 
@@ -108,7 +108,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             return False
         return True
 
-    def create_reminder(self, device_serial: str, label: str, datetime_str: str) -> Optional[Dict]:
+    def create_reminder(self, device_serial: str, label: str, datetime_str: str) -> Optional[Dict[str, Any]]:
         """
         Crée un nouveau rappel ponctuel sur un appareil Alexa.
 
@@ -149,7 +149,9 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 )
                 response.raise_for_status()
 
-                result = response.json()
+                from typing import cast
+
+                result = cast(Dict[str, Any], response.json())
                 logger.success(f"Rappel créé pour {device_serial}")
 
                 # Invalider le cache
@@ -168,7 +170,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
     def create_recurring_reminder(
         self, device_serial: str, label: str, recurrence: str, time_str: str
-    ) -> Optional[Dict]:
+    ) -> Optional[Dict[str, Any]]:
         """
         Crée un nouveau rappel récurrent sur un appareil Alexa.
 
@@ -215,7 +217,9 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 )
                 response.raise_for_status()
 
-                result = response.json()
+                from typing import cast
+
+                result = cast(Dict[str, Any], response.json())
                 logger.success(f"Rappel récurrent créé pour {device_serial}")
 
                 # Invalider le cache
@@ -305,7 +309,9 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 logger.info("Aucun rappel trouvé (réponse vide)")
                 reminders = []
             else:
-                data = response.json()
+                from typing import cast
+
+                data = cast(Dict[str, Any], response.json())
                 # Les rappels sont dans la liste des notifications
                 notifications = data.get("notifications", [])
 

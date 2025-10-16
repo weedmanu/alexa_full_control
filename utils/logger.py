@@ -7,7 +7,7 @@ Logging utilities for Alexa Advanced Control - Module unique centralisé
 import logging
 import sys
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Callable
 
 # Pre-declare logger so type checkers have a stable name and type for it.
 logger: Any = None
@@ -15,7 +15,7 @@ LOGURU_AVAILABLE = False
 try:
     # Import into a temporary name then assign to the pre-declared symbol to
     # avoid redefining the name from an import (which mypy flags).
-    from loguru import logger as _loguru_logger  # type: ignore
+    from loguru import logger as _loguru_logger
 
     logger = _loguru_logger
     LOGURU_AVAILABLE = True
@@ -166,15 +166,21 @@ def _ensure_utf8_stdout() -> None:
             return
 
 
-def _get_format_record():
+def _get_format_record() -> Callable[[Any], str]:
     """Retourne une fonction de formatage Loguru réutilisable."""
 
-    def format_record(record):
+    def format_record(record: Any) -> str:
         """Formateur personnalisé pour injecter l'émoji."""
         level_name = record["level"].name
         level_no = record["level"].no
         emoji = _EMOJI_MAP.get(level_name, "📋")
-        record["extra"]["emoji"] = emoji
+        # Assurer que la clé extra existe
+        try:
+            record_extra = record.setdefault("extra", {})
+            record_extra["emoji"] = emoji
+        except Exception:
+            # En cas d'objet non-mappé, ignorer l'assignation
+            pass
 
         # Afficher la localisation seulement pour les erreurs ou en mode debug
         show_location = level_name in ["ERROR", "CRITICAL"] or level_no <= 10  # DEBUG level
@@ -406,62 +412,72 @@ class InstallLogger:
                 custom_levels=["INSTALL"],  # Niveau spécifique pour l'installateur
                 ensure_utf8=True,
             )
-
+    
     def header(self, msg: str, emoji: str = "🔧") -> None:
         if self.use_loguru:
             logger.opt(depth=1).log("INSTALL", f"{emoji} {msg}")
         else:
             from scripts.install import Logger as FallbackLogger
 
-            FallbackLogger.header(msg, emoji)
+            # FallbackLogger comes from an external script and is untyped here;
+            # cast to Any to avoid mypy 'no-untyped-call' errors in typed context.
+            from typing import cast
+
+            cast(Any, FallbackLogger).header(msg, emoji)
 
     def step(self, msg: str, emoji: str = "⚡") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{emoji} {msg}")
         else:
             from scripts.install import Logger as FallbackLogger
+            from typing import cast
 
-            FallbackLogger.step(msg, emoji)
+            cast(Any, FallbackLogger).step(msg, emoji)
 
     def progress(self, msg: str) -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"⏳ {msg}...")
         else:
             from scripts.install import Logger as FallbackLogger
+            from typing import cast
 
-            FallbackLogger.progress(msg)
+            cast(Any, FallbackLogger).progress(msg)
 
     def success(self, msg: str, emoji: str = "✅") -> None:
         if self.use_loguru:
             logger.opt(depth=1).success(f"{msg}")
         else:
             from scripts.install import Logger as FallbackLogger
+            from typing import cast
 
-            FallbackLogger.success(msg, emoji)
+            cast(Any, FallbackLogger).success(msg, emoji)
 
     def error(self, msg: str, emoji: str = "❌") -> None:
         if self.use_loguru:
             logger.opt(depth=1).error(f"{msg}")
         else:
             from scripts.install import Logger as FallbackLogger
+            from typing import cast
 
-            FallbackLogger.error(msg, emoji)
+            cast(Any, FallbackLogger).error(msg, emoji)
 
     def warning(self, msg: str, emoji: str = "⚠️") -> None:
         if self.use_loguru:
             logger.opt(depth=1).warning(f"{msg}")
         else:
             from scripts.install import Logger as FallbackLogger
+            from typing import cast
 
-            FallbackLogger.warning(msg, emoji)
+            cast(Any, FallbackLogger).warning(msg, emoji)
 
     def info(self, msg: str, emoji: str = "ℹ️") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{msg}")
         else:
             from scripts.install import Logger as FallbackLogger
+            from typing import cast
 
-            FallbackLogger.info(msg, emoji)
+            cast(Any, FallbackLogger).info(msg, emoji)
 
     def debug(self, msg: str) -> None:
         if self.use_loguru:

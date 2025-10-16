@@ -7,7 +7,7 @@ modifier et supprimer des alarmes via l'API Alexa.
 
 import threading
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import requests
 from loguru import logger
@@ -31,7 +31,7 @@ class AlarmManager:
         _lock: Verrou pour la thread-safety
     """
 
-    def __init__(self, auth, config, state_machine: Optional[AlexaStateMachine] = None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         """
         Initialise le gestionnaire d'alarmes.
 
@@ -69,7 +69,7 @@ class AlarmManager:
         alarm_time: str,
         recurring_pattern: str = "ONCE",
         label: str = "Alarme",
-    ) -> Optional[Dict]:
+    ) -> Optional[Dict[Any, Any]]:
         """
         Crée une nouvelle alarme.
 
@@ -125,7 +125,7 @@ class AlarmManager:
 
                 alarm_data = response.json()
                 logger.success(f"Alarme '{label}' créée pour {alarm_time} ({recurring_pattern})")
-                return alarm_data
+                return cast(Optional[Dict[Any, Any]], alarm_data)
 
             except requests.exceptions.RequestException as e:
                 logger.error(f"Erreur lors de la création de l'alarme: {e}")
@@ -136,7 +136,7 @@ class AlarmManager:
                 logger.error(f"Erreur inattendue: {e}")
                 return None
 
-    def list_alarms(self, device_serial: Optional[str] = None) -> List[Dict]:
+    def list_alarms(self, device_serial: Optional[str] = None) -> List[Dict[Any, Any]]:
         """
         Liste toutes les alarmes actives.
 
@@ -170,7 +170,7 @@ class AlarmManager:
                     alarms = [a for a in alarms if a.get("deviceSerialNumber") == device_serial]
 
                 logger.info(f"Récupéré {len(alarms)} alarme(s)")
-                return alarms
+                return cast(List[Dict[Any, Any]], alarms)
 
             except requests.exceptions.RequestException as e:
                 logger.error(f"Erreur lors de la récupération des alarmes: {e}")

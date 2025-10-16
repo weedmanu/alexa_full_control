@@ -254,7 +254,7 @@ class LightController(BaseManager[Dict[str, Any]]):
 
         return None
 
-    def get_all_lights(self, force_refresh: bool = False) -> List[Dict]:
+    def get_all_lights(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
         """Récupère toutes les lumières connectées (avec cache)."""
         with self._lock:
             # Vérifier cache mémoire
@@ -270,7 +270,7 @@ class LightController(BaseManager[Dict[str, Any]]):
             # Refresh depuis cache smart_home_all ou API
             return self._refresh_lights_cache()
 
-    def _refresh_lights_cache(self) -> List[Dict]:
+    def _refresh_lights_cache(self) -> List[Dict[str, Any]]:
         """Rafraîchit le cache des lumières depuis l'API."""
         if not self._check_connection():
             return []

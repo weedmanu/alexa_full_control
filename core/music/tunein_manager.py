@@ -3,7 +3,7 @@ Gestionnaire TuneIn (radio en ligne) - Thread-safe.
 """
 
 import threading
-from typing import Dict, List
+from typing import Any, Dict, List, cast
 
 from loguru import logger
 
@@ -14,7 +14,7 @@ from ..state_machine import AlexaStateMachine
 class TuneInManager:
     """Gestionnaire thread-safe pour TuneIn (radio)."""
 
-    def __init__(self, auth_or_http, config, state_machine=None):
+    def __init__(self, auth_or_http: Any, config: Any, state_machine: Any = None) -> None:
         # Normalize to http_client wrapper when possible
         try:
             from core.base_manager import create_http_client_from_auth
@@ -33,7 +33,7 @@ class TuneInManager:
         self._lock = threading.RLock()
         logger.info("TuneInManager initialisé")
 
-    def search_stations(self, query: str, limit: int = 20) -> List[Dict]:
+    def search_stations(self, query: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Recherche des stations radio."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -47,8 +47,9 @@ class TuneInManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                results = response.json().get("results", [])
-                return results[:limit]
+                data = cast(Dict[str, Any], response.json())
+                results = data.get("results", [])
+                return cast(list[dict[str, Any]], results[:limit])
             except Exception as e:
                 logger.error(f"Erreur recherche stations: {e}")
                 return []
@@ -79,7 +80,7 @@ class TuneInManager:
                 logger.error(f"Erreur lecture station: {e}")
                 return False
 
-    def get_favorites(self) -> List[Dict]:
+    def get_favorites(self) -> List[Dict[str, Any]]:
         """Récupère les stations favorites."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -92,7 +93,8 @@ class TuneInManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json().get("favorites", [])
+                data = cast(Dict[str, Any], response.json())
+                return cast(list[dict[str, Any]], data.get("favorites", []))
             except Exception as e:
                 logger.error(f"Erreur récupération favoris: {e}")
                 return []

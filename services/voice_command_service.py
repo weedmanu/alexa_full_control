@@ -16,8 +16,8 @@ from loguru import logger
 from utils.logger import SharedIcons
 
 if TYPE_CHECKING:
-    from core.circuit_breaker import CircuitBreaker  # type: ignore
-    from core.state_machine import AlexaStateMachine  # type: ignore
+    from core.circuit_breaker import CircuitBreaker
+    from core.state_machine import AlexaStateMachine
 else:
     CircuitBreaker = None
     AlexaStateMachine = None
@@ -70,7 +70,8 @@ class VoiceCommandService:
                 self.state_machine = None
 
             try:
-                self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)  # type: ignore[name-defined]
+                from core.circuit_breaker import CircuitBreaker as CB
+                self.breaker = CB(failure_threshold=3, timeout=30)
             except Exception:
                 self.breaker = None
 
@@ -413,7 +414,7 @@ class VoiceCommandService:
             customer_id = data.get("authentication", {}).get("customerId")
             if customer_id:
                 logger.debug(f"✅ Customer ID: {customer_id}")
-                return customer_id
+                return cast(str | None, customer_id)
             else:
                 logger.warning("⚠️ Customer ID non trouvé dans bootstrap")
                 return None

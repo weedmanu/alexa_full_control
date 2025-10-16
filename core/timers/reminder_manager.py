@@ -3,24 +3,33 @@ Gestionnaire de rappels Alexa - Thread-safe avec state machine.
 """
 
 import threading
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
 from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine
+from services.cache_service import CacheService
 
 
 class ReminderManager:
     """Gestionnaire thread-safe de rappels Alexa."""
 
-    def __init__(self, auth, config, state_machine: Optional[AlexaStateMachine] = None):
+    def __init__(
+        self,
+        auth: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        cache_service: Optional[CacheService] = None,
+    ) -> None:
         self.auth = auth
         self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
+        self.state_machine: AlexaStateMachine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
+        self.cache_service = cache_service or CacheService()
         logger.info("ReminderManager initialisé")
+
         # Normaliser vers http_client pour migration progressive
         try:
             from core.base_manager import create_http_client_from_auth
@@ -39,13 +48,13 @@ class ReminderManager:
         device_serial: str,
         device_type: str,
         recurring: Optional[str] = None,
-    ) -> Optional[Dict]:
+    ) -> Optional[Dict[str, Any]]:
         """Crée un rappel."""
         with self._lock:
             if not self._check_connection():
                 return None
             try:
-                payload = {
+                payload: Dict[str, Any] = {
                     "type": "Reminder",
                     "status": "ON",
                     "reminderLabel": text,
@@ -67,12 +76,12 @@ class ReminderManager:
                 )
                 response.raise_for_status()
                 logger.success(f"Rappel '{text}' créé")
-                return response.json()
+                return cast(dict[str, Any] | None, response.json())
             except Exception as e:
                 logger.error(f"Erreur création rappel: {e}")
                 return None
 
-    def list_reminders(self) -> List[Dict]:
+    def list_reminders(self) -> List[Dict[str, Any]]:
         """Liste tous les rappels."""
         with self._lock:
             if not self._check_connection():
@@ -89,7 +98,7 @@ class ReminderManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json().get("reminders", [])
+                return cast(list[dict[str, Any]], response.json().get("reminders", []))
             except Exception as e:
                 logger.error(f"Erreur liste rappels: {e}")
                 return []

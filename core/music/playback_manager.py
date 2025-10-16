@@ -15,7 +15,7 @@ Note: Aucune fallback VoiceCommand - si l'API échoue, la commande échoue.
 """
 
 import threading
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
@@ -30,7 +30,7 @@ class PlaybackManager:
     Pas de fallback VoiceCommand - plus rapide mais moins tolérant aux erreurs.
     """
 
-    def __init__(self, auth, config, state_machine=None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         self.auth = auth
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
@@ -51,7 +51,7 @@ class PlaybackManager:
 
         logger.info("PlaybackManager initialisé avec VoiceCommandService")
 
-    def _send_np_command(self, command_data: Dict, device_serial: str, device_type: str) -> bool:
+    def _send_np_command(self, command_data: Dict[str, Any], device_serial: str, device_type: str) -> bool:
         """Envoie une commande directe à /api/np/command (comme le script shell)."""
         try:
             # Headers complets comme le script shell - CRITIQUE pour éviter 403/404
@@ -196,7 +196,7 @@ class PlaybackManager:
                 logger.error(f"Erreur seek: {e}")
                 return False
 
-    def get_history(self, limit: int = 50) -> List[Dict]:
+    def get_history(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Récupère l'historique de lecture."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -210,7 +210,12 @@ class PlaybackManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json().get("history", [])
+                from typing import cast
+
+                data = cast(Dict[str, Any], response.json())
+                from typing import cast as _cast, List as _List, Dict as _Dict
+
+                return _cast(_List[_Dict[str, Any]], data.get("history", []))
             except Exception as e:
                 logger.error(f"Erreur historique: {e}")
                 return []
@@ -230,7 +235,7 @@ class PlaybackManager:
         device_type: str,
         parent_id: Optional[str] = None,
         parent_type: Optional[str] = None,
-    ) -> Optional[Dict]:
+    ) -> Optional[Dict[str, Any]]:
         """Récupère l'état complet de la lecture (comme le script shell).
 
         Interroge 3 endpoints pour avoir toutes les informations:
@@ -284,7 +289,9 @@ class PlaybackManager:
                     timeout=10,
                 )
                 player_response.raise_for_status()
-                player_data = player_response.json()
+                from typing import cast
+
+                player_data = cast(Dict[str, Any], player_response.json())
 
                 # 2. État média
                 logger.debug(f"Récupération état média pour {device_serial}")
@@ -297,7 +304,7 @@ class PlaybackManager:
                     timeout=10,
                 )
                 media_response.raise_for_status()
-                media_data = media_response.json()
+                media_data = cast(Dict[str, Any], media_response.json())
 
                 # 3. Queue complète
                 logger.debug(f"Récupération queue pour {device_serial}")
@@ -309,7 +316,7 @@ class PlaybackManager:
                     timeout=10,
                 )
                 queue_response.raise_for_status()
-                queue_data = queue_response.json()
+                queue_data = cast(Dict[str, Any], queue_response.json())
 
                 # Combiner les 3 réponses (comme le script shell)
                 result = {"player": player_data, "media": media_data, "queue": queue_data}

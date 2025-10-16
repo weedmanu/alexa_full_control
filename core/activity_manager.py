@@ -5,7 +5,7 @@ Gestionnaire d'activités et historique vocal Alexa - Thread-safe.
 import re
 import threading
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
@@ -16,7 +16,7 @@ from .state_machine import AlexaStateMachine
 class ActivityManager:
     """Gestionnaire thread-safe de l'historique d'activités."""
 
-    def __init__(self, auth, config, state_machine=None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         self.auth = auth
         self.config = config
         self.state_machine: AlexaStateMachine = state_machine or AlexaStateMachine()
@@ -98,7 +98,7 @@ class ActivityManager:
         )
 
         response.raise_for_status()
-        data = response.json()
+        data = cast(Dict[str, Any], response.json())
 
         # Extraire les enregistrements
         records = data.get("customerHistoryRecords", [])
@@ -108,9 +108,9 @@ class ActivityManager:
         if limit and len(records) > limit:
             records = records[:limit]
 
-        return records
+        return cast(list[dict[str, Any]], records)
 
-    def _save_activities_to_cache(self, records: List[Dict[str, Any]]):
+    def _save_activities_to_cache(self, records: List[Dict[str, Any]]) -> None:
         """Sauvegarde les activités dans le cache local."""
         try:
             # Utiliser le cache service pour persister les données
@@ -127,6 +127,8 @@ class ActivityManager:
 
         except Exception as e:
             logger.debug(f"Erreur sauvegarde cache activités: {e}")
+
+    # Note: the real file-based implementation of _save_to_local_cache is defined later in this file.
 
     def _get_activities_from_cache(self, limit: int, start_time: Optional[int]) -> List[Dict[str, Any]]:
         """Récupère les activités depuis le cache local."""
@@ -148,7 +150,7 @@ class ActivityManager:
                 records = records[:limit]
 
             logger.debug(f"✅ Récupéré {len(records)} activités depuis le cache local")
-            return records
+            return cast(list[dict[str, Any]], records)
 
         except Exception as e:
             logger.debug(f"Erreur lecture cache activités: {e}")
@@ -224,7 +226,7 @@ class ActivityManager:
 
         return mock_activities
 
-    def _save_to_local_cache(self, key: str, data: Dict[str, Any]):
+    def _save_to_local_cache(self, key: str, data: Dict[str, Any]) -> None:
         """Sauvegarde des données dans un cache local simple."""
         try:
             import json
@@ -248,7 +250,7 @@ class ActivityManager:
 
             cache_file = Path("data/cache") / f"{key}_local.json"
             if cache_file.exists():
-                return json.loads(cache_file.read_text(encoding="utf-8"))
+                return cast(Dict[str, Any], json.loads(cache_file.read_text(encoding="utf-8")))
         except Exception as e:
             logger.debug(f"Erreur lecture cache local {key}: {e}")
         return None
@@ -271,7 +273,7 @@ class ActivityManager:
             # L'API Privacy pourrait accepter le même token que les autres APIs
             if self.auth.csrf:
                 logger.debug(f"Utilisation du token CSRF standard des cookies: {self.auth.csrf[:20]}...")
-                return self.auth.csrf
+                return cast(str | None, self.auth.csrf)
 
             # Fallback: essayer d'extraire depuis la page HTML (peut ne plus fonctionner)
             try:
@@ -491,9 +493,9 @@ class ActivityManager:
             cache_file = Path("data/cache/devices.json")
             if cache_file.exists():
                 with open(cache_file, encoding="utf-8") as f:
-                    cache_data = json.load(f)
+                    cache_data = cast(Dict[str, Any], json.load(f))
 
-                devices = cache_data.get("devices", [])
+                devices = cast(List[Dict[str, Any]], cache_data.get("devices", []))
                 for device in devices:
                     if device.get("serialNumber") == serial_number:
                         return device
@@ -614,7 +616,7 @@ class ActivityManager:
                 # Trouver la première activité vocale
                 for activity in activities:
                     if activity.get("type") == "voice" and activity.get("utterance"):
-                        return activity["utterance"]
+                        return cast(str | None, activity["utterance"])
 
                 return None
 
@@ -721,7 +723,7 @@ class ActivityManager:
                 # Trouver la première activité vocale avec réponse Alexa
                 for activity in activities:
                     if activity.get("type") == "voice" and activity.get("alexaResponse"):
-                        return activity["alexaResponse"]
+                        return cast(str | None, activity["alexaResponse"])
 
                 return None
 

@@ -10,7 +10,7 @@ Fournit:
 
 import time
 from threading import RLock
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Any, Generic, List, Optional, TypeVar, cast
 
 import requests
 from loguru import logger
@@ -32,16 +32,16 @@ class _ClientWrapper:
         self.csrf = csrf_val
 
     def get(self, url: str, **kwargs: Any) -> "requests.Response":
-        return self._session.get(url, **kwargs)
+        return cast("requests.Response", self._session.get(url, **kwargs))
 
     def post(self, url: str, **kwargs: Any) -> "requests.Response":
-        return self._session.post(url, **kwargs)
+        return cast("requests.Response", self._session.post(url, **kwargs))
 
     def put(self, url: str, **kwargs: Any) -> "requests.Response":
-        return self._session.put(url, **kwargs)
+        return cast("requests.Response", self._session.put(url, **kwargs))
 
     def delete(self, url: str, **kwargs: Any) -> "requests.Response":
-        return self._session.delete(url, **kwargs)
+        return cast("requests.Response", self._session.delete(url, **kwargs))
 
 
 def create_http_client_from_auth(auth: Any) -> HTTPClientProtocol:
@@ -51,9 +51,12 @@ def create_http_client_from_auth(auth: Any) -> HTTPClientProtocol:
     compatible (get/post/put/delete) et on expose `csrf` si présent. Sinon, on
     retourne directement `auth` (on suppose qu'il implémente déjà l'interface).
     """
+    from typing import cast
+
     if hasattr(auth, "session"):
         return _ClientWrapper(auth.session, getattr(auth, "csrf", None))
-    return auth
+    # auth may already implement HTTPClientProtocol; cast for the typechecker
+    return cast(HTTPClientProtocol, auth)
 
 
 T = TypeVar("T")

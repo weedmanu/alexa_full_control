@@ -2,7 +2,7 @@
 Contrôleur générique pour appareils Smart Home - Thread-safe.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
@@ -33,7 +33,7 @@ class SmartDeviceController(BaseManager[Dict[str, Any]]):
         self._all_devices_cache: Optional[List[Dict[str, Any]]] = None
         logger.info("SmartDeviceController initialisé")
 
-    def get_smart_home_devices(self) -> list:
+    def get_smart_home_devices(self) -> List[Dict[str, Any]]:
         """
         Récupère tous les appareils Smart Home (lazy loading).
 
@@ -49,12 +49,12 @@ class SmartDeviceController(BaseManager[Dict[str, Any]]):
                 devices = smart_home_data.get("devices", [])
                 self._all_devices_cache = devices
                 logger.debug(f"{len(devices)} appareils Smart Home depuis cache")
-                return devices
+                return cast(List[Dict[str, Any]], devices)
 
             logger.warning("Aucun cache smart_home_all trouvé")
             return []
 
-    def get_all_locks(self) -> list:
+    def get_all_locks(self) -> List[Dict[str, Any]]:
         """Récupère toutes les serrures depuis smart_home_all cache."""
         with self._lock:
             if self._locks_cache:
@@ -70,7 +70,7 @@ class SmartDeviceController(BaseManager[Dict[str, Any]]):
             logger.warning("Aucun cache smart_home_all")
             return []
 
-    def get_all_plugs(self) -> list:
+    def get_all_plugs(self) -> List[Dict[str, Any]]:
         """Récupère toutes les prises depuis smart_home_all cache."""
         with self._lock:
             if self._plugs_cache:
@@ -86,9 +86,9 @@ class SmartDeviceController(BaseManager[Dict[str, Any]]):
             logger.warning("Aucun cache smart_home_all")
             return []
 
-    def _filter_locks(self, devices: list) -> list:
+    def _filter_locks(self, devices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filtre serrures."""
-        locks = []
+        locks: List[Dict[str, Any]] = []
         for device in devices:
             provider_data = device.get("providerData", {})
             category = provider_data.get("categoryType", "")
@@ -99,9 +99,9 @@ class SmartDeviceController(BaseManager[Dict[str, Any]]):
 
         return locks
 
-    def _filter_plugs(self, devices: list) -> list:
+    def _filter_plugs(self, devices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filtre prises/switches."""
-        plugs = []
+        plugs: List[Dict[str, Any]] = []
         for device in devices:
             provider_data = device.get("providerData", {})
             category = provider_data.get("categoryType", "")
@@ -192,7 +192,7 @@ class SmartDeviceController(BaseManager[Dict[str, Any]]):
                 logger.error(f"Erreur position: {e}")
                 return False
 
-    def get_device_state(self, entity_id: str) -> Optional[Dict]:
+    def get_device_state(self, entity_id: str) -> Optional[Dict[str, Any]]:
         """Récupère l'état d'un appareil."""
         with self._lock:
             if not self._check_connection():
@@ -205,7 +205,9 @@ class SmartDeviceController(BaseManager[Dict[str, Any]]):
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json()
+                from typing import cast
+
+                return cast(Dict[str, Any], response.json())
             except Exception as e:
                 logger.error(f"Erreur état appareil: {e}")
                 return None

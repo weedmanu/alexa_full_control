@@ -13,7 +13,7 @@ import time
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from threading import RLock
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast, Generator
 
 from loguru import logger
 
@@ -21,7 +21,7 @@ from utils.logger import SharedIcons
 
 # Optional inter-process locking: use portalocker when available
 try:
-    import portalocker as _portalocker  # type: ignore
+    import portalocker as _portalocker
 except Exception:
     _portalocker = None
 
@@ -127,7 +127,7 @@ class CacheService:
             if cache_file_gz.exists():
                 try:
                     with gzip.open(cache_file_gz, "rt", encoding="utf-8") as f:
-                        data = json.load(f)
+                        data = cast(Dict[str, Any], json.load(f))
                     ttl_info = " (ignoring TTL)" if ignore_ttl else ""
                     logger.debug(f"✅ Cache HIT (compressed): {key}{ttl_info}")
                     self._stats["hits"] += 1
@@ -138,7 +138,7 @@ class CacheService:
                     return None
             elif cache_file.exists():
                 try:
-                    data = json.loads(cache_file.read_text(encoding="utf-8"))
+                    data = cast(Dict[str, Any], json.loads(cache_file.read_text(encoding="utf-8")))
                     ttl_info = " (ignoring TTL)" if ignore_ttl else ""
                     logger.debug(f"✅ Cache HIT: {key}{ttl_info}")
                     self._stats["hits"] += 1
@@ -152,7 +152,7 @@ class CacheService:
                 self._stats["misses"] += 1
                 return None
 
-    def set(self, key: str, data: Dict[str, Any], ttl_seconds: int):
+    def set(self, key: str, data: Dict[str, Any], ttl_seconds: int) -> None:
         """
         Sauvegarde une donnée dans le cache avec TTL et compression optionnelle.
 
@@ -298,7 +298,7 @@ class CacheService:
         with self._lock, self._file_lock(key):
             cache_file_gz = self.cache_dir / f"{key}.json.gz"
             cache_file_json = self.cache_dir / f"{key}.json"
-            deleted = False
+            deleted: bool = False
 
             # Supprimer fichier compressé
             if cache_file_gz.exists():
@@ -423,21 +423,21 @@ class CacheService:
         """Vérifie si une entrée de cache est expirée."""
         if key not in self.metadata:
             return True
-        return time.time() > self.metadata[key]["expires_at"]
+        return cast(bool, time.time() > self.metadata[key]["expires_at"])
 
-    def _load_metadata(self):
+    def _load_metadata(self) -> None:
         """Charge le fichier metadata au démarrage."""
         # Load metadata under metadata lock to avoid partial reads during writes
         with self._file_lock(".metadata"):
             if self.metadata_file.exists():
                 try:
-                    self.metadata = json.loads(self.metadata_file.read_text(encoding="utf-8"))
+                    self.metadata = cast(Dict[str, Dict[str, Any]], json.loads(self.metadata_file.read_text(encoding="utf-8")))
                     logger.debug(f"Metadata chargé: {len(self.metadata)} entrée(s)")
                 except (json.JSONDecodeError, OSError) as e:
                     logger.warning(f"Erreur chargement metadata: {e}, réinitialisation")
                     self.metadata = {}
 
-    def _save_metadata(self):
+    def _save_metadata(self) -> None:
         """Sauvegarde le fichier metadata."""
         try:
             # Write metadata atomically
@@ -456,7 +456,7 @@ class CacheService:
             logger.error(f"Erreur sauvegarde metadata: {e}")
 
     @contextmanager
-    def _file_lock(self, name: str, timeout: float = 5.0):
+    def _file_lock(self, name: str, timeout: float = 5.0) -> Generator[None, None, None]:
         """Context manager for a per-name file lock inside the cache dir.
 
         Uses portalocker if available; otherwise a no-op fallback is used.

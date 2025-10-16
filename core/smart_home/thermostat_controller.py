@@ -31,7 +31,7 @@ class ThermostatController(BaseManager[Dict[str, Any]]):
         self._thermostats_cache: Optional[List[Dict[str, Any]]] = None
         logger.info("ThermostatController initialisé")
 
-    def get_all_thermostats(self) -> list:
+    def get_all_thermostats(self) -> list[dict[str, Any]]:
         """Récupère tous les thermostats depuis le cache smart_home_all."""
         with self._lock:
             # 1. Cache mémoire (TTL 5min)
@@ -50,7 +50,7 @@ class ThermostatController(BaseManager[Dict[str, Any]]):
             logger.warning("Aucun cache smart_home_all disponible, synchronisation nécessaire")
             return []
 
-    def _filter_thermostats(self, devices: list) -> list:
+    def _filter_thermostats(self, devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Filtre les thermostats depuis la liste complète smart devices."""
         thermostats = []
         for device in devices:

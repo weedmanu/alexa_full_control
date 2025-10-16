@@ -3,7 +3,7 @@ Gestionnaire DND (Do Not Disturb) Alexa - Thread-safe.
 """
 
 import threading
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from loguru import logger
 
@@ -14,7 +14,7 @@ from .state_machine import AlexaStateMachine
 class DNDManager:
     """Gestionnaire thread-safe du mode Ne Pas Déranger."""
 
-    def __init__(self, auth, config, state_machine=None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         self.auth = auth
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
@@ -28,7 +28,7 @@ class DNDManager:
             self.http_client = self.auth
         logger.info("DNDManager initialisé")
 
-    def get_dnd_status(self, device_serial: str) -> Optional[Dict]:
+    def get_dnd_status(self, device_serial: str) -> Optional[Dict[str, Any]]:
         """Récupère le statut DND d'un appareil."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -41,10 +41,13 @@ class DNDManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                statuses = response.json().get("doNotDisturbDeviceStatusList", [])
+                from typing import cast
+
+                data = cast(Dict[str, Any], response.json())
+                statuses = data.get("doNotDisturbDeviceStatusList", [])
                 for status in statuses:
                     if status.get("deviceSerialNumber") == device_serial:
-                        return status
+                        return cast(dict[str, Any] | None, status)
                 return None
             except Exception as e:
                 logger.error(f"Erreur récupération DND: {e}")

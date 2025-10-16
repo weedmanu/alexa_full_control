@@ -3,7 +3,7 @@ Gestionnaire de notifications Alexa - Thread-safe.
 """
 
 import threading
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
@@ -14,7 +14,7 @@ from .state_machine import AlexaStateMachine
 class NotificationManager:
     """Gestionnaire thread-safe des notifications Alexa."""
 
-    def __init__(self, auth, config, state_machine=None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         self.auth = auth
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
@@ -30,7 +30,7 @@ class NotificationManager:
         except Exception:
             self.http_client = self.auth
 
-    def list_notifications(self, limit: int = 50) -> List[Dict]:
+    def list_notifications(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Liste les notifications."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -44,7 +44,10 @@ class NotificationManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json().get("notifications", [])
+                from typing import cast
+
+                data = cast(Dict[str, Any], response.json())
+                return cast(list[dict[str, Any]], data.get("notifications", []))
             except Exception as e:
                 logger.error(f"Erreur liste notifications: {e}")
                 return []

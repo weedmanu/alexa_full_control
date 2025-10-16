@@ -16,7 +16,7 @@ Date: 12 octobre 2025
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
@@ -88,7 +88,7 @@ class CalendarManager:
             # Utiliser directement le CSRF des cookies (fonctionne pour Privacy API)
             if self.auth.csrf:
                 logger.debug("✅ Utilisation du token CSRF pour l'API Privacy")
-                return self.auth.csrf
+                return cast(str | None, self.auth.csrf)
 
             logger.error("❌ Aucun token CSRF disponible")
             return None

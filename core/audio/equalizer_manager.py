@@ -3,7 +3,7 @@ Gestionnaire d'égaliseur audio - Thread-safe.
 """
 
 import threading
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from loguru import logger
 
@@ -14,7 +14,7 @@ from ..state_machine import AlexaStateMachine
 class EqualizerManager:
     """Gestionnaire thread-safe de l'égaliseur."""
 
-    def __init__(self, auth, config, state_machine=None):
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
         self.auth = auth
         self.config = config
         self.state_machine = state_machine or AlexaStateMachine()
@@ -28,7 +28,7 @@ class EqualizerManager:
             self.http_client = self.auth
         logger.info("EqualizerManager initialisé")
 
-    def get_equalizer(self, device_serial: str, device_type: str) -> Optional[Dict]:
+    def get_equalizer(self, device_serial: str, device_type: str) -> Optional[Dict[Any, Any]]:
         """Récupère les paramètres d'égaliseur."""
         with self._lock:
             if not self.state_machine.can_execute_commands:
@@ -41,7 +41,7 @@ class EqualizerManager:
                     timeout=10,
                 )
                 response.raise_for_status()
-                return response.json()
+                return cast(Optional[Dict[Any, Any]], response.json())
             except Exception as e:
                 logger.error(f"Erreur récupération égaliseur: {e}")
                 return None
