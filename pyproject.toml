@@ -171,8 +171,18 @@ exclude = [
 
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-# Use conventional pytest discovery
-python_files = ["test_*.py", "*_test.py"]
-# Show extra summary and keep quiet on passing tests; keep maxfail
-addopts = "-q --disable-warnings --maxfail=1 -ra"
+# Updated: All tests now in Dev/pytests/ directory (Phase 5 cleanup)
+testpaths = ["Dev/pytests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers -ra"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "security: Security tests",
+    "workflow: Workflow tests",
+    "scenario: Real-world scenario tests",
+]
