@@ -49,6 +49,47 @@
   - Success criteria verification
   - Next steps and recommendations
 
+### Quality Control Reports
+
+- **`QUALITY_REPORT.md`** (214 lines)
+
+  - Executive summary of quality metrics
+  - MyPy, Pylint, Ruff, Flake8 analysis
+  - Error prioritization and fix plan
+  - Checklist for corrections
+
+- **`QUALITY_EXECUTION.md`** (380+ lines)
+  - Full quality test execution report
+  - Detailed error analysis for each tool
+  - Root cause analysis
+  - Prioritized remediation steps
+  - Before/after comparison
+
+### Quality Tool Reports
+
+- **`mypy_errors.txt`** (raw output)
+
+  - 14 type checking errors
+  - Imports and type annotations issues
+  - Used for fixing type safety
+
+- **`pylint_report.txt`** (134 KB)
+
+  - Code analysis score: 9.53/10
+  - Error/Warning/Refactoring categories
+  - Used for code quality assessment
+
+- **`ruff_report.json`** (97 KB)
+
+  - Modern linter analysis
+  - ~1,239 issues (mostly whitespace)
+  - Auto-fixable with `ruff check --fix`
+
+- **`flake8_report.txt`** (285 KB)
+  - Style compliance check
+  - ~1,859 issues (mostly whitespace)
+  - E/W error codes with line numbers
+
 ---
 
 ## 🔍 QUICK REFERENCE
@@ -66,6 +107,18 @@
 
 **Final project statistics?**  
 → See `PROJECT_COMPLETION_REPORT.md`
+
+**Quality control results?**  
+→ See `QUALITY_REPORT.md` or `QUALITY_EXECUTION.md`
+
+**Type checking errors to fix?**  
+→ See `mypy_errors.txt`
+
+**Code quality score?**  
+→ See `pylint_report.txt`
+
+**Auto-fixable style issues?**  
+→ See `ruff_report.json` (use `ruff check --fix`)
 
 **Phase-specific details?**  
 → See `../phases/INDEX.md`
