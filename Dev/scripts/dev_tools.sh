@@ -11,8 +11,9 @@ case "$action" in
     python -m pytest --benchmark-only
     ;;
   profile)
-    pyinstrument -o profile.html python -m pytest tests/pytest_install.py
-    xdg-open profile.html || open profile.html
+    # pyinstrument -o profile.html python -m pytest tests/pytest_install.py
+    echo "Profiling disabled - no test file available"
+    # xdg-open profile.html || open profile.html
     ;;
   *)
     echo "Usage: $0 [vulture|tests|bench|profile]"

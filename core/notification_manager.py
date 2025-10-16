@@ -2,93 +2,72 @@
 Gestionnaire de notifications Alexa - Thread-safe.
 """
 
-import threading
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
-from .circuit_breaker import CircuitBreaker
+from .base_manager import BaseManager, create_http_client_from_auth
 from .state_machine import AlexaStateMachine
 
 
-class NotificationManager:
+class NotificationManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire thread-safe des notifications Alexa."""
 
     def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
+        # Créer le client HTTP depuis auth
+        http_client = create_http_client_from_auth(auth)
+
+        # Initialiser BaseManager
+        super().__init__(
+            http_client=http_client,
+            config=config,
+            state_machine=state_machine or AlexaStateMachine(),
+        )
+
+        # Attributs spécifiques à NotificationManager
         self.auth = auth
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
-        self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
-        self._lock = threading.RLock()
+
         logger.info("NotificationManager initialisé")
-
-        # Compatibility: provide http_client wrapper for legacy auth
-        try:
-            from core.base_manager import create_http_client_from_auth
-
-            self.http_client = create_http_client_from_auth(self.auth)
-        except Exception:
-            self.http_client = self.auth
 
     def list_notifications(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Liste les notifications."""
-        with self._lock:
-            if not self.state_machine.can_execute_commands:
+        if not self._check_connection():
+            return []
+        try:
+            data = self._api_call("get", "/api/notifications", params={"size": limit}, timeout=10)
+            if data is None:
                 return []
-            try:
-                response = self.breaker.call(
-                    self.http_client.get,
-                    f"https://{self.config.alexa_domain}/api/notifications",
-                    params={"size": limit},
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                    timeout=10,
-                )
-                response.raise_for_status()
-                from typing import cast
 
-                data = cast(Dict[str, Any], response.json())
-                return cast(list[dict[str, Any]], data.get("notifications", []))
-            except Exception as e:
-                logger.error(f"Erreur liste notifications: {e}")
-                return []
+            notifications = data.get("notifications", [])
+            return cast(List[Dict[str, Any]], notifications) if isinstance(notifications, list) else []
+        except Exception as e:
+            self.logger.error(f"Erreur liste notifications: {e}")
+            return []
 
     def delete_notification(self, notification_id: str) -> bool:
         """Supprime une notification."""
-        with self._lock:
-            if not self.state_machine.can_execute_commands:
-                return False
-            try:
-                response = self.breaker.call(
-                    self.http_client.delete,
-                    f"https://{self.config.alexa_domain}/api/notifications/{notification_id}",
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                    timeout=10,
-                )
-                response.raise_for_status()
-                logger.success(f"Notification {notification_id} supprimée")
+        if not self._check_connection():
+            return False
+        try:
+            result = self._api_call("delete", f"/api/notifications/{notification_id}", timeout=10)
+            if result is not None:
+                self.logger.success(f"Notification {notification_id} supprimée")
                 return True
-            except Exception as e:
-                logger.error(f"Erreur suppression notification: {e}")
-                return False
+            return False
+        except Exception as e:
+            self.logger.error(f"Erreur suppression notification: {e}")
+            return False
 
     def mark_as_read(self, notification_id: str) -> bool:
         """Marque une notification comme lue."""
-        with self._lock:
-            if not self.state_machine.can_execute_commands:
-                return False
-            try:
-                response = self.breaker.call(
-                    self.http_client.put,
-                    f"https://{self.config.alexa_domain}/api/notifications/{notification_id}",
-                    json={"status": "READ"},
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                    timeout=10,
-                )
-                response.raise_for_status()
-                return True
-            except Exception as e:
-                logger.error(f"Erreur marquage notification: {e}")
-                return False
+        if not self._check_connection():
+            return False
+        try:
+            result = self._api_call("put", f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10)
+            return result is not None
+        except Exception as e:
+            self.logger.error(f"Erreur marquage notification: {e}")
+            return False
 
     def send_notification(self, device_serial: str, message: str, title: Optional[str] = None) -> bool:
         """
@@ -102,30 +81,24 @@ class NotificationManager:
         Returns:
             True si succès, False sinon
         """
-        with self._lock:
-            if not self.state_machine.can_execute_commands:
-                return False
-            try:
-                payload = {
-                    "deviceSerialNumber": device_serial,
-                    "notification": message,
-                }
-                if title:
-                    payload["title"] = title
+        if not self._check_connection():
+            return False
+        try:
+            payload = {
+                "deviceSerialNumber": device_serial,
+                "notification": message,
+            }
+            if title:
+                payload["title"] = title
 
-                response = self.breaker.call(
-                    self.http_client.put,
-                    f"https://{self.config.alexa_domain}/api/notifications/createReminder",
-                    json=payload,
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                    timeout=10,
-                )
-                response.raise_for_status()
-                logger.success(f"Notification envoyée à {device_serial}")
+            result = self._api_call("put", "/api/notifications/createReminder", json=payload, timeout=10)
+            if result is not None:
+                self.logger.success(f"Notification envoyée à {device_serial}")
                 return True
-            except Exception as e:
-                logger.error(f"Erreur envoi notification: {e}")
-                return False
+            return False
+        except Exception as e:
+            self.logger.error(f"Erreur envoi notification: {e}")
+            return False
 
     def clear_notifications(self, device_serial: str) -> bool:
         """
@@ -137,29 +110,28 @@ class NotificationManager:
         Returns:
             True si succès, False sinon
         """
-        with self._lock:
-            if not self.state_machine.can_execute_commands:
-                return False
-            try:
-                # Récupérer toutes les notifications de l'appareil
-                notifications = self.list_notifications(limit=100)
-                device_notifications = [n for n in notifications if n.get("deviceSerialNumber") == device_serial]
+        if not self._check_connection():
+            return False
+        try:
+            # Récupérer toutes les notifications de l'appareil
+            notifications = self.list_notifications(limit=100)
+            device_notifications = [n for n in notifications if n.get("deviceSerialNumber") == device_serial]
 
-                if not device_notifications:
-                    logger.info(f"Aucune notification pour {device_serial}")
-                    return True
+            if not device_notifications:
+                self.logger.info(f"Aucune notification pour {device_serial}")
+                return True
 
-                # Supprimer chaque notification
-                success_count = 0
-                for notif in device_notifications:
-                    notif_id = notif.get("id") or notif.get("notificationId")
-                    if notif_id and self.delete_notification(notif_id):
-                        success_count += 1
+            # Supprimer chaque notification
+            success_count = 0
+            for notif in device_notifications:
+                notif_id = notif.get("id") or notif.get("notificationId")
+                if notif_id and self.delete_notification(notif_id):
+                    success_count += 1
 
-                logger.success(
-                    f"{success_count}/{len(device_notifications)} notifications supprimées pour {device_serial}"
-                )
-                return success_count > 0
-            except Exception as e:
-                logger.error(f"Erreur suppression notifications: {e}")
-                return False
+            self.logger.success(
+                f"{success_count}/{len(device_notifications)} notifications supprimées pour {device_serial}"
+            )
+            return success_count > 0
+        except Exception as e:
+            self.logger.error(f"Erreur suppression notifications: {e}")
+            return False

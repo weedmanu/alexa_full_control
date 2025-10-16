@@ -18,7 +18,6 @@ from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.alarms import AlarmsCommands
 from cli.commands.timers.reminders import RemindersCommands
 from cli.commands.timers.timers import TimersCommands
-from cli.help_texts.timers_help import TIMER_DESCRIPTION
 
 
 class TimerCommand(BaseCommand):
@@ -49,8 +48,11 @@ class TimerCommand(BaseCommand):
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
 
-        # Description réorganisée: utiliser la constante partagée
-        parser.description = TIMER_DESCRIPTION
+        # Supprimer la ligne d'usage automatique
+        parser.usage = argparse.SUPPRESS
+
+        # Description simplifiée
+        parser.description = "Gérer les minuteurs, alarmes et rappels"
 
         subparsers = parser.add_subparsers(
             dest="subcategory",

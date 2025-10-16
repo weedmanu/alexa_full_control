@@ -45,6 +45,7 @@ from typing import Any, Dict, List, Optional
 # 🎨 PALETTE DE COULEURS STANDARDISÉE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 from utils.term import Colors
+from utils.colorizer import colorize
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🏗️ COMPOSANTS DE BASE
@@ -116,8 +117,8 @@ class HelpComponents:
             # Utiliser des nuances : foncé pour les champs, clair pour leurs options
             parts.append(f"{Colors.GREEN_BOLD}<CATEGORIE>{Colors.RESET}")
             parts.append(f"[{Colors.GREEN}OPTIONS_CATEGORIE{Colors.RESET}]")
-            parts.append(f"[{Colors.CYAN_BOLD}<SOUS-CATEGORIE>{Colors.RESET}]")
-            parts.append(f"[{Colors.CYAN}OPTIONS_SOUS-CATEGORIE{Colors.RESET}]")
+            parts.append(f"[{colorize('<SOUS-CATEGORIE>', 'color_usage')}]")
+            parts.append(f"[{colorize('OPTIONS_SOUS-CATEGORIE', 'color_action_options')}]")
             parts.append(f"[{Colors.ORANGE_BOLD}<ACTION>{Colors.RESET}]")
             parts.append(f"[{Colors.ORANGE}OPTIONS_ACTION{Colors.RESET}]")
         else:
@@ -128,7 +129,7 @@ class HelpComponents:
                 if not action:
                     parts.append(f"{Colors.ORANGE_BOLD}<ACTION>{Colors.RESET}")
             if subcategory:
-                parts.append(f"{Colors.CYAN_BOLD}{subcategory}{Colors.RESET}")
+                parts.append(f"{colorize(subcategory, 'color_usage')}")
                 # Si pas d'action spécifiée, montrer que ACTION est requis
                 if not action:
                     parts.append(f"{Colors.ORANGE_BOLD}<ACTION>{Colors.RESET}")
@@ -549,8 +550,8 @@ def format_categories(categories: List[Dict[str, str]]) -> str:
 def format_subcategories(subcategories: List[Dict[str, str]]) -> str:
     """Formate la section des sous-catégories avec titre encadré."""
     # Utilise HelpComponents via ses méthodes statiques
-    separator = f"{Colors.CYAN_BOLD}{'━' * 100}{Colors.RESET}"
-    title_line = f"{Colors.CYAN_BOLD}🔖 Sous-catégories disponibles:{Colors.RESET}"
+    separator = f"{colorize('━' * 100, 'color_usage')}"
+    title_line = f"{colorize('🔖 Sous-catégories disponibles:', 'color_usage')}"
 
     desc = (
         "\n  Les sous-catégories affinent les fonctionnalités d'une catégorie principale.\n"
@@ -560,7 +561,7 @@ def format_subcategories(subcategories: List[Dict[str, str]]) -> str:
 
     items = []
     for sub in subcategories:
-        name_colored = f"{Colors.CYAN_BOLD}• {sub['name']}{Colors.RESET}"
+        name_colored = f"{colorize('• ' + sub['name'], 'color_usage')}"
         padding = " " * (13 - len(sub["name"]))
         items.append(f"  {name_colored}{padding}: {sub['desc']}")
 

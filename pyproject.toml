@@ -84,8 +84,7 @@ ignore-paths = [
     "build",
     "dist",
     ".tox",
-    ".eggs",
-    "*.egg"
+    ".eggs"
 ]
 
 [tool.pylint.messages_control]

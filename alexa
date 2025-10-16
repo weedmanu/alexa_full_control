@@ -28,18 +28,18 @@ Date: 8 octobre 2025
 ============================================================================
 """
 
+import io
 import sys
 from pathlib import Path
 from typing import Any
-import io
 
 # Forcer l'encodage UTF-8 pour stdout/stderr sur Windows **seulement** lorsque
 # le script est exécuté directement. Réaffecter sys.stdout/stderr à l'import
 # peut casser les frameworks de test (pytest) qui remplacent ces streams.
-if __name__ == '__main__' and sys.platform == 'win32':
+if __name__ == "__main__" and sys.platform == "win32":
     try:
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
     except Exception:
         # Si pour une raison quelconque les streams ne sont pas standard
         # (par ex. capture de pytest), ne pas échouer à l'import.
@@ -108,33 +108,33 @@ def register_all_commands(parser: Any) -> None:
         parser: CommandParser
     """
     # Phase 1 - Sprint 1 ✅
-    parser.register_command('auth', AuthCommand)
-    parser.register_command('device', DeviceCommand)
+    parser.register_command("auth", AuthCommand)
+    parser.register_command("device", DeviceCommand)
 
     # Phase 2 - Sprint 2 ✅
-    parser.register_command('music', MusicCommand)
-    parser.register_command('timers', TimerCommand)
+    parser.register_command("music", MusicCommand)
+    parser.register_command("timers", TimerCommand)
     # alarm et reminder sont maintenant des sous-catégories de timers
 
     # Phase 3 - Sprint 3 ✅
-    parser.register_command('smarthome', SmartHomeCommand)
+    parser.register_command("smarthome", SmartHomeCommand)
 
     # Phase 4 - Sprint 4 ✅
-    parser.register_command('announcement', AnnouncementCommand)
-    parser.register_command('dnd', DNDCommand)
+    parser.register_command("announcement", AnnouncementCommand)
+    parser.register_command("dnd", DNDCommand)
     # announcement: SUPPRIMÉ - Drop-in bloqué par Amazon (privacy)
 
     # Phase 5 - Sprint 5 ✅
-    parser.register_command('activity', ActivityCommand)
-    parser.register_command('calendar', CalendarCommand)
-    parser.register_command('lists', ListsCommand)
+    parser.register_command("activity", ActivityCommand)
+    parser.register_command("calendar", CalendarCommand)
+    parser.register_command("lists", ListsCommand)
 
     # Phase 6 - Sprint 6 ✅
-    parser.register_command('routine', RoutineCommand)
-    parser.register_command('multiroom', MultiroomCommand)
+    parser.register_command("routine", RoutineCommand)
+    parser.register_command("multiroom", MultiroomCommand)
 
     # Cache management
-    parser.register_command('cache', CacheCommand)
+    parser.register_command("cache", CacheCommand)
 
 
 def main() -> int:
@@ -157,10 +157,10 @@ def main() -> int:
 
         # Parser les arguments
         # Si -h est passé après une action, c'est une erreur car -h n'existe qu'au niveau catégorie
-        if '-h' in sys.argv and len(sys.argv) > 3:
+        if "-h" in sys.argv and len(sys.argv) > 3:
             # Il y a au moins: script, category, action, -h
             # Vérifier si -h vient après une action (position 3+)
-            if sys.argv[-1] == '-h' or (len(sys.argv) > 3 and '-h' in sys.argv[3:]):
+            if sys.argv[-1] == "-h" or (len(sys.argv) > 3 and "-h" in sys.argv[3:]):
                 # Sauvegarder les arguments originaux
                 original_argv = sys.argv.copy()
 
@@ -171,18 +171,18 @@ def main() -> int:
                 print()
 
                 # Afficher l'aide de la catégorie
-                sys.argv = [original_argv[0], original_argv[1], '-h']
+                sys.argv = [original_argv[0], original_argv[1], "-h"]
                 args = parser.parse_args()
                 sys.exit(0)
 
         args = parser.parse_args()
 
         # Configurer le logging définitif avec les bonnes options
-        verbose_mode = getattr(args, 'verbose', False)
-        debug_mode = getattr(args, 'debug', False)
+        verbose_mode = getattr(args, "verbose", False)
+        debug_mode = getattr(args, "debug", False)
         # Only pass --no-color when the attribute is present on args
-        no_color_exists = hasattr(args, 'no_color')
-        raw_no_color = getattr(args, 'no_color', False)
+        no_color_exists = hasattr(args, "no_color")
+        raw_no_color = getattr(args, "no_color", False)
         # If argparse produced a real bool, keep it. If tests used MagicMock, coerce to False.
         no_color_mode = raw_no_color if isinstance(raw_no_color, bool) else False
 
@@ -205,12 +205,12 @@ def main() -> int:
         logger.info(f"Alexa Voice Control CLI v2.0.0 - Catégorie: {args.category}")
 
         # Créer le contexte
-        config_file = args.config if hasattr(args, 'config') and args.config else None
+        config_file = args.config if hasattr(args, "config") and args.config else None
         context = create_context(config_file=config_file)
 
         # Charger l'authentification (sauf pour auth login)
         # Si les cookies existent, initialiser l'auth dans le contexte
-        if not (args.category == 'auth' and args.action == 'login'):
+        if not (args.category == "auth" and args.action == "login"):
             try:
                 from alexa_auth.alexa_auth import AlexaAuth
                 from core.state_machine import ConnectionState
@@ -220,9 +220,8 @@ def main() -> int:
                 if auth.load_cookies():
                     # Sanity check: tenter un ping minimal sur un endpoint devices
                     try:
-                        # Use the Alexa subdomain for API ping (some regions require alexa.<domain>)
                         resp = auth.get(f"https://alexa.{auth.amazon_domain}/api/devices-v2/device", timeout=10)
-                        if getattr(resp, 'status_code', None) == 200:
+                        if getattr(resp, "status_code", None) == 200:
                             # Cookies et endpoint valides
                             context.state_machine.set_initial_state(ConnectionState.AUTHENTICATED)
                             context.initialize_auth(auth)
@@ -242,8 +241,12 @@ def main() -> int:
         command_class = parser.get_command_class(args.category)
 
         if not command_class:
-            logger.error(f"Commande '{args.category}' non trouvée")
-            print(f"❌ Erreur: Catégorie '{args.category}' non reconnue", file=sys.stderr)
+            if not args.category:
+                logger.error("Aucune catégorie spécifiée")
+                print("❌ Erreur: Veuillez spécifier une catégorie (ex: alexa device list)", file=sys.stderr)
+            else:
+                logger.error(f"Commande '{args.category}' non trouvée")
+                print(f"❌ Erreur: Catégorie '{args.category}' non reconnue", file=sys.stderr)
             return 1
 
         # Créer l'instance de commande avec le contexte
@@ -269,5 +272,5 @@ def main() -> int:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

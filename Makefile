@@ -39,7 +39,8 @@ bench:
 	$(PYTHON) -m pytest --benchmark-only
 
 profile:
-	$(PYTHON) -m pyinstrument -o profile.html $(PYTHON) -m pytest tests/pytest_install.py
+	@echo "Profiling disabled - no test file available"
+	# $(PYTHON) -m pyinstrument -o profile.html $(PYTHON) -m pytest tests/pytest_install.py
 	@echo "Profile written to profile.html"
 
 precommit:

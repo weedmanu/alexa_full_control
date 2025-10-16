@@ -1,28 +1,14 @@
-class Logger:
-    @staticmethod
-    def header(msg: str, emoji: str) -> None:
-        print(f"{emoji} {msg}")
+# Thin compatibility shim for tests expecting `scripts.install`
+# Re-export the real install implementation from the `install` package.
+from importlib import import_module
 
-    @staticmethod
-    def step(msg: str, emoji: str) -> None:
-        print(f"{emoji} {msg}")
+_real = import_module('install.install')
 
-    @staticmethod
-    def progress(msg: str) -> None:
-        print(f"⏳ {msg}...")
+# Re-export top-level names from the real module
+for _name in dir(_real):
+    if _name.startswith("__"):
+        continue
+    globals()[_name] = getattr(_real, _name)
 
-    @staticmethod
-    def success(msg: str, emoji: str) -> None:
-        print(f"{emoji} {msg}")
-
-    @staticmethod
-    def error(msg: str, emoji: str) -> None:
-        print(f"{emoji} {msg}")
-
-    @staticmethod
-    def warning(msg: str, emoji: str) -> None:
-        print(f"{emoji} {msg}")
-
-    @staticmethod
-    def info(msg: str, emoji: str) -> None:
-        print(f"{emoji} {msg}")
+# Make module attributes available for `from scripts import install` style
+__all__ = [n for n in globals().keys() if not n.startswith("_")]

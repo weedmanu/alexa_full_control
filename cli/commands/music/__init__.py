@@ -3,8 +3,8 @@ Module de commandes musicales - Architecture modulaire.
 
 Organisation:
 - base.py: Classe de base commune
-- playback.py: ContrÃ´le lecture (pause, stop, control, shuffle, repeat)
-- library.py: BibliothÃ¨que (track, playlist, library)
+- playback.py: Contrôle lecture (pause, stop, control, shuffle, repeat)
+- library.py: Bibliothèque (track, playlist, library)
 - tunein.py: Radio TuneIn
 - status.py: Informations (status, queue)
 
@@ -22,15 +22,15 @@ from cli.commands.music.status import StatusCommands
 from cli.commands.music.tunein import TuneInCommands
 
 
-# Constante de description simplifiÃ©e
-MUSIC_DESCRIPTION = "GÃ©rer la musique et la lecture audio"
+# Constante de description simplifiée
+MUSIC_DESCRIPTION = "Gérer la musique et la lecture audio"
 
 
 class MusicCommand(BaseCommand):
     """
-    Commande de contrÃ´le musical Alexa (architecture modulaire).
+    Commande de contrôle musical Alexa (architecture modulaire).
 
-    DÃ©lÃ¨gue les actions aux sous-modules spÃ©cialisÃ©s.
+    Délègue les actions aux sous-modules spécialisés.
     """
 
     def __init__(self, context=None):
@@ -47,21 +47,21 @@ class MusicCommand(BaseCommand):
         """
         Configure le parser pour les commandes musicales.
 
-        DÃ©lÃ¨gue la configuration aux sous-modules.
+        Délègue la configuration aux sous-modules.
 
         Args:
-            parser: Sous-parser pour la catÃ©gorie 'music'
+            parser: Sous-parser pour la catégorie 'music'
         """
-        # Utiliser le formatter universel pour l'ordre exact demandÃ©
+        # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
 
-        # Description rÃ©organisÃ©e: utiliser la constante partagÃ©e
+        # Description réorganisée: utiliser la constante partagée
         parser.description = MUSIC_DESCRIPTION
 
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
-            help="Action Ã  exÃ©cuter",
+            help="Action à exécuter",
             required=True,
         )
 
@@ -73,21 +73,21 @@ class MusicCommand(BaseCommand):
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
-        ExÃ©cute la commande musicale.
+        Exécute la commande musicale.
 
-        DÃ©lÃ¨gue l'exÃ©cution au sous-module appropriÃ©.
+        Délègue l'exécution au sous-module approprié.
 
         Args:
-            args: Arguments parsÃ©s
+            args: Arguments parsés
 
         Returns:
-            True si succÃ¨s, False sinon
+            True si succès, False sinon
         """
         # Validation connexion
         if not self.validate_connection():
             return False
 
-        # TransfÃ©rer le contexte aux sous-modules
+        # Transférer le contexte aux sous-modules
         self._transfer_context()
 
         # Router vers le bon sous-module
@@ -114,8 +114,7 @@ class MusicCommand(BaseCommand):
             return False
 
     def _transfer_context(self):
-        """TransfÃ¨re le contexte aux sous-modules."""
+        """Transfère le contexte aux sous-modules."""
         for sub_command in [self.playback, self.library, self.tunein, self.status]:
             sub_command.context = self.context
             sub_command.logger = self.logger
-

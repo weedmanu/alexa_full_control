@@ -1,11 +1,11 @@
 ﻿"""
 Commandes de gestion du calendrier Alexa.
 
-Ce module gÃ¨re toutes les opÃ©rations liÃ©es aux Ã©vÃ©nements du calendrier:
-- list: Lister les Ã©vÃ©nements Ã  venir
-- add: Ajouter un nouvel Ã©vÃ©nement
-- delete: Supprimer un Ã©vÃ©nement
-- info: Afficher les dÃ©tails d'un Ã©vÃ©nement
+Ce module gère toutes les opérations liées aux événements du calendrier:
+- list: Lister les événements à venir
+- add: Ajouter un nouvel événement
+- delete: Supprimer un événement
+- info: Afficher les détails d'un événement
 
 Auteur: M@nu
 Date: 12 octobre 2025
@@ -19,29 +19,29 @@ from typing import Any, Dict, List, Optional
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
-# Constantes de description simplifiÃ©es
-CALENDAR_DESCRIPTION = "GÃ©rer le calendrier Alexa"
-ADD_HELP = "Ajouter un nouvel Ã©vÃ©nement"
-DELETE_HELP = "Supprimer un Ã©vÃ©nement"
-INFO_HELP = "Afficher les dÃ©tails d'un Ã©vÃ©nement"
-LIST_HELP = "Lister les Ã©vÃ©nements Ã  venir"
+# Constantes de description simplifiées
+CALENDAR_DESCRIPTION = "Gérer le calendrier Alexa"
+ADD_HELP = "Ajouter un nouvel événement"
+DELETE_HELP = "Supprimer un événement"
+INFO_HELP = "Afficher les détails d'un événement"
+LIST_HELP = "Lister les événements à venir"
 
 
 class CalendarCommand(BaseCommand):
     """
     Commande de gestion du calendrier Alexa.
 
-    GÃ¨re list, add, delete et info pour les Ã©vÃ©nements du calendrier.
+    Gère list, add, delete et info pour les événements du calendrier.
 
     Actions:
-        - list: Lister les Ã©vÃ©nements Ã  venir
-        - add: Ajouter un nouvel Ã©vÃ©nement
-        - delete: Supprimer un Ã©vÃ©nement
-        - info: Afficher les dÃ©tails d'un Ã©vÃ©nement
+        - list: Lister les événements à venir
+        - add: Ajouter un nouvel événement
+        - delete: Supprimer un événement
+        - info: Afficher les détails d'un événement
 
     Example:
         >>> python alexa calendar list
-        >>> python alexa calendar add --title "RÃ©union" --start "2025-10-15 14:00"
+        >>> python alexa calendar add --title "Réunion" --start "2025-10-15 14:00"
     """
 
     def setup_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -49,7 +49,7 @@ class CalendarCommand(BaseCommand):
         Configure le parser pour les commandes calendar.
 
         Args:
-            parser: Sous-parser pour la catÃ©gorie 'calendar'
+            parser: Sous-parser pour la catégorie 'calendar'
         """
         parser.formatter_class = UniversalHelpFormatter
         parser.usage = argparse.SUPPRESS
@@ -58,7 +58,7 @@ class CalendarCommand(BaseCommand):
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
-            help="Action Ã  exÃ©cuter",
+            help="Action à exécuter",
             required=True,
         )
 
@@ -66,21 +66,21 @@ class CalendarCommand(BaseCommand):
         test_parser = subparsers.add_parser(
             "test",
             help="Tester les endpoints Privacy API pour le calendrier",
-            add_help=True,
+            add_help=False,
         )
         test_parser.add_argument(
             "--network",
             action="store_true",
-            help="Scanner Ã©galement le rÃ©seau local pour trouver les API locales",
+            help="Scanner également le réseau local pour trouver les API locales",
         )
 
         # Action: list
         list_parser = subparsers.add_parser(
             "list",
-            help="Consulter les Ã©vÃ©nements (commande vocale)",
+            help="Consulter les événements (commande vocale)",
             description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=True,
+            add_help=False,
         )
         list_parser.add_argument(
             "-d",
@@ -88,7 +88,7 @@ class CalendarCommand(BaseCommand):
             type=str,
             required=False,
             metavar="DEVICE",
-            help="Appareil sur lequel exÃ©cuter la commande",
+            help="Appareil sur lequel exécuter la commande",
         )
         list_parser.add_argument(
             "--days",
@@ -101,74 +101,74 @@ class CalendarCommand(BaseCommand):
         # Action: add
         add_parser = subparsers.add_parser(
             "add",
-            help="Ajouter un Ã©vÃ©nement au calendrier",
+            help="Ajouter un événement au calendrier",
             description=ADD_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=True,
+            add_help=False,
         )
         add_parser.add_argument(
             "--title",
             type=str,
             required=True,
             metavar="TEXT",
-            help="Titre de l'Ã©vÃ©nement",
+            help="Titre de l'événement",
         )
         add_parser.add_argument(
             "--start",
             type=str,
             required=True,
             metavar="DATETIME",
-            help="Date/heure de dÃ©but (format: YYYY-MM-DD HH:MM)",
+            help="Date/heure de début (format: YYYY-MM-DD HH:MM)",
         )
         add_parser.add_argument(
             "--end",
             type=str,
             metavar="DATETIME",
-            help="Date/heure de fin (dÃ©faut: +1h)",
+            help="Date/heure de fin (défaut: +1h)",
         )
         add_parser.add_argument(
             "--location",
             type=str,
             metavar="TEXT",
-            help="Lieu de l'Ã©vÃ©nement",
+            help="Lieu de l'événement",
         )
         add_parser.add_argument(
             "--description",
             type=str,
             metavar="TEXT",
-            help="Description de l'Ã©vÃ©nement",
+            help="Description de l'événement",
         )
 
         # Action: delete
         delete_parser = subparsers.add_parser(
             "delete",
-            help="Supprimer un Ã©vÃ©nement",
+            help="Supprimer un événement",
             description=DELETE_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=True,
+            add_help=False,
         )
         delete_parser.add_argument(
             "--id",
             type=str,
             required=True,
             metavar="EVENT_ID",
-            help="ID de l'Ã©vÃ©nement Ã  supprimer",
+            help="ID de l'événement à supprimer",
         )
 
         # Action: info
         info_parser = subparsers.add_parser(
             "info",
-            help="Afficher les dÃ©tails d'un Ã©vÃ©nement",
+            help="Afficher les détails d'un événement",
             description=INFO_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=True,
+            add_help=False,
         )
         info_parser.add_argument(
             "--id",
             type=str,
             required=True,
             metavar="EVENT_ID",
-            help="ID de l'Ã©vÃ©nement",
+            help="ID de l'événement",
         )
         info_parser.add_argument(
             "--json",
@@ -179,18 +179,18 @@ class CalendarCommand(BaseCommand):
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
-        ExÃ©cute la commande calendar selon l'action.
+        Exécute la commande calendar selon l'action.
 
         Args:
-            args: Arguments parsÃ©s
+            args: Arguments parsés
 
         Returns:
-            True si succÃ¨s, False sinon
+            True si succès, False sinon
         """
         ctx = self.require_context()
-        # VÃ©rifier l'authentification
+        # Vérifier l'authentification
         if not ctx.auth:
-            self.error("Authentification requise. ExÃ©cutez 'alexa auth create' d'abord.")
+            self.error("Authentification requise. Exécutez 'alexa auth create' d'abord.")
             return False
 
         # Router vers la bonne action
@@ -216,7 +216,7 @@ class CalendarCommand(BaseCommand):
             args: Arguments
 
         Returns:
-            True si succÃ¨s
+            True si succès
         """
         try:
             ctx = self.require_context()
@@ -224,35 +224,35 @@ class CalendarCommand(BaseCommand):
                 self.error("CalendarManager non disponible")
                 return False
 
-            self.info("ðŸ” Test des endpoints Privacy API pour le calendrier...")
+            self.info("🔍 Test des endpoints Privacy API pour le calendrier...")
 
             results = self.call_with_breaker(ctx.calendar_manager.test_privacy_api_endpoints)
 
             if not results:
-                self.error("Aucun rÃ©sultat")
+                self.error("Aucun résultat")
                 return False
 
-            # Afficher les rÃ©sultats
-            self.info("\nðŸ“Š RÃ©sultats des tests Cloud API:")
+            # Afficher les résultats
+            self.info("\n📊 Résultats des tests Cloud API:")
             for endpoint, data in results.items():
                 if "error" in data:
-                    self.error(f"  âŒ {endpoint}: {data['error']}")
+                    self.error(f"  ❌ {endpoint}: {data['error']}")
                 else:
                     status = data.get("status", "?")
                     size = data.get("size", 0)
 
                     if status == 200:
-                        self.success(f"  âœ… {endpoint}: {status} ({size} bytes)")
+                        self.success(f"  ✅ {endpoint}: {status} ({size} bytes)")
                     elif status == 404:
-                        self.warning(f"  âš ï¸ {endpoint}: {status} (Not Found)")
+                        self.warning(f"  ⚠️ {endpoint}: {status} (Not Found)")
                     elif status == 403:
-                        self.warning(f"  âš ï¸ {endpoint}: {status} (Forbidden - Token manquant)")
+                        self.warning(f"  ⚠️ {endpoint}: {status} (Forbidden - Token manquant)")
                     else:
-                        self.warning(f"  âš ï¸ {endpoint}: {status}")
+                        self.warning(f"  ⚠️ {endpoint}: {status}")
 
-            # Test rÃ©seau local si demandÃ©
+            # Test réseau local si demandé
             if hasattr(args, "network") and args.network:
-                self.info("\nðŸŒ Scan du rÃ©seau local...")
+                self.info("\n🌐 Scan du réseau local...")
                 self._test_local_network()
 
             return True
@@ -263,63 +263,63 @@ class CalendarCommand(BaseCommand):
             return False
 
     def _test_local_network(self) -> None:
-        """Teste la dÃ©couverte rÃ©seau locale des appareils Alexa."""
+        """Teste la découverte réseau locale des appareils Alexa."""
         try:
             from utils.network_discovery import AlexaNetworkDiscovery
 
             discovery = AlexaNetworkDiscovery()
 
-            # DÃ©couverte UPnP/SSDP
-            self.info("  ðŸ” DÃ©couverte UPnP/SSDP...")
+            # Découverte UPnP/SSDP
+            self.info("  🔍 Découverte UPnP/SSDP...")
             devices = discovery.discover_upnp(timeout=5)
 
             if devices:
-                self.success(f"  âœ… {len(devices)} appareil(s) dÃ©couvert(s):")
+                self.success(f"  ✅ {len(devices)} appareil(s) découvert(s):")
                 for device in devices:
                     ip = device.get("ip", "?")
                     server = device.get("server", "Unknown")
-                    self.info(f"    ðŸ“± {ip} - {server}")
+                    self.info(f"    📱 {ip} - {server}")
 
                     # Scanner les ports du premier appareil
                     if device == devices[0]:
-                        self.info(f"\n  ðŸ” Scan des ports sur {ip}...")
+                        self.info(f"\n  🔍 Scan des ports sur {ip}...")
                         open_ports = discovery.scan_device_ports(ip)
                         ports_ouverts = [p for p, o in open_ports.items() if o]
 
                         if ports_ouverts:
-                            self.success(f"    âœ… Ports ouverts: {ports_ouverts}")
+                            self.success(f"    ✅ Ports ouverts: {ports_ouverts}")
 
                             # Tester l'API locale sur les ports HTTP
                             for port in [80, 8080, 443, 8443]:
                                 if port in ports_ouverts:
-                                    self.info(f"\n  ðŸ” Test API locale sur {ip}:{port}...")
+                                    self.info(f"\n  🔍 Test API locale sur {ip}:{port}...")
                                     api_results = discovery.test_local_api(ip, port)
 
                                     for endpoint, data in api_results.items():
                                         if "error" not in data and data.get("status") == 200:
-                                            self.success(f"    âœ… {endpoint}: {data['status']}")
+                                            self.success(f"    ✅ {endpoint}: {data['status']}")
                                         elif "error" not in data:
-                                            self.warning(f"    âš ï¸ {endpoint}: {data.get('status', '?')}")
+                                            self.warning(f"    ⚠️ {endpoint}: {data.get('status', '?')}")
                         else:
-                            self.warning("    âš ï¸ Aucun port HTTP/HTTPS ouvert")
+                            self.warning("    ⚠️ Aucun port HTTP/HTTPS ouvert")
             else:
-                self.warning("  âš ï¸ Aucun appareil Alexa dÃ©couvert via UPnP")
+                self.warning("  ⚠️ Aucun appareil Alexa découvert via UPnP")
 
         except ImportError:
-            self.error("  âŒ Module network_discovery non disponible")
+            self.error("  ❌ Module network_discovery non disponible")
         except Exception as e:
-            self.logger.exception("Erreur scan rÃ©seau local")
-            self.error(f"  âŒ Erreur: {e}")
+            self.logger.exception("Erreur scan réseau local")
+            self.error(f"  ❌ Erreur: {e}")
 
     def _list_events(self, args: argparse.Namespace) -> bool:
         """
-        Liste les Ã©vÃ©nements du calendrier via TextCommand.
+        Liste les événements du calendrier via TextCommand.
 
         Args:
             args: Arguments (days, device)
 
         Returns:
-            True si succÃ¨s
+            True si succès
         """
         try:
             ctx = self.require_context()
@@ -327,7 +327,7 @@ class CalendarCommand(BaseCommand):
                 self.error("CalendarManager non disponible")
                 return False
 
-            # DÃ©terminer la pÃ©riode
+            # Déterminer la période
             if args.days == 1:
                 timeframe = "aujourd'hui"
             elif args.days == 2:
@@ -337,7 +337,7 @@ class CalendarCommand(BaseCommand):
             else:
                 timeframe = "ce mois"
 
-            self.info(f"ðŸ“… Consultation des Ã©vÃ©nements {timeframe}...")
+            self.info(f"📅 Consultation des événements {timeframe}...")
 
             # Appel via TextCommand
             result = self.call_with_breaker(
@@ -347,11 +347,11 @@ class CalendarCommand(BaseCommand):
             )
 
             if result:
-                self.success(f"âœ… {result}")
-                self.info("ðŸ’¡ Alexa Ã©nonce vocalement vos Ã©vÃ©nements sur l'appareil")
+                self.success(f"✅ {result}")
+                self.info("💡 Alexa énonce vocalement vos événements sur l'appareil")
                 return True
             else:
-                self.error("Impossible de consulter les Ã©vÃ©nements")
+                self.error("Impossible de consulter les événements")
                 return False
 
         except Exception as e:
@@ -361,14 +361,14 @@ class CalendarCommand(BaseCommand):
 
     def _display_events_table(self, events: List[Dict[str, Any]]) -> None:
         """
-        Affiche les Ã©vÃ©nements sous forme de tableau.
+        Affiche les événements sous forme de tableau.
 
         Args:
-            events: Liste des Ã©vÃ©nements
+            events: Liste des événements
         """
-        self.success(f"âœ… {len(events)} Ã©vÃ©nement(s) trouvÃ©(s):\n")
+        self.success(f"✅ {len(events)} événement(s) trouvé(s):\n")
 
-        # PrÃ©parer les donnÃ©es
+        # Préparer les données
         table_data = []
         for event in events:
             event_id = event.get("id", "N/A")[:12] + "..."
@@ -380,23 +380,23 @@ class CalendarCommand(BaseCommand):
             start_str = start_dt.strftime("%d/%m/%Y %H:%M") if start_dt else "N/A"
 
             location = event.get("location", "-")
-            status = "ðŸŸ¢ Actif" if event.get("status") == "active" else "âšª Inactif"
+            status = "🟢 Actif" if event.get("status") == "active" else "⚪ Inactif"
 
             table_data.append([event_id, title[:30], start_str, location[:20], status])
 
         # Afficher le tableau
-        table = self.format_table(table_data, ["ID", "Titre", "DÃ©but", "Lieu", "Statut"])
+        table = self.format_table(table_data, ["ID", "Titre", "Début", "Lieu", "Statut"])
         print(table)
 
     def _add_event(self, args: argparse.Namespace) -> bool:
         """
-        Ajoute un Ã©vÃ©nement au calendrier.
+        Ajoute un événement au calendrier.
 
         Args:
             args: Arguments (title, start, end, location, description)
 
         Returns:
-            True si succÃ¨s
+            True si succès
         """
         try:
             ctx = self.require_context()
@@ -408,7 +408,7 @@ class CalendarCommand(BaseCommand):
             start_time = self._parse_datetime(args.start)
             if not start_time:
                 self.error(f"Format de date invalide: {args.start}")
-                self.info("Formats acceptÃ©s: YYYY-MM-DD HH:MM ou DD/MM/YYYY HH:MM")
+                self.info("Formats acceptés: YYYY-MM-DD HH:MM ou DD/MM/YYYY HH:MM")
                 return False
 
             end_time = None
@@ -418,7 +418,7 @@ class CalendarCommand(BaseCommand):
                     self.error(f"Format de date invalide: {args.end}")
                     return False
 
-            self.info(f"âž• Ajout de l'Ã©vÃ©nement '{args.title}'...")
+            self.info(f"➕ Ajout de l'événement '{args.title}'...")
 
             # Appel API
             event = self.call_with_breaker(
@@ -431,27 +431,27 @@ class CalendarCommand(BaseCommand):
             )
 
             if event:
-                self.success(f"âœ… Ã‰vÃ©nement '{args.title}' crÃ©Ã© avec succÃ¨s!")
+                self.success(f"✅ Événement '{args.title}' créé avec succès!")
                 self.info(f"ID: {event.get('id', 'N/A')}")
                 return True
             else:
-                self.error("Ã‰chec de la crÃ©ation de l'Ã©vÃ©nement")
+                self.error("Échec de la création de l'événement")
                 return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de l'ajout de l'Ã©vÃ©nement")
+            self.logger.exception("Erreur lors de l'ajout de l'événement")
             self.error(f"Erreur: {e}")
             return False
 
     def _delete_event(self, args: argparse.Namespace) -> bool:
         """
-        Supprime un Ã©vÃ©nement du calendrier.
+        Supprime un événement du calendrier.
 
         Args:
             args: Arguments (id)
 
         Returns:
-            True si succÃ¨s
+            True si succès
         """
         try:
             ctx = self.require_context()
@@ -459,31 +459,31 @@ class CalendarCommand(BaseCommand):
                 self.error("CalendarManager non disponible")
                 return False
 
-            self.info(f"ðŸ—‘ï¸ Suppression de l'Ã©vÃ©nement {args.id}...")
+            self.info(f"🗑️ Suppression de l'événement {args.id}...")
 
             success = self.call_with_breaker(ctx.calendar_manager.delete_event, event_id=args.id)
 
             if success:
-                self.success("âœ… Ã‰vÃ©nement supprimÃ© avec succÃ¨s!")
+                self.success("✅ Événement supprimé avec succès!")
                 return True
             else:
-                self.error("Ã‰chec de la suppression")
+                self.error("Échec de la suppression")
                 return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la suppression de l'Ã©vÃ©nement")
+            self.logger.exception("Erreur lors de la suppression de l'événement")
             self.error(f"Erreur: {e}")
             return False
 
     def _event_info(self, args: argparse.Namespace) -> bool:
         """
-        Affiche les dÃ©tails d'un Ã©vÃ©nement.
+        Affiche les détails d'un événement.
 
         Args:
             args: Arguments (id, json_output)
 
         Returns:
-            True si succÃ¨s
+            True si succès
         """
         try:
             ctx = self.require_context()
@@ -491,12 +491,12 @@ class CalendarCommand(BaseCommand):
                 self.error("CalendarManager non disponible")
                 return False
 
-            self.info(f"â„¹ï¸ RÃ©cupÃ©ration de l'Ã©vÃ©nement {args.id}...")
+            self.info(f"ℹ️ Récupération de l'événement {args.id}...")
 
             event = self.call_with_breaker(ctx.calendar_manager.get_event_details, event_id=args.id)
 
             if not event:
-                self.error("Ã‰vÃ©nement non trouvÃ©")
+                self.error("Événement non trouvé")
                 return False
 
             # Affichage
@@ -508,18 +508,18 @@ class CalendarCommand(BaseCommand):
             return True
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la rÃ©cupÃ©ration des dÃ©tails")
+            self.logger.exception("Erreur lors de la récupération des détails")
             self.error(f"Erreur: {e}")
             return False
 
     def _display_event_details(self, event: Dict[str, Any]) -> None:
         """
-        Affiche les dÃ©tails d'un Ã©vÃ©nement de maniÃ¨re formatÃ©e.
+        Affiche les détails d'un événement de manière formatée.
 
         Args:
-            event: DonnÃ©es de l'Ã©vÃ©nement
+            event: Données de l'événement
         """
-        self.success("â„¹ï¸ DÃ©tails de l'Ã©vÃ©nement:\n")
+        self.success("ℹ️ Détails de l'événement:\n")
 
         print(f"  ID:          {event.get('id', 'N/A')}")
         print(f"  Titre:       {event.get('title', 'Sans titre')}")
@@ -527,7 +527,7 @@ class CalendarCommand(BaseCommand):
         # Dates
         start_ms = event.get("startTime", 0)
         start_dt = datetime.fromtimestamp(start_ms / 1000) if start_ms else None
-        print(f"  DÃ©but:       {start_dt.strftime('%d/%m/%Y %H:%M') if start_dt else 'N/A'}")
+        print(f"  Début:       {start_dt.strftime('%d/%m/%Y %H:%M') if start_dt else 'N/A'}")
 
         end_ms = event.get("endTime", 0)
         end_dt = datetime.fromtimestamp(end_ms / 1000) if end_ms else None
@@ -540,10 +540,10 @@ class CalendarCommand(BaseCommand):
 
     def _parse_datetime(self, date_str: str) -> Optional[datetime]:
         """
-        Parse une chaÃ®ne de date/heure.
+        Parse une chaîne de date/heure.
 
         Args:
-            date_str: ChaÃ®ne au format YYYY-MM-DD HH:MM ou DD/MM/YYYY HH:MM
+            date_str: Chaîne au format YYYY-MM-DD HH:MM ou DD/MM/YYYY HH:MM
 
         Returns:
             Objet datetime ou None si invalide
@@ -560,4 +560,3 @@ class CalendarCommand(BaseCommand):
                 continue
 
         return None
-

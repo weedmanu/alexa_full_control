@@ -15,12 +15,6 @@ from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.device_help import (
-    DEVICE_DESCRIPTION,
-    INFO_HELP,
-    LIST_HELP,
-    VOLUME_HELP,
-)
 from data.device_family_mapping import get_device_display_name
 
 
@@ -52,8 +46,8 @@ class DeviceCommand(BaseCommand):
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
-        # Description simplifiée (uniquement Usage)
-        parser.description = DEVICE_DESCRIPTION
+        # Description simplifiée
+        parser.description = "Gérer les appareils Alexa connectés"
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -66,7 +60,6 @@ class DeviceCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister tous les appareils Alexa",
-            description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -86,7 +79,6 @@ class DeviceCommand(BaseCommand):
         info_parser = subparsers.add_parser(
             "info",
             help="Informations détaillées sur un appareil",
-            description=INFO_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -104,7 +96,6 @@ class DeviceCommand(BaseCommand):
         volume_parser = subparsers.add_parser(
             "volume",
             help="Gérer le volume d'un appareil",
-            description=VOLUME_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
