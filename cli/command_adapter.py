@@ -76,6 +76,7 @@ class CommandAdapter:
     def create_manager_command(
         self,
         command_class: Type[ManagerCommand],
+        command_name: Optional[str] = None,
         args: Optional[Dict[str, Any]] = None
     ) -> ManagerCommand:
         """
@@ -83,15 +84,15 @@ class CommandAdapter:
         
         Args:
             command_class: ManagerCommand subclass
-            args: Optional arguments dict
+            command_name: Name of the command (defaults to class name)
+            args: Optional arguments dict (not directly assigned to command)
             
         Returns:
             Initialized ManagerCommand instance
         """
         try:
-            command = command_class(self.di_container)
-            if args:
-                command.args = args
+            name = command_name or command_class.__name__.lower()
+            command = command_class(name, self.di_container)
             return command
         except Exception as e:
             self.logger.error(f"Failed to create command {command_class.__name__}: {e}")

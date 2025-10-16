@@ -202,7 +202,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
             data = response
 
             # Chercher le volume pour le device serial spécifié
-            if "volumes" in data:
+            if data and "volumes" in data:
                 for volume_info in data["volumes"]:
                     if volume_info.get("dsn") == device_serial:
                         return cast(int | None, volume_info.get("speakerVolume"))
@@ -221,16 +221,13 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
         Customer ID ou None si erreur
         """
         try:
-            url = f"https://{self.config.alexa_domain}/api/bootstrap?version=0"
-            response = self.breaker.call(
-                self.http_client.get,
-                url,
+            response = self._api_call("get", r"/api/bootstrap?version=0",
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )
             data = response
 
-            customer_id = data.get("authentication", {}).get("customerId")
+            customer_id = data.get("authentication", {}).get("customerId") if data else None
             if customer_id:
                 logger.debug(f"Customer ID: {customer_id}")
                 return cast(str | None, customer_id)

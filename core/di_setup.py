@@ -5,7 +5,7 @@ Provides utilities for setting up and managing the dependency injection containe
 in different contexts (CLI, tests, API, etc.).
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from loguru import logger
 
 from core.di_container import DIContainer, setup_di_container, reset_di_container, get_di_container
@@ -26,19 +26,19 @@ class DISetup:
         Setup DI container for CLI usage.
 
         Args:
-            auth_file: Path to auth credentials file
-            config_file: Path to configuration file
+            auth_file: Path to auth credentials file (Note: AlexaAuth loads from default dir)
+            config_file: Path to configuration file (Note: Config loads from default dir)
 
         Returns:
             Configured DIContainer
         """
         logger.info("Setting up DI Container for CLI")
 
-        # Load configuration
-        config = Config.from_file(config_file) if config_file else Config()
+        # Load configuration (Config reads from its default data directory)
+        config = Config()
 
-        # Load or create auth
-        auth = AlexaAuth.from_file(auth_file) if auth_file else AlexaAuth()
+        # Load or create auth (AlexaAuth reads from its default data directory)
+        auth = AlexaAuth()
 
         # Setup container
         container = setup_di_container(auth, config)

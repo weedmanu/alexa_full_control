@@ -36,7 +36,7 @@ class BluetoothManager(BaseManager[Dict[str, Any]]):
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )
-            return cast(List[Dict[Any, Any]], response.get("bluetoothStates", []))
+            return cast(List[Dict[Any, Any]], response.get("bluetoothStates", []) if response else [])
         except Exception as e:
             logger.error(f"Erreur récupération Bluetooth: {e}")
             return []
