@@ -7,19 +7,20 @@ Ce module gère les routines Alexa (automation scenarios) avec:
 - Cache automatique via CacheService
 - Circuit breaker pour résilience
 - Thread-safety complet
+
+Now inherits from BaseManager to eliminate code duplication.
 """
 
-import threading
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
-from core.circuit_breaker import CircuitBreaker
+from core.base_manager import BaseManager, create_http_client_from_auth
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 
 
-class RoutineManager:
+class RoutineManager(BaseManager[Dict[str, Any]]):
     """
     Gestionnaire thread-safe pour routines Alexa.
 
@@ -30,7 +31,7 @@ class RoutineManager:
         - State machine pour vérification état système
 
     Thread-safety:
-        - RLock pour opérations atomiques
+        - RLock pour opérations atomiques (hérité de BaseManager)
         - Cache thread-safe via CacheService
 
     Example:
@@ -55,15 +56,20 @@ class RoutineManager:
             state_machine: Machine d'état système (défaut: nouvelle instance)
             cache_service: Service cache (défaut: nouvelle instance)
         """
+        # Créer le client HTTP depuis auth
+        http_client = create_http_client_from_auth(auth)
+
+        # Initialiser BaseManager (hérite: breaker, _lock, cache_service, _api_call, headers)
+        super().__init__(
+            http_client=http_client,
+            config=config,
+            state_machine=state_machine or AlexaStateMachine(),
+            cache_service=cache_service,
+            cache_ttl=300,  # 5 minutes mémoire
+        )
+
+        # Attributs spécifiques à RoutineManager
         self.auth = auth
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
-        self.cache_service = cache_service or CacheService()
-        self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
-        self._lock = threading.RLock()
-        self._routines_cache: Optional[List[Dict[str, Any]]] = None
-        self._cache_timestamp: float = 0
-        self._cache_ttl: int = 300  # 5 minutes mémoire
 
         logger.info("RoutineManager initialisé (cache 5min mémoire + 1h disque)")
 
@@ -132,20 +138,13 @@ class RoutineManager:
                 return []
 
             # Endpoint API routines (v2 automations)
-            url = f"https://{self.config.alexa_domain}/api/behaviors/v2/automations"
+            response_data = self._api_call("get", "/api/behaviors/v2/automations", timeout=15)
 
-            # Use unified http_client when available; ensure non-None for mypy
-            http_client: Any = getattr(self, "http_client", None) or self.auth
-            response = self.breaker.call(
-                http_client.get,
-                url,
-                headers={"csrf": getattr(http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=15,
-            )
-            response.raise_for_status()
+            if not response_data:
+                logger.warning("API returned empty response for routines")
+                return []
 
-            data = response.json()
-            routines = data if isinstance(data, list) else []
+            routines = response_data if isinstance(response_data, list) else []
 
             # Sauvegarde cache double
             self._update_memory_cache(routines)
