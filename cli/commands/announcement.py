@@ -1,4 +1,4 @@
-"""
+﻿"""
 Commandes de gestion des annonces Alexa.
 
 Ce module gère toutes les opérations liées aux annonces:
@@ -13,16 +13,10 @@ Date: 7 octobre 2025
 
 import argparse
 import json
+from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.announcement_help import (
-    ANNOUNCE_DESCRIPTION,
-    CLEAR_HELP,
-    LIST_HELP,
-    READ_HELP,
-    SEND_HELP,
-)
 
 
 class AnnouncementCommand(BaseCommand):
@@ -58,8 +52,8 @@ class AnnouncementCommand(BaseCommand):
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
-        # Description centralisée
-        parser.description = ANNOUNCE_DESCRIPTION
+        # Description simplifiée
+        parser.description = "Gérer les annonces audio sur les appareils Alexa"
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -72,7 +66,6 @@ class AnnouncementCommand(BaseCommand):
         send_parser = subparsers.add_parser(
             "send",
             help="Envoyer une annonce",
-            description=SEND_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -91,7 +84,6 @@ class AnnouncementCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister les annonces",
-            description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -108,7 +100,6 @@ class AnnouncementCommand(BaseCommand):
         clear_parser = subparsers.add_parser(
             "clear",
             help="Supprimer annonces",
-            description=CLEAR_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -119,7 +110,6 @@ class AnnouncementCommand(BaseCommand):
         read_parser = subparsers.add_parser(
             "read",
             help="Marquer comme lu",
-            description=READ_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -271,7 +261,7 @@ class AnnouncementCommand(BaseCommand):
     # HELPERS
     # ========================================================================
 
-    def _display_announcements(self, announcements: list) -> None:
+    def _display_announcements(self, announcements: List[Dict[str, Any]]) -> None:
         """Affiche les annonces."""
         print(f"\n� {len(announcements)} annonce(s):\n")
 

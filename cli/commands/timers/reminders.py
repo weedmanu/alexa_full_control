@@ -1,4 +1,4 @@
-"""
+﻿"""
 Gestion des rappels Alexa.
 
 Auteur: M@nu
@@ -10,12 +10,6 @@ from typing import Any, Dict, List
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand
-from cli.help_texts.reminder_help import (
-    COMPLETE_HELP,
-    CREATE_HELP,
-    DELETE_HELP,
-    LIST_HELP,
-)
 
 
 class RemindersCommands(TimeSubCommand):
@@ -244,7 +238,7 @@ class RemindersCommands(TimeSubCommand):
         create_parser = reminder_subparsers.add_parser(
             "create",
             help="Créer un rappel",
-            description=CREATE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         create_parser.add_argument(
@@ -273,7 +267,7 @@ class RemindersCommands(TimeSubCommand):
         list_parser = reminder_subparsers.add_parser(
             "list",
             help="Lister les rappels",
-            description=LIST_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         list_parser.add_argument(
@@ -288,7 +282,7 @@ class RemindersCommands(TimeSubCommand):
         delete_parser = reminder_subparsers.add_parser(
             "delete",
             help="Supprimer un rappel",
-            description=DELETE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         delete_parser.add_argument(
@@ -303,7 +297,7 @@ class RemindersCommands(TimeSubCommand):
         complete_parser = reminder_subparsers.add_parser(
             "complete",
             help="Marquer un rappel comme terminé",
-            description=COMPLETE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         complete_parser.add_argument(

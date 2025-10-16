@@ -1,4 +1,4 @@
-"""
+﻿"""
 Commandes de contrôle des appareils Smart Home génériques.
 
 Ce module gère le contrôle des appareils intelligents connectés:
@@ -19,15 +19,16 @@ from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.smarthome_help import (
-    CONTROL_HELP,
-    INFO_HELP,
-    LIST_HELP,
-    LOCK_HELP,
-    SMARTHOME_DESCRIPTION,
-    STATUS_HELP,
-    UNLOCK_HELP,
-)
+
+
+# Constantes de description simplifiées
+SMARTHOME_DESCRIPTION = "Contrôler les appareils Smart Home"
+CONTROL_HELP = "Contrôler un appareil (on/off)"
+INFO_HELP = "Informations détaillées sur un appareil"
+LIST_HELP = "Lister tous les appareils"
+LOCK_HELP = "Verrouiller une serrure"
+STATUS_HELP = "État des appareils"
+UNLOCK_HELP = "Déverrouiller une serrure"
 
 
 class SmartHomeCommand(BaseCommand):

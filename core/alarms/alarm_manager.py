@@ -1,4 +1,4 @@
-"""
+﻿"""
 Gestionnaire d'alarmes Alexa.
 
 Ce module fournit une interface thread-safe pour créer, lister,
@@ -121,71 +121,36 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
     ) -> Optional[Dict[str, Any]]:
         """
         Crée une nouvelle alarme sur un appareil Alexa.
-
-        Args:
-            device_serial: Numéro de série de l'appareil
-            device_type: Type d'appareil
-            alarm_time: Heure de l'alarme (format ISO 8601)
-            repeat: Pattern de répétition (ONCE, DAILY, WEEKLY, etc.)
-            label: Étiquette de l'alarme
-            sound: ID du son d'alarme (optionnel)
-
-        Returns:
-            Dictionnaire avec les détails de l'alarme créée, None en cas d'erreur
         """
         with self._lock:
             if not self._check_connection():
                 return None
 
-            try:
-                # Construire explicitement le pattern pour que mypy infère bien le type
-                pattern: List[Dict[str, Any]] = [{"type": "alarm", "time": alarm_time, "recurrence": repeat}]
+            # Construire le payload
+            pattern: List[Dict[str, Any]] = [{"type": "alarm", "time": alarm_time, "recurrence": repeat}]
 
-                if label:
-                    pattern[0]["label"] = label
+            if label:
+                pattern[0]["label"] = label
 
-                if sound:
-                    pattern[0]["sound"] = {"id": sound}
+            if sound:
+                pattern[0]["sound"] = {"id": sound}
 
-                payload: Dict[str, Any] = {
-                    "deviceSerialNumber": device_serial,
-                    "deviceType": device_type,
-                    "pattern": pattern,
-                }
+            payload: Dict[str, Any] = {
+                "deviceSerialNumber": device_serial,
+                "deviceType": device_type,
+                "pattern": pattern,
+            }
 
-                logger.debug(f"Création alarme: {payload}")
+            logger.debug(f"Création alarme: {payload}")
 
-                response = self.breaker.call(
-                    self.http_client.post,
-                    f"https://{self.config.alexa_domain}/api/alarms",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
-                    json=payload,
-                    timeout=10,
-                )
-                response.raise_for_status()
+            result = self._api_call("post", "/api/alarms", json=payload)
 
-                from typing import cast
-
-                result = cast(Dict[str, Any], response.json())
+            if result is not None:
                 logger.success(f"Alarme créée pour {device_serial}")
-
-                # Invalider le cache
-                self._alarms_cache = None
-
+                self._invalidate_cache()
                 return result
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la création de l'alarme: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return None
-            except Exception as e:
-                logger.error(f"Erreur inattendue lors de la création de l'alarme: {e}")
-                return None
+            return None
 
     def list_alarms(self, device_serial: Optional[str] = None) -> List[Dict[str, Any]]:
         """
@@ -233,63 +198,33 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
     def _refresh_alarms_cache(self) -> List[Dict[str, Any]]:
         """
         Rafraîchit le cache des alarmes en effectuant un appel API.
-
-        Les alarmes sont récupérées depuis /api/notifications et filtrées par type "Alarm".
-
-        Returns:
-            Liste des alarmes ou liste vide en cas d'erreur
         """
-        try:
-            logger.debug("🌐 Récupération de toutes les alarmes depuis l'API notifications")
+        logger.debug("🌐 Récupération de toutes les alarmes depuis l'API notifications")
 
-            response = self.breaker.call(
-                self.http_client.get,
-                f"https://{self.config.alexa_domain}/api/notifications",
-                headers={
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "csrf": getattr(self.http_client, "csrf", None),
-                },
-                timeout=10,
-            )
-            response.raise_for_status()
+        result = self._api_call("get", "/api/notifications")
 
-            # Gérer le cas où la réponse est vide
-            if not response.content.strip():
-                logger.info("Aucune alarme trouvée (réponse vide)")
-                alarms = []
-            else:
-                from typing import cast
-
-                data = cast(Dict[str, Any], response.json())
-                # Les alarmes sont dans la liste des notifications
-                notifications = data.get("notifications", [])
-
-                # Filtrer pour ne garder que les alarmes (type="Alarm")
-                alarms = [notification for notification in notifications if notification.get("type") == "Alarm"]
-
-            # Mise à jour cache mémoire (Niveau 1)
-            self._alarms_cache = alarms
-            self._cache_timestamp = time.time()
-
-            # Mise à jour cache disque (Niveau 2) - TTL 5min
-            self.cache_service.set("alarms", {"alarms": alarms}, ttl_seconds=300)
-
-            logger.info(f"✅ {len(alarms)} alarme(s) récupérée(s) et mise(s) en cache (mémoire + disque)")
-            return alarms
-
-        except ValueError as e:
-            # Erreur de parsing JSON (réponse vide ou malformée)
-            logger.warning(f"Réponse JSON invalide pour les alarmes: {e}")
+        if result is None:
             return []
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Erreur lors de la récupération des alarmes: {e}")
-            if self.breaker.state.name == "OPEN":
-                self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-            return []
-        except Exception as e:
-            logger.error(f"Erreur inattendue lors de la récupération des alarmes: {e}")
-            return []
+
+        # Gérer le cas où la réponse est vide
+        if not result:
+            logger.info("Aucune alarme trouvée (réponse vide)")
+            alarms = []
+        else:
+            # Les alarmes sont dans la liste des notifications
+            notifications = result.get("notifications", [])
+            # Filtrer pour ne garder que les alarmes (type="Alarm")
+            alarms = [notification for notification in notifications if notification.get("type") == "Alarm"]
+
+        # Mise à jour cache mémoire (Niveau 1)
+        self._alarms_cache = alarms
+        self._cache_timestamp = time.time()
+
+        # Mise à jour cache disque (Niveau 2) - TTL 5min
+        self.cache_service.set("alarms", {"alarms": alarms}, ttl_seconds=300)
+
+        logger.info(f"✅ {len(alarms)} alarme(s) récupérée(s) et mise(s) en cache (mémoire + disque)")
+        return alarms
 
     def delete_alarm(self, device_serial: str, device_type: str, alarm_id: str) -> bool:
         """
@@ -339,111 +274,51 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
     def update_alarm(self, device_serial: str, device_type: str, alarm_id: str, **updates: Any) -> bool:
         """
         Modifie une alarme existante.
-
-        Args:
-            device_serial: Numéro de série de l'appareil
-            device_type: Type d'appareil
-            alarm_id: ID de l'alarme à modifier
-            updates: Dictionnaire des modifications (time, label, repeat, sound)
-
-        Returns:
-            True si succès, False sinon
         """
         with self._lock:
             if not self._check_connection():
                 return False
 
-            try:
-                payload = {}
+            payload = {}
 
-                if "time" in updates:
-                    payload["time"] = updates["time"]
-                if "label" in updates:
-                    payload["label"] = updates["label"]
-                if "repeat" in updates:
-                    payload["recurrence"] = updates["repeat"]
-                if "sound" in updates:
-                    payload["sound"] = {"id": updates["sound"]}
+            if "time" in updates:
+                payload["time"] = updates["time"]
+            if "label" in updates:
+                payload["label"] = updates["label"]
+            if "repeat" in updates:
+                payload["recurrence"] = updates["repeat"]
+            if "sound" in updates:
+                payload["sound"] = {"id": updates["sound"]}
 
-                if not payload:
-                    logger.warning("Aucune modification spécifiée pour l'alarme")
-                    return False
+            if not payload:
+                logger.warning("Aucune modification spécifiée pour l'alarme")
+                return False
 
-                response = self.breaker.call(
-                    self.http_client.put,
-                    f"https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
-                    json=payload,
-                    timeout=10,
-                )
-                response.raise_for_status()
+            result = self._api_call("put", f"/api/alarms/{alarm_id}", json=payload)
 
+            if result is not None:
                 logger.success(f"Alarme {alarm_id} modifiée")
-
-                # Invalider le cache
-                self._alarms_cache = None
-
+                self._invalidate_cache()
                 return True
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la modification de l'alarme: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return False
-            except Exception as e:
-                logger.error(f"Erreur inattendue lors de la modification de l'alarme: {e}")
-                return False
+            return False
 
     def set_alarm_enabled(self, device_serial: str, device_type: str, alarm_id: str, enabled: bool) -> bool:
         """
         Active ou désactive une alarme.
-
-        Args:
-            device_serial: Numéro de série de l'appareil
-            device_type: Type d'appareil
-            alarm_id: ID de l'alarme
-            enabled: True pour activer, False pour désactiver
-
-        Returns:
-            True si succès, False sinon
         """
         with self._lock:
             if not self._check_connection():
                 return False
 
-            try:
-                payload = {"enabled": enabled}
+            payload = {"enabled": enabled}
 
-                response = self.breaker.call(
-                    self.http_client.put,
-                    f"https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
-                    json=payload,
-                    timeout=10,
-                )
-                response.raise_for_status()
+            result = self._api_call("put", f"/api/alarms/{alarm_id}", json=payload)
 
+            if result is not None:
                 action = "activée" if enabled else "désactivée"
                 logger.success(f"Alarme {alarm_id} {action}")
-
-                # Invalider le cache
-                self._alarms_cache = None
-
+                self._invalidate_cache()
                 return True
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de l'activation/désactivation de l'alarme: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return False
-            except Exception as e:
-                logger.error(f"Erreur inattendue lors de l'activation/désactivation de l'alarme: {e}")
-                return False
+            return False

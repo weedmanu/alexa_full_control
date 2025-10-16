@@ -11,13 +11,6 @@ from typing import Any, Dict, List, Optional
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand
-from cli.help_texts.timers_help import (
-    TIMER_CANCEL_HELP,
-    TIMER_CREATE_HELP,
-    TIMER_LIST_HELP,
-    TIMER_PAUSE_HELP,
-    TIMER_RESUME_HELP,
-)
 
 
 class TimersCommands(TimeSubCommand):
@@ -307,9 +300,15 @@ class TimersCommands(TimeSubCommand):
         timer_parser = subparsers.add_parser(
             "countdown",
             help="Gérer les minuteurs",
-            description="Créer et gérer les minuteurs sur Amazon Alexa",
             formatter_class=UniversalHelpFormatter,
+            add_help=False,
         )
+
+        # Supprimer la ligne d'usage automatique
+        timer_parser.usage = argparse.SUPPRESS
+
+        # Description simplifiée
+        timer_parser.description = "Gérer les minuteurs sur les appareils Alexa"
 
         timer_subparsers = timer_parser.add_subparsers(
             dest="action",
@@ -323,8 +322,8 @@ class TimersCommands(TimeSubCommand):
         create_parser = timer_subparsers.add_parser(
             "create",
             help="Créer un minuteur",
-            description=TIMER_CREATE_HELP,
             formatter_class=UniversalHelpFormatter,
+            add_help=False,
         )
         create_parser.add_argument(
             "-d",
@@ -347,8 +346,8 @@ class TimersCommands(TimeSubCommand):
         list_parser = timer_subparsers.add_parser(
             "list",
             help="Lister les minuteurs",
-            description=TIMER_LIST_HELP,
             formatter_class=UniversalHelpFormatter,
+            add_help=False,
         )
         list_parser.add_argument(
             "-d",
@@ -363,8 +362,8 @@ class TimersCommands(TimeSubCommand):
         cancel_parser = timer_subparsers.add_parser(
             "cancel",
             help="Annuler un minuteur",
-            description=TIMER_CANCEL_HELP,
             formatter_class=UniversalHelpFormatter,
+            add_help=False,
         )
         cancel_parser.add_argument(
             "-d",
@@ -382,8 +381,8 @@ class TimersCommands(TimeSubCommand):
         pause_parser = timer_subparsers.add_parser(
             "pause",
             help="Mettre en pause un minuteur",
-            description=TIMER_PAUSE_HELP,
             formatter_class=UniversalHelpFormatter,
+            add_help=False,
         )
         pause_parser.add_argument(
             "-d",
@@ -399,8 +398,8 @@ class TimersCommands(TimeSubCommand):
         resume_parser = timer_subparsers.add_parser(
             "resume",
             help="Reprendre un minuteur",
-            description=TIMER_RESUME_HELP,
             formatter_class=UniversalHelpFormatter,
+            add_help=False,
         )
         resume_parser.add_argument(
             "-d",

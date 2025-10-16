@@ -1,4 +1,4 @@
-"""
+﻿"""
 Commandes de gestion de bibliothèque musicale.
 
 Gère: library (imported, purchased, playlists, prime-playlists, prime-stations)
@@ -14,7 +14,12 @@ import json
 
 from cli.command_parser import ActionHelpFormatter
 from cli.commands.music.base import MusicSubCommand
-from cli.help_texts.music_help import LIBRARY_HELP, PLAYLIST_HELP, TRACK_HELP
+
+
+# Constantes de description simplifiées
+LIBRARY_HELP = "Gérer la bibliothèque musicale"
+PLAYLIST_HELP = "Gérer les playlists"
+TRACK_HELP = "Gérer les pistes musicales"
 
 
 class LibraryCommands(MusicSubCommand):

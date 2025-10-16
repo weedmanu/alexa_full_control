@@ -12,14 +12,6 @@ from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.routine_help import (
-    DISABLE_HELP,
-    ENABLE_HELP,
-    EXECUTE_HELP,
-    INFO_HELP,
-    LIST_HELP,
-    ROUTINE_DESCRIPTION,
-)
 
 
 class RoutineCommand(BaseCommand):
@@ -64,8 +56,8 @@ class RoutineCommand(BaseCommand):
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
-        # Description centralisée
-        parser.description = ROUTINE_DESCRIPTION
+        # Description simplifiée
+        parser.description = "Gérer les routines Alexa"
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -78,7 +70,6 @@ class RoutineCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister routines",
-            description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -88,7 +79,6 @@ class RoutineCommand(BaseCommand):
         info_parser = subparsers.add_parser(
             "info",
             help="Détails routine",
-            description=INFO_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -105,7 +95,6 @@ class RoutineCommand(BaseCommand):
         exec_parser = subparsers.add_parser(
             "execute",
             help="Exécuter routine",
-            description=EXECUTE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -128,7 +117,6 @@ class RoutineCommand(BaseCommand):
         enable_parser = subparsers.add_parser(
             "enable",
             help="Activer routine",
-            description=ENABLE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -151,7 +139,6 @@ class RoutineCommand(BaseCommand):
         disable_parser = subparsers.add_parser(
             "disable",
             help="Désactiver routine",
-            description=DISABLE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )

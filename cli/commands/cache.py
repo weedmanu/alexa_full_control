@@ -1,4 +1,4 @@
-"""Commande de gestion du cache."""
+﻿"""Commande de gestion du cache."""
 
 import json
 from argparse import ArgumentParser, Namespace
@@ -9,13 +9,13 @@ from loguru import logger
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from cli.context import Context
-from cli.help_texts.cache_help import (
-    CACHE_DESCRIPTION,
-    CLEAR_HELP,
-    REFRESH_HELP,
-    SHOW_HELP,
-    STATUS_HELP,
-)
+
+# Constantes de description simplifiées
+CACHE_DESCRIPTION = "Gérer le cache de la CLI"
+CLEAR_HELP = "Vider le cache"
+REFRESH_HELP = "Actualiser le cache"
+SHOW_HELP = "Afficher le contenu du cache"
+STATUS_HELP = "Afficher l'état du cache"
 
 
 class CacheCommand(BaseCommand):

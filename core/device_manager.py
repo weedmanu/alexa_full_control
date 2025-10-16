@@ -16,12 +16,11 @@ Date: 7 octobre 2025
 """
 
 import time
-from threading import RLock
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from loguru import logger
 
-from core.base_manager import create_http_client_from_auth
+from core.base_manager import BaseManager, create_http_client_from_auth
 from services.cache_service import CacheService
 
 if TYPE_CHECKING:
@@ -29,7 +28,7 @@ if TYPE_CHECKING:
     from core.state_machine import AlexaStateMachine
 
 
-class DeviceManager:
+class DeviceManager(BaseManager[Dict[str, Any]]):
     """
     Gestionnaire des appareils Alexa.
 
@@ -76,21 +75,23 @@ class DeviceManager:
         if not state_machine:
             raise ValueError("state_machine ne peut pas être None")
 
-        self.auth: AlexaAuth = auth
-        self.state_machine: AlexaStateMachine = state_machine
-        # Normalize http client (wrap legacy auth.session if needed)
-        try:
-            self.http_client = create_http_client_from_auth(self.auth)
-        except Exception:
-            # Fallback: keep auth object as-is (duck-typed)
-            self.http_client = self.auth
-        self._cache_ttl = cache_ttl
-        self._cache_service = cache_service or CacheService()
+        # Créer le client HTTP depuis auth
+        http_client = create_http_client_from_auth(auth)
 
-        # Cache mémoire thread-safe (Niveau 1)
-        self._devices_cache: Optional[List[Dict[str, Any]]] = None
-        self._cache_timestamp: float = 0.0
-        self._lock: RLock = RLock()
+        # Initialiser BaseManager
+        super().__init__(
+            http_client=http_client,
+            config=auth,  # auth contient amazon_domain
+            state_machine=state_machine,
+            cache_service=cache_service,
+            cache_ttl=cache_ttl,
+        )
+
+        # Attributs spécifiques à DeviceManager
+        self.auth: AlexaAuth = auth
+
+        # Pré-calcul de l'URL de base pour optimisation
+        self._base_url = f"https://{self.config.amazon_domain}"
 
         logger.debug(f"DeviceManager initialisé (cache_ttl={cache_ttl}s)")
 
@@ -120,19 +121,19 @@ class DeviceManager:
         """
         with self._lock:
             # Niveau 1 : Cache mémoire (avec TTL)
-            if not force_refresh and self._is_cache_valid() and self._devices_cache is not None:
-                logger.debug(f"✅ Cache mémoire: {len(self._devices_cache)} appareils")
-                return self._devices_cache
+            if not force_refresh and self._is_cache_valid() and self._cache is not None:
+                logger.debug(f"✅ Cache mémoire: {len(self._cache)} appareils")
+                return self._cache
 
             # Niveau 2 : Cache disque (SANS TTL - toujours valide si présent)
-            # Utilisé uniquement si cache mémoire expiré/absent
-            if not force_refresh:
-                disk_cache = self._cache_service.get("devices", ignore_ttl=True)
+            # Utilisé uniquement si cache mémoire expiré/absent ET connexion valide
+            if not force_refresh and self._check_connection():
+                disk_cache = self.cache_service.get("devices", ignore_ttl=True)
                 if disk_cache and "devices" in disk_cache:
                     logger.debug(f"💾 Cache disque: {len(disk_cache['devices'])} appareils (fallback)")
-                    self._devices_cache = disk_cache["devices"]
+                    self._cache = disk_cache["devices"]
                     self._cache_timestamp = time.time()
-                    return self._devices_cache
+                    return self._cache
 
             # Niveau 3 : API
             return self._refresh_cache()
@@ -144,7 +145,7 @@ class DeviceManager:
         Returns:
             True si le cache existe et n'a pas expiré
         """
-        if self._devices_cache is None:
+        if self._cache is None:
             return False
 
         age = time.time() - self._cache_timestamp
@@ -167,29 +168,21 @@ class DeviceManager:
         try:
             logger.debug("🌐 Récupération de la liste des appareils depuis l'API")
 
-            # Appel API pour récupérer les appareils via http_client
-            response = self.http_client.get(
-                f"https://alexa.{self.auth.amazon_domain}/api/devices-v2/device",
-                params={"cached": "false"},
-            )
+            # Appel API unifié via BaseManager
+            response_data = self._api_call("get", "/api/devices-v2/device", params={"cached": "false"}, timeout=10)
 
-            if not response or response.status_code != 200:
-                logger.error(
-                    f"Échec de récupération des appareils (status: {response.status_code if response else 'None'})"
-                )
+            if response_data is None:
+                logger.error("Échec de récupération des appareils (réponse None)")
                 return None
 
-            from typing import cast
-
-            data = cast(Dict[str, Any], response.json())
-            devices: List[Dict[str, Any]] = data.get("devices", [])
+            devices: List[Dict[str, Any]] = response_data.get("devices", [])
 
             # Mise à jour cache mémoire (Niveau 1)
-            self._devices_cache = devices
+            self._cache = devices
             self._cache_timestamp = time.time()
 
             # Mise à jour cache disque (Niveau 2) - TTL 1h
-            self._cache_service.set("devices", {"devices": devices}, ttl_seconds=3600)
+            self.cache_service.set("devices", {"devices": devices}, ttl_seconds=3600)
 
             logger.info(f"✅ {len(devices)} appareils récupérés et mis en cache (mémoire + disque)")
             return devices
@@ -347,9 +340,9 @@ class DeviceManager:
             >>> devices = device_mgr.get_devices()  # Forcera un appel API
         """
         with self._lock:
-            self._devices_cache = None
+            self._cache = None
             self._cache_timestamp = 0.0
-            self._cache_service.invalidate("devices")
+            self.cache_service.invalidate("devices")
             logger.info("🗑️ Cache appareils invalidé (mémoire + disque)")
 
     def get_cache_info(self) -> Dict[str, Any]:
@@ -369,7 +362,7 @@ class DeviceManager:
             age = time.time() - self._cache_timestamp if self._cache_timestamp > 0 else None
 
             return {
-                "device_count": len(self._devices_cache) if self._devices_cache else 0,
+                "device_count": len(self._cache) if self._cache else 0,
                 "is_valid": self._is_cache_valid(),
                 "age_seconds": age,
                 "ttl_seconds": self._cache_ttl,

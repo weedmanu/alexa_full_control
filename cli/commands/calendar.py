@@ -1,4 +1,4 @@
-"""
+﻿"""
 Commandes de gestion du calendrier Alexa.
 
 Ce module gère toutes les opérations liées aux événements du calendrier:
@@ -18,13 +18,13 @@ from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.calendar_help import (
-    ADD_HELP,
-    CALENDAR_DESCRIPTION,
-    DELETE_HELP,
-    INFO_HELP,
-    LIST_HELP,
-)
+
+# Constantes de description simplifiées
+CALENDAR_DESCRIPTION = "Gérer le calendrier Alexa"
+ADD_HELP = "Ajouter un nouvel événement"
+DELETE_HELP = "Supprimer un événement"
+INFO_HELP = "Afficher les détails d'un événement"
+LIST_HELP = "Lister les événements à venir"
 
 
 class CalendarCommand(BaseCommand):

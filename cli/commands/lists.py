@@ -7,7 +7,6 @@ from typing import Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import UniversalHelpFormatter
-from cli.help_texts.lists_help import LISTS_DESCRIPTION
 
 
 class ListsCommand(BaseCommand):
@@ -39,8 +38,8 @@ class ListsCommand(BaseCommand):
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
-        # Description centralisée
-        parser.description = LISTS_DESCRIPTION
+        # Description simplifiée
+        parser.description = "Gérer les listes de courses et tâches"
 
         # Option globale pour le type de liste
         parser.add_argument(

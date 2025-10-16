@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 from loguru import logger
 
+from utils.logger import SharedIcons
+
 
 class BaseCommand(ABC):
     """
@@ -130,6 +132,176 @@ class BaseCommand(ABC):
     # MÉTHODES UTILITAIRES COMMUNES
     # ========================================================================
 
+    def setup_common_parser_config(self, parser: argparse.ArgumentParser, description: str) -> Any:
+        """
+        Configure les paramètres communs du parser pour une catégorie de commandes.
+
+        Args:
+            parser: Parser de la catégorie
+            description: Description de la catégorie
+
+        Returns:
+            Sous-parsers action pour ajouter les actions spécifiques
+        """
+        # Utiliser le formatter universel pour l'ordre exact demandé
+        from cli.command_parser import UniversalHelpFormatter
+
+        parser.formatter_class = UniversalHelpFormatter
+
+        # Supprimer la ligne d'usage automatique
+        parser.usage = argparse.SUPPRESS
+
+        # Description
+        parser.description = description
+
+        # Créer les sous-parsers
+        subparsers = parser.add_subparsers(
+            dest="action",
+            metavar="ACTION",
+            help="Action à exécuter",
+            required=True,
+        )
+
+        return subparsers
+
+    def add_device_argument(self, parser: argparse.ArgumentParser, required: bool = True) -> None:
+        """
+        Ajoute l'argument --device/-d à un parser.
+
+        Args:
+            parser: Parser auquel ajouter l'argument
+            required: Si l'argument est requis
+        """
+        parser.add_argument(
+            "-d",
+            "--device",
+            type=str,
+            required=required,
+            metavar="DEVICE_NAME",
+            help="Nom de l'appareil",
+        )
+
+    def add_json_argument(self, parser: argparse.ArgumentParser) -> None:
+        """
+        Ajoute l'argument --json à un parser.
+        """
+        parser.add_argument(
+            "--json",
+            action="store_true",
+            help="Afficher les données au format JSON",
+        )
+
+    def add_refresh_argument(self, parser: argparse.ArgumentParser) -> None:
+        """
+        Ajoute l'argument --refresh à un parser.
+        """
+        parser.add_argument(
+            "--refresh",
+            action="store_true",
+            help="Forcer la resynchronisation avant d'afficher",
+        )
+
+    def add_filter_argument(self, parser: argparse.ArgumentParser) -> None:
+        """
+        Ajoute l'argument --filter à un parser.
+        """
+        parser.add_argument(
+            "--filter",
+            type=str,
+            metavar="PATTERN",
+            help="Filtrer par nom (recherche partielle)",
+        )
+
+    def create_action_parser(
+        self,
+        subparsers: Any,
+        action_name: str,
+        help_text: str,
+        description: str = "",
+        add_help: bool = False,
+    ) -> argparse.ArgumentParser:
+        """
+        Crée un parser d'action standardisé.
+
+        Args:
+            subparsers: Sous-parsers action
+            action_name: Nom de l'action
+            help_text: Texte d'aide court
+            description: Description détaillée
+            add_help: Si ajouter l'aide automatique
+
+        Returns:
+            Parser configuré pour l'action
+        """
+        from cli.command_parser import ActionHelpFormatter
+
+        return subparsers.add_parser(
+            action_name,
+            help=help_text,
+            description=description,
+            formatter_class=ActionHelpFormatter,
+            add_help=add_help,
+        )
+
+    def validate_device_arg(self, args: argparse.Namespace) -> Optional[tuple[str, str]]:
+        """
+        Valide et résout l'argument device.
+
+        Args:
+            args: Arguments parsés contenant device
+
+        Returns:
+            Tuple (serial, device_type) ou None si erreur
+        """
+        if not hasattr(args, "device") or not args.device:
+            self.error("Nom d'appareil requis")
+            return None
+
+        device_info = self.get_device_serial_and_type(args.device)
+        if not device_info:
+            return None
+
+        return device_info
+
+    def call_manager_method(self, manager_name: str, method_name: str, *args: Any, **kwargs: Any) -> Optional[Any]:
+        """
+        Appelle une méthode sur un manager avec gestion d'erreur centralisée.
+
+        Args:
+            manager_name: Nom du manager (ex: 'alarm_mgr', 'device_mgr')
+            method_name: Nom de la méthode à appeler
+            *args: Arguments positionnels
+            **kwargs: Arguments nommés
+
+        Returns:
+            Résultat de la méthode ou None si erreur
+
+        Example:
+            >>> result = self.call_manager_method('alarm_mgr', 'create_alarm',
+            ...                                   device_serial, device_type, time_str)
+        """
+        # Obtenir le manager depuis le contexte
+        manager = getattr(self.context, manager_name, None) if self.context else None
+
+        if not manager:
+            self.error(f"Manager '{manager_name}' non disponible")
+            return None
+
+        # Obtenir la méthode
+        method = getattr(manager, method_name, None)
+        if not method:
+            self.error(f"Méthode '{method_name}' non trouvée sur {manager_name}")
+            return None
+
+        # Appeler la méthode avec gestion d'erreur
+        try:
+            result = method(*args, **kwargs)
+            return result
+        except Exception as e:
+            self.logger.error(f"Erreur lors de l'appel {manager_name}.{method_name}: {e}")
+            self.error(f"Erreur {manager_name}: {e}")
+            return None
+
     def validate_connection(self) -> bool:
         """
         Vérifie que la connexion à l'API Alexa est établie.
@@ -190,7 +362,7 @@ class BaseCommand(ABC):
             raise RuntimeError("Context is required for this operation")
         return self._context
 
-    def call_with_breaker(self, func: Callable[..., Any], *args, **kwargs) -> Optional[Any]:
+    def call_with_breaker(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Optional[Any]:
         """
         Exécute une fonction avec protection du circuit breaker.
 
@@ -360,7 +532,27 @@ class BaseCommand(ABC):
                 return False
         return True
 
-    def format_table(self, data: list, headers: list) -> str:
+    def validate_manager_available(self, manager_name: str) -> bool:
+        """
+        Valide qu'un manager est disponible dans le contexte.
+
+        Args:
+            manager_name: Nom du manager à vérifier (ex: 'alarm_mgr', 'device_mgr')
+
+        Returns:
+            True si le manager est disponible, False sinon
+
+        Example:
+            >>> if not self.validate_manager_available('alarm_mgr'):
+            ...     return False
+        """
+        manager = getattr(self.context, manager_name, None) if self.context else None
+        if not manager:
+            self.error(f"Manager '{manager_name}' non disponible. Vérifiez la connexion.")
+            return False
+        return True
+
+    def format_table(self, data: list[list[Any]], headers: list[str]) -> str:
         """
         Formate des données en tableau texte avec couleurs.
 
@@ -395,10 +587,10 @@ class BaseCommand(ABC):
                 col_widths[i] = max(col_widths[i], visible_length(str(cell)))
 
         # Construire tableau
-        lines = []
+        lines: list[str] = []
 
         # En-tête avec couleur
-        header_parts = []
+        header_parts: list[str] = []
         for i, h in enumerate(headers):
             header_parts.append(f"\033[1;36m{str(h).ljust(col_widths[i])}\033[0m")
         header_line = "\033[1;36m │ \033[0m".join(header_parts)
@@ -410,7 +602,7 @@ class BaseCommand(ABC):
 
         # Données
         for row in data:
-            line_parts = []
+            line_parts: list[str] = []
             for i, cell in enumerate(row):
                 cell_str = str(cell)
                 # Colorer certaines valeurs spéciales
@@ -429,6 +621,159 @@ class BaseCommand(ABC):
             lines.append(" │ ".join(line_parts))
 
         return "\n".join(lines)
+
+    # ========================================================================
+    # MÉTHODES DE LOGGING STANDARDISÉES AVEC SHAREDICONS
+    # ========================================================================
+
+    def log_operation_start(self, operation: str, *args: Any) -> None:
+        """
+        Log le début d'une opération avec icône standardisée.
+
+        Args:
+            operation: Nom de l'opération (ex: "synchronisation", "recherche")
+            *args: Arguments supplémentaires pour le message
+        """
+        message = f"{operation}"
+        if args:
+            message += f" {', '.join(str(arg) for arg in args)}"
+        self.logger.info(f"{SharedIcons.SEARCH} {message}...")
+
+    def log_operation_success(self, operation: str, count: Optional[int] = None, details: str = "") -> None:
+        """
+        Log le succès d'une opération avec icône standardisée.
+
+        Args:
+            operation: Nom de l'opération
+            count: Nombre d'éléments traités (optionnel)
+            details: Détails supplémentaires
+        """
+        message = f"{operation}"
+        if count is not None:
+            message += f" {count} élément(s)"
+        if details:
+            message += f" {details}"
+        self.logger.success(f"{SharedIcons.SUCCESS} {message}")
+
+    def log_operation_error(self, operation: str, error: Exception) -> None:
+        """
+        Log une erreur d'opération avec icône standardisée.
+
+        Args:
+            operation: Nom de l'opération
+            error: Exception levée
+        """
+        self.logger.error(f"{SharedIcons.ERROR} Erreur {operation}: {error}")
+
+    def log_cache_hit(self, cache_type: str, key: str, count: Optional[int] = None) -> None:
+        """
+        Log un hit de cache avec icône standardisée.
+
+        Args:
+            cache_type: Type de cache ("mémoire", "disque")
+            key: Clé du cache
+            count: Nombre d'éléments (optionnel)
+        """
+        count_str = f" {count} élément(s)" if count is not None else ""
+        self.logger.debug(f"{SharedIcons.SAVE} Cache {cache_type}: {key}{count_str}")
+
+    def log_data_retrieved(self, data_type: str, count: int, cached: bool = True) -> None:
+        """
+        Log la récupération de données avec icône standardisée.
+
+        Args:
+            data_type: Type de données (ex: "alarme", "timer", "appareil")
+            count: Nombre d'éléments récupérés
+            cached: Si les données viennent du cache
+        """
+        cache_info = " (cache)" if cached else ""
+        self.logger.info(f"{SharedIcons.SUCCESS} {count} {data_type}(s) récupéré(s){cache_info}")
+
+    def log_item_created(self, item_type: str, identifier: str, target: Optional[str] = None) -> None:
+        """
+        Log la création d'un élément avec icône standardisée.
+
+        Args:
+            item_type: Type d'élément (ex: "alarme", "timer", "rappel")
+            identifier: Identifiant de l'élément
+            target: Cible de l'opération (optionnel)
+        """
+        target_str = f" pour {target}" if target else ""
+        self.logger.success(f"{SharedIcons.SUCCESS} {item_type} '{identifier}' créé{target_str}")
+
+    def log_item_deleted(self, item_type: str, identifier: str) -> None:
+        """
+        Log la suppression d'un élément avec icône standardisée.
+
+        Args:
+            item_type: Type d'élément
+            identifier: Identifiant de l'élément
+        """
+        self.logger.success(f"{SharedIcons.TRASH} {item_type} {identifier} supprimé")
+
+    def log_item_modified(self, item_type: str, identifier: str, action: str = "modifié") -> None:
+        """
+        Log la modification d'un élément avec icône standardisée.
+
+        Args:
+            item_type: Type d'élément
+            identifier: Identifiant de l'élément
+            action: Action effectuée (ex: "modifié", "activé", "désactivé")
+        """
+        self.logger.success(f"{SharedIcons.GEAR} {item_type} {identifier} {action}")
+
+    def log_service_initialized(self, service_name: str) -> None:
+        """
+        Log l'initialisation d'un service avec icône standardisée.
+
+        Args:
+            service_name: Nom du service
+        """
+        self.logger.info(f"{SharedIcons.GEAR} {service_name} initialisé")
+
+    def log_sync_started(self, sync_type: str = "données") -> None:
+        """
+        Log le début d'une synchronisation avec icône standardisée.
+
+        Args:
+            sync_type: Type de synchronisation
+        """
+        self.logger.info(f"{SharedIcons.SYNC} Démarrage synchronisation {sync_type}...")
+
+    def log_sync_completed(self, sync_type: str, count: int, duration: float) -> None:
+        """
+        Log la fin d'une synchronisation avec icône standardisée.
+
+        Args:
+            sync_type: Type de synchronisation
+            count: Nombre d'éléments synchronisés
+            duration: Durée en secondes
+        """
+        self.logger.success(
+            f"{SharedIcons.CELEBRATION} Synchronisation {sync_type} terminée: " f"{count} éléments en {duration:.1f}s"
+        )
+
+    def log_device_found(self, device_name: str, device_type: Optional[str] = None) -> None:
+        """
+        Log la découverte d'un appareil avec icône standardisée.
+
+        Args:
+            device_name: Nom de l'appareil
+            device_type: Type d'appareil (optionnel)
+        """
+        type_str = f" ({device_type})" if device_type else ""
+        self.logger.info(f"{SharedIcons.DEVICE} Appareil trouvé: {device_name}{type_str}")
+
+    def log_music_action(self, action: str, track_info: str, device: str) -> None:
+        """
+        Log une action musicale avec icône standardisée.
+
+        Args:
+            action: Action effectuée (ex: "lancé", "arrêté")
+            track_info: Informations sur la piste
+            device: Appareil cible
+        """
+        self.logger.success(f"{SharedIcons.MUSIC} {track_info} {action} sur {device}")
 
 
 class CommandError(Exception):

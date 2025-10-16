@@ -21,15 +21,6 @@ from typing import Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.alarm_help import (
-    ALARM_DESCRIPTION,
-    CREATE_HELP,
-    DELETE_HELP,
-    DISABLE_HELP,
-    ENABLE_HELP,
-    LIST_HELP,
-    UPDATE_HELP,
-)
 
 
 class AlarmCommand(BaseCommand):
@@ -82,8 +73,11 @@ class AlarmCommand(BaseCommand):
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
 
-        # Description centralisée
-        parser.description = ALARM_DESCRIPTION
+        # Supprimer la ligne d'usage automatique
+        parser.usage = argparse.SUPPRESS
+
+        # Description simple
+        parser.description = "Gérer les alarmes Alexa"
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -96,7 +90,6 @@ class AlarmCommand(BaseCommand):
         create_parser = subparsers.add_parser(
             "create",
             help="Créer une alarme",
-            description=CREATE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -132,7 +125,6 @@ class AlarmCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister les alarmes",
-            description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -149,7 +141,6 @@ class AlarmCommand(BaseCommand):
         delete_parser = subparsers.add_parser(
             "delete",
             help="Supprimer une alarme",
-            description=DELETE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -169,7 +160,6 @@ class AlarmCommand(BaseCommand):
         update_parser = subparsers.add_parser(
             "update",
             help="Modifier une alarme",
-            description=UPDATE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -199,7 +189,6 @@ class AlarmCommand(BaseCommand):
         enable_parser = subparsers.add_parser(
             "enable",
             help="Activer une alarme",
-            description=ENABLE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -217,7 +206,6 @@ class AlarmCommand(BaseCommand):
         disable_parser = subparsers.add_parser(
             "disable",
             help="Désactiver une alarme",
-            description=DISABLE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )

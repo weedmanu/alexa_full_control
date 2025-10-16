@@ -1,4 +1,4 @@
-"""
+﻿"""
 Module de commandes musicales - Architecture modulaire.
 
 Organisation:
@@ -20,7 +20,10 @@ from cli.commands.music.library import LibraryCommands
 from cli.commands.music.playback import PlaybackCommands
 from cli.commands.music.status import StatusCommands
 from cli.commands.music.tunein import TuneInCommands
-from cli.help_texts.music_help import MUSIC_DESCRIPTION
+
+
+# Constante de description simplifiée
+MUSIC_DESCRIPTION = "Gérer la musique et la lecture audio"
 
 
 class MusicCommand(BaseCommand):

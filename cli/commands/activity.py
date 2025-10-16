@@ -1,4 +1,4 @@
-"""Commande de consultation de l'historique d'activité Alexa.
+﻿"""Commande de consultation de l'historique d'activité Alexa.
 
 Ce module fournit une interface CLI pour consulter l'historique :
 - Voir les activités récentes
@@ -11,10 +11,10 @@ import argparse
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.activity_help import (
-    ACTIVITY_DESCRIPTION,
-    LIST_HELP,
-)
+
+# Constantes de description simplifiées
+ACTIVITY_DESCRIPTION = "Consulter l'historique d'activité Alexa"
+LIST_HELP = "Lister les activités récentes"
 
 
 class ActivityCommand(BaseCommand):

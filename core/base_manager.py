@@ -1,4 +1,4 @@
-"""
+﻿"""
 BaseManager: classe de base pour tous les managers Alexa.
 
 Fournit:
@@ -10,7 +10,7 @@ Fournit:
 
 import time
 from threading import RLock
-from typing import Any, Generic, List, Optional, TypeVar, cast
+from typing import Any, Dict, Generic, List, Optional, TypeVar, cast
 
 import requests
 from loguru import logger
@@ -91,6 +91,18 @@ class BaseManager(Generic[T]):
         self._cache_ttl: int = cache_ttl
         self._lock = RLock()
 
+        # Pré-calcul des headers statiques pour optimisation
+        self._base_headers = {
+            "Content-Type": "application/json; charset=UTF-8",
+            "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
+            "Origin": f"https://alexa.{self.config.amazon_domain}",
+        }
+
+        # Optimisation : niveau de log pour éviter les logs inutiles en production
+        import os
+
+        self._debug_mode = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
+
         self.logger = logger.bind(manager=self.__class__.__name__)
 
     def _is_cache_valid(self) -> bool:
@@ -117,3 +129,103 @@ class BaseManager(Generic[T]):
             self._cache = None
             self._cache_timestamp = 0.0
             self.logger.debug("Cache invalidé")
+
+    def _get_api_headers(self, extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """
+        Retourne les headers HTTP standard pour les appels API Alexa.
+
+        Args:
+            extra: Headers additionnels optionnels (fusionnés avec les standards)
+
+        Returns:
+            Dictionnaire de headers prêt pour requests
+
+        Example:
+            >>> headers = self._get_api_headers({"X-Custom": "value"})
+        """
+        headers = self._base_headers.copy()
+
+        csrf_value = getattr(self.http_client, "csrf", None)
+        if csrf_value is not None:
+            headers["csrf"] = csrf_value
+
+        if extra:
+            headers.update(extra)
+
+        return headers
+
+    def _api_call(
+        self, method: str, endpoint: str, use_breaker: bool = True, **kwargs: Any
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Wrapper unifié pour tous les appels API avec gestion d'erreurs complète.
+
+        Cette méthode encapsule:
+        - Construction URL complète
+        - Injection headers standards (via _get_api_headers)
+        - Protection circuit breaker
+        - Gestion erreurs HTTP
+        - Logging standardisé
+        - Transition state machine si circuit open
+
+        Args:
+            method: Méthode HTTP ('get', 'post', 'put', 'delete')
+            endpoint: Endpoint relatif (ex: '/api/alarms')
+            use_breaker: Utiliser le circuit breaker (défaut: True)
+            **kwargs: Arguments pour requests (json, params, timeout, etc.)
+
+        Returns:
+            Réponse JSON parsée ou None si erreur
+
+        Example:
+            >>> result = self._api_call('post', '/api/alarms', json=payload, timeout=10)
+        """
+        # Construction URL complète
+        url = f"https://{self.config.alexa_domain}{endpoint}"
+
+        # Injection headers (fusionner avec headers fournis si présents)
+        headers = self._get_api_headers(kwargs.pop("headers", None))
+        kwargs["headers"] = headers
+
+        # Définir timeout par défaut si non fourni
+        kwargs.setdefault("timeout", 10)
+
+        try:
+            # Appel avec ou sans breaker
+            if use_breaker and hasattr(self, "breaker"):
+                response = self.breaker.call(getattr(self.http_client, method), url, **kwargs)
+            else:
+                response = getattr(self.http_client, method)(url, **kwargs)
+
+            # Vérifier status HTTP
+            response.raise_for_status()
+
+            # Parser JSON (gérer réponse vide)
+            if response.content.strip():
+                return cast(Dict[str, Any], response.json())
+            else:
+                if self._debug_mode:
+                    self.logger.debug(f"Réponse vide pour {method.upper()} {endpoint}")
+                return {}
+
+        except ValueError as e:
+            # Erreur parsing JSON
+            self.logger.warning(f"Réponse JSON invalide pour {endpoint}: {e}")
+            return None
+
+        except requests.exceptions.RequestException as e:
+            # Erreur HTTP/réseau
+            self.logger.error(f"Erreur {method.upper()} {endpoint}: {e}")
+
+            # Transition state machine si circuit ouvert
+            if hasattr(self, "breaker") and hasattr(self.breaker, "state") and self.breaker.state.name == "OPEN":
+                from core.state_machine import ConnectionState
+
+                self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
+
+            return None
+
+        except Exception as e:
+            # Erreur inattendue
+            self.logger.error(f"Erreur inattendue {method.upper()} {endpoint}: {e}")
+            return None

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Gestionnaire des événements du calendrier Alexa via TextCommand.
 
 Ce module gère les événements du calendrier synchronisés avec Amazon Alexa.
@@ -284,6 +284,10 @@ class CalendarManager:
             logger.debug(f"Tentative création via TextCommand: {command}")
             self.voice_service.speak(command)
 
+        # mark unused parameters to avoid static dead-code detectors
+        _ = location
+        _ = description
+
         return None
 
     def delete_event(self, event_id: str) -> bool:
@@ -300,6 +304,8 @@ class CalendarManager:
         Returns:
             False (fonctionnalité non disponible)
         """
+        # mark event_id as intentionally unused (API not available)
+        _ = event_id
         logger.warning("⚠️ Suppression d'événements non disponible via API Alexa")
         logger.info("💡 Supprimez l'événement depuis Google Calendar, Outlook ou Apple Calendar")
         return False
@@ -316,6 +322,8 @@ class CalendarManager:
         Returns:
             None (fonctionnalité non disponible)
         """
+        # event_id is intentionally unused; detailed API not available
+        _ = event_id
         logger.warning("⚠️ Détails d'événements non disponibles via API Alexa")
         logger.info("💡 Consultez l'événement depuis Google Calendar, Outlook ou Apple Calendar")
         return None

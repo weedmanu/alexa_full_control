@@ -1,4 +1,4 @@
-"""Commande de gestion des groupes multiroom Alexa.
+﻿"""Commande de gestion des groupes multiroom Alexa.
 
 Ce module fournit une interface CLI pour gérer les groupes multi-pièces :
 - Lister les groupes existants
@@ -11,13 +11,13 @@ import argparse
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.multiroom_help import (
-    CREATE_HELP,
-    DELETE_HELP,
-    INFO_HELP,
-    LIST_HELP,
-    MULTIROOM_DESCRIPTION,
-)
+
+# Constantes de description simplifiées
+MULTIROOM_DESCRIPTION = "Gérer les groupes multiroom Alexa"
+CREATE_HELP = "Créer un nouveau groupe"
+DELETE_HELP = "Supprimer un groupe"
+INFO_HELP = "Obtenir des informations sur un groupe"
+LIST_HELP = "Lister les groupes existants"
 
 
 class MultiroomCommand(BaseCommand):

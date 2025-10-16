@@ -1,4 +1,4 @@
-"""
+﻿"""
 Gestionnaire de bibliothèque musicale - Utilise VoiceCommandService.
 
 Ce module gère la musique en utilisant VoiceCommandService au lieu
@@ -146,5 +146,8 @@ class LibraryManager:
             False (non supporté)
         """
         with self._lock:
+            # mark unused parameters to silence dead-code detectors
+            _ = playlist_id
+            _ = shuffle
             logger.warning("Lecture de playlist non supportée (pas de playlists locales)")
             return False

@@ -278,7 +278,7 @@ class Context:
         if self._notification_mgr is None and self.auth:
             from core.notification_manager import NotificationManager
 
-            self._notification_mgr = NotificationManager(self.auth, self.state_machine)
+            self._notification_mgr = NotificationManager(self.auth, self.config, self.state_machine)
             logger.debug("NotificationManager chargé")
         return self._notification_mgr
 
@@ -288,7 +288,7 @@ class Context:
         if self._dnd_mgr is None and self.auth:
             from core.dnd_manager import DNDManager
 
-            self._dnd_mgr = DNDManager(self.auth, self.state_machine)
+            self._dnd_mgr = DNDManager(self.auth, self.config, self.state_machine)
             logger.debug("DNDManager chargé")
         return self._dnd_mgr
 
@@ -461,7 +461,6 @@ class Context:
         self._notification_mgr = None
         self._dnd_mgr = None
         self._activity_mgr = None
-        self._announcement_mgr = None
         self._calendar_mgr = None
         self._equalizer_mgr = None
         self._bluetooth_mgr = None

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Gestion des alarmes Alexa.
 
 Auteur: M@nu
@@ -13,14 +13,6 @@ from typing import Any, Dict, List, Optional
 
 from cli.command_parser import UniversalHelpFormatter
 from cli.commands.timers.base import TimeSubCommand
-from cli.help_texts.alarm_help import (
-    CREATE_HELP,
-    DELETE_HELP,
-    DISABLE_HELP,
-    ENABLE_HELP,
-    LIST_HELP,
-    UPDATE_HELP,
-)
 
 
 class AlarmsCommands(TimeSubCommand):
@@ -329,7 +321,7 @@ class AlarmsCommands(TimeSubCommand):
         create_parser = alarm_subparsers.add_parser(
             "create",
             help="Créer une alarme",
-            description=CREATE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         create_parser.add_argument(
@@ -359,7 +351,7 @@ class AlarmsCommands(TimeSubCommand):
         list_parser = alarm_subparsers.add_parser(
             "list",
             help="Lister les alarmes",
-            description=LIST_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         list_parser.add_argument(
@@ -375,7 +367,7 @@ class AlarmsCommands(TimeSubCommand):
         delete_parser = alarm_subparsers.add_parser(
             "delete",
             help="Supprimer une alarme",
-            description=DELETE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         delete_parser.add_argument(
@@ -398,7 +390,7 @@ class AlarmsCommands(TimeSubCommand):
         update_parser = alarm_subparsers.add_parser(
             "update",
             help="Modifier une alarme",
-            description=UPDATE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         update_parser.add_argument(
@@ -434,7 +426,7 @@ class AlarmsCommands(TimeSubCommand):
         enable_parser = alarm_subparsers.add_parser(
             "enable",
             help="Activer une alarme",
-            description=ENABLE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         enable_parser.add_argument(
@@ -457,7 +449,7 @@ class AlarmsCommands(TimeSubCommand):
         disable_parser = alarm_subparsers.add_parser(
             "disable",
             help="Désactiver une alarme",
-            description=DISABLE_HELP,
+            description="",
             formatter_class=UniversalHelpFormatter,
         )
         disable_parser.add_argument(

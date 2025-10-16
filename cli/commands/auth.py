@@ -1,4 +1,4 @@
-"""
+﻿"""
 Commandes d'authentification pour la CLI Alexa Voice Control.
 
 Ce module gère toutes les opérations liées à l'authentification:
@@ -15,12 +15,12 @@ from pathlib import Path
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.auth_help import (
-    AUTH_DESCRIPTION,
-    CREATE_HELP,
-    STATUS_HELP,
-)
 from core.state_machine import ConnectionState
+
+# Constantes de description simplifiées
+AUTH_DESCRIPTION = "Gérer l'authentification Alexa"
+CREATE_HELP = "Créer une nouvelle session d'authentification"
+STATUS_HELP = "Vérifier l'état de connexion"
 
 
 class AuthCommand(BaseCommand):

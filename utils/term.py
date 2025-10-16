@@ -21,6 +21,8 @@ if importlib.util.find_spec("colorama") is not None:
 else:
     # colorama is optional; absence simply means no ANSI emulation on Windows
     _has_colorama_available = False
+
+
 class Colors:
     """Centralised ANSI color palette and helpers.
 
@@ -49,8 +51,10 @@ class Colors:
 
     # Additional simple colours referenced elsewhere
     BLUE = "\033[1;34m"
+    BLUE_NORMAL = "\033[0;34m"
     YELLOW = "\033[1;33m"
     RED = "\033[1;31m"
+    GRAY = "\033[0;90m"
 
     @staticmethod
     def supports_color() -> bool:
@@ -119,3 +123,59 @@ def should_colorize(*, no_color: bool = False) -> bool:
     stdout_isatty = bool(getattr(sys.stdout, "isatty", lambda: False)())
     stderr_isatty = bool(getattr(sys.stderr, "isatty", lambda: False)())
     return stdout_isatty and stderr_isatty
+
+
+# Convenience mapping and helpers to support span-like coloring in text
+# Example usage in code: from utils.term import span, apply_spans
+# - span("text", "color_usage") -> colored text
+# - apply_spans("Hello <span color=\"color_usage\">world</span>") -> colored
+COLOR_KEY_MAP = {
+    # Couleurs sémantiques pour l'interface CLI
+    "color_usage": Colors.GRAY_BOLD,  # Usage, options principales (cyan gras)
+    "color_category": Colors.GREEN_BOLD,  # Noms de catégories (vert gras)
+    "color_category_options": Colors.GREEN,  # Options de catégories (vert clair)
+    "color_action": Colors.BLUE,  # Noms d'actions (bleu gras)
+    "color_action_options": Colors.BLUE_NORMAL,  # Options d'actions (bleu)
+    "color_global_options": Colors.GRAY,  # Options globales (gris)
+    "color_command": Colors.CYAN_BOLD,  # Commandes (cyan gras)
+    "color_command_options": Colors.CYAN,  # Options de commandes (cyan)
+    "color_text_dim": Colors.GRAY_BOLD,  # Texte secondaire (gris gras)
+    "color_text_gray": Colors.GRAY,  # Texte gris (gris)
+    "color_text_cyan": Colors.CYAN,  # Texte cyan (cyan)
+    "color_text_blue": Colors.BLUE_NORMAL,  # Texte bleu normal (bleu normal)
+    "color_reset": Colors.RESET,  # Reset des couleurs
+}
+
+
+def span(text: str, color_key: str) -> str:
+    """Return the given text wrapped in the colour mapped from color_key.
+
+    If the colour is not found, returns the original text unchanged.
+    """
+    color = COLOR_KEY_MAP.get(color_key)
+    if not color:
+        return text
+    return Colors.colorize(text, color)
+
+
+def apply_spans(text: str) -> str:
+    """Simple replacement of <span color="key">...</span> occurrences.
+
+    Supports both single-quoted and double-quoted color attributes and
+    a fallback to <span class="key">...</"></span>.
+    This is intentionally small and does not implement full HTML parsing.
+    """
+    import re
+
+    if not text:
+        return text
+
+    # Pattern: <span color="key">content</span> or <span class='key'>content</span>
+    pattern = re.compile(r"<span\s+(?:color|class)=[\"'](?P<key>[^\"']+)[\"']>(?P<content>.*?)</span>", flags=re.DOTALL)
+
+    def repl(m: re.Match) -> str:
+        key = m.group("key")
+        content = m.group("content")
+        return span(content, key)
+
+    return pattern.sub(repl, text)

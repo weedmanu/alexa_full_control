@@ -1,4 +1,4 @@
-"""
+﻿"""
 Commandes de contrôle de lecture (playback).
 
 Gère: play, pause, stop, control, shuffle, repeat
@@ -11,7 +11,14 @@ import argparse
 
 from cli.command_parser import ActionHelpFormatter
 from cli.commands.music.base import MusicSubCommand
-from cli.help_texts.music_help import CONTROL_HELP, PAUSE_HELP, REPEAT_HELP, SHUFFLE_HELP, STOP_HELP
+
+
+# Constantes de description simplifiées
+CONTROL_HELP = "Contrôler la lecture musicale"
+PAUSE_HELP = "Mettre en pause la lecture"
+REPEAT_HELP = "Gérer la répétition"
+SHUFFLE_HELP = "Gérer le mode aléatoire"
+STOP_HELP = "Arrêter la lecture"
 
 
 class PlaybackCommands(MusicSubCommand):

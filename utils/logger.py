@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 
 """
 Logging utilities for Alexa Advanced Control - Module unique centralisé
@@ -7,7 +7,7 @@ Logging utilities for Alexa Advanced Control - Module unique centralisé
 import logging
 import sys
 from pathlib import Path
-from typing import Any, List, Optional, Callable
+from typing import Any, Callable, List, Optional
 
 # Pre-declare logger so type checkers have a stable name and type for it.
 logger: Any = None
@@ -412,72 +412,79 @@ class InstallLogger:
                 custom_levels=["INSTALL"],  # Niveau spécifique pour l'installateur
                 ensure_utf8=True,
             )
-    
+
     def header(self, msg: str, emoji: str = "🔧") -> None:
         if self.use_loguru:
             logger.opt(depth=1).log("INSTALL", f"{emoji} {msg}")
         else:
-            from scripts.install import Logger as FallbackLogger
+            # FallbackLogger lives in an external script; import dynamically
+            # via importlib so mypy treats it as Any and doesn't attempt to
+            # analyze the module implementation.
+            from importlib import import_module
 
-            # FallbackLogger comes from an external script and is untyped here;
-            # cast to Any to avoid mypy 'no-untyped-call' errors in typed context.
-            from typing import cast
+            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
 
-            cast(Any, FallbackLogger).header(msg, emoji)
+            FallbackLogger.header(msg, emoji)
 
     def step(self, msg: str, emoji: str = "⚡") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{emoji} {msg}")
         else:
-            from scripts.install import Logger as FallbackLogger
-            from typing import cast
+            from importlib import import_module
 
-            cast(Any, FallbackLogger).step(msg, emoji)
+            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+
+            FallbackLogger.step(msg, emoji)
 
     def progress(self, msg: str) -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"⏳ {msg}...")
         else:
-            from scripts.install import Logger as FallbackLogger
-            from typing import cast
+            from importlib import import_module
 
-            cast(Any, FallbackLogger).progress(msg)
+            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+
+            FallbackLogger.progress(msg)
 
     def success(self, msg: str, emoji: str = "✅") -> None:
         if self.use_loguru:
             logger.opt(depth=1).success(f"{msg}")
         else:
-            from scripts.install import Logger as FallbackLogger
-            from typing import cast
+            from importlib import import_module
 
-            cast(Any, FallbackLogger).success(msg, emoji)
+            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+
+            FallbackLogger.success(msg, emoji)
 
     def error(self, msg: str, emoji: str = "❌") -> None:
         if self.use_loguru:
             logger.opt(depth=1).error(f"{msg}")
         else:
-            from scripts.install import Logger as FallbackLogger
-            from typing import cast
+            from importlib import import_module
 
-            cast(Any, FallbackLogger).error(msg, emoji)
+            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+
+            FallbackLogger.error(msg, emoji)
 
     def warning(self, msg: str, emoji: str = "⚠️") -> None:
         if self.use_loguru:
             logger.opt(depth=1).warning(f"{msg}")
         else:
-            from scripts.install import Logger as FallbackLogger
-            from typing import cast
+            from importlib import import_module
 
-            cast(Any, FallbackLogger).warning(msg, emoji)
+            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+
+            FallbackLogger.warning(msg, emoji)
 
     def info(self, msg: str, emoji: str = "ℹ️") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{msg}")
         else:
-            from scripts.install import Logger as FallbackLogger
-            from typing import cast
+            from importlib import import_module
 
-            cast(Any, FallbackLogger).info(msg, emoji)
+            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+
+            FallbackLogger.info(msg, emoji)
 
     def debug(self, msg: str) -> None:
         if self.use_loguru:

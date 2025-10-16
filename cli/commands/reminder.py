@@ -9,16 +9,10 @@ Ce module fournit une interface CLI pour gérer les rappels :
 
 import argparse
 from datetime import datetime
+from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.reminder_help import (
-    COMPLETE_HELP,
-    CREATE_HELP,
-    DELETE_HELP,
-    LIST_HELP,
-    REMINDER_DESCRIPTION,
-)
 
 
 class ReminderCommand(BaseCommand):
@@ -66,8 +60,8 @@ class ReminderCommand(BaseCommand):
         # Définir un usage plus détaillé
         parser.usage = "alexa [OPTIONS_GLOBALES] reminder <ACTION> [OPTIONS_ACTION]"
 
-        # Description réorganisée dans l'ordre demandé : Titre → Usage → Options → Actions → Options d'action → Exemples
-        parser.description = REMINDER_DESCRIPTION
+        # Description simplifiée
+        parser.description = "Gérer les rappels sur les appareils Alexa"
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -80,7 +74,6 @@ class ReminderCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister rappels",
-            description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -104,7 +97,6 @@ class ReminderCommand(BaseCommand):
         create_parser = subparsers.add_parser(
             "create",
             help="Créer rappel",
-            description=CREATE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -129,7 +121,6 @@ class ReminderCommand(BaseCommand):
         delete_parser = subparsers.add_parser(
             "delete",
             help="Supprimer rappel",
-            description=DELETE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -142,7 +133,6 @@ class ReminderCommand(BaseCommand):
         complete_parser = subparsers.add_parser(
             "complete",
             help="Marquer complété",
-            description=COMPLETE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
@@ -345,7 +335,7 @@ class ReminderCommand(BaseCommand):
             self.error(f"Erreur: {e}")
             return False
 
-    def _display_reminders(self, reminders: list) -> None:
+    def _display_reminders(self, reminders: List[Dict[str, Any]]) -> None:
         """Affiche les rappels sous forme de tableau."""
         self.info(f"📋 {len(reminders)} rappel(s) trouvé(s):\n")
 

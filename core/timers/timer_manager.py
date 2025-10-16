@@ -1,20 +1,12 @@
-"""
-Gestionnaire de timers Alexa.
-
-Ce module fournit une interface thread-safe pour créer, lister,
-modifier et annuler des timers via l'API Alexa.
-"""
-
-import threading
+﻿import threading
 import time
 from typing import Any, Dict, List, Optional
 
-import requests
 from loguru import logger
 
 from core.base_manager import BaseManager
 from core.circuit_breaker import CircuitBreaker
-from core.state_machine import AlexaStateMachine, ConnectionState
+from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 
 
@@ -142,34 +134,21 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                     "deviceType": device_type,
                 }
 
-                response = self.breaker.call(
-                    self.http_client.post,
+                timer_data = self._api_call(
+                    "POST",
                     f"https://{self.config.alexa_domain}/api/timers",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "Origin": f"https://alexa.{self.config.amazon_domain}",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     json=payload,
                     timeout=10,
                 )
-                assert response is not None
-                response.raise_for_status()
 
                 from typing import cast
 
-                timer_data = cast(Dict[str, Any], response.json())
+                timer_data = cast(Dict[str, Any], timer_data)
                 logger.success(f"Timer '{label}' créé ({duration_minutes} min)")
                 return timer_data
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la création du timer: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return None
             except Exception as e:
-                logger.error(f"Erreur inattendue lors de la création du timer: {e}")
+                logger.error(f"Erreur lors de la création du timer: {e}")
                 return None
 
     def list_timers(self, device_serial: Optional[str] = None, force_refresh: bool = False) -> List[Dict[str, Any]]:
@@ -231,27 +210,16 @@ class TimerManager(BaseManager[Dict[str, Any]]):
         try:
             logger.debug("🌐 Récupération de tous les timers depuis l'API notifications")
 
-            response = self.breaker.call(
-                self.http_client.get,
+            data = self._api_call(
+                "GET",
                 f"https://{self.config.alexa_domain}/api/notifications",
-                headers={
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "csrf": getattr(self.http_client, "csrf", None),
-                },
                 timeout=10,
             )
-            assert response is not None
-            response.raise_for_status()
 
-            # Gérer le cas où la réponse est vide
-            if not response.content.strip():
-                logger.info("Aucun timer trouvé (réponse vide)")
+            if data is None:
+                logger.warning("Réponse vide pour les timers")
                 timers = []
             else:
-                from typing import cast
-
-                data = cast(Dict[str, Any], response.json())
                 # Les timers sont dans la liste des notifications
                 notifications = data.get("notifications", [])
 
@@ -272,17 +240,8 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             logger.info(f"✅ {len(timers)} timer(s) actif(s) récupéré(s) et mis en cache (mémoire + disque)")
             return timers
 
-        except ValueError as e:
-            # Erreur de parsing JSON (réponse vide ou malformée)
-            logger.warning(f"Réponse JSON invalide pour les timers: {e}")
-            return []
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Erreur lors de la récupération des timers: {e}")
-            if self.breaker.state.name == "OPEN":
-                self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-            return []
         except Exception as e:
-            logger.error(f"Erreur inattendue lors de la récupération des timers: {e}")
+            logger.error(f"Erreur lors de la récupération des timers: {e}")
             return []
 
     def cancel_all_timers(self, device_serial: str, device_type: str) -> bool:
@@ -336,29 +295,17 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 return False
 
             try:
-                response = self.breaker.call(
-                    self.http_client.delete,
+                self._api_call(
+                    "DELETE",
                     f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     timeout=10,
                 )
-                assert response is not None
-                response.raise_for_status()
 
                 logger.success(f"Timer {timer_id} annulé")
                 return True
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de l'annulation du timer: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return False
             except Exception as e:
-                logger.error(f"Erreur inattendue lors de l'annulation du timer: {e}")
+                logger.error(f"Erreur lors de l'annulation du timer: {e}")
                 return False
 
     def pause_timer(self, timer_id: str) -> bool:
@@ -378,30 +325,18 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             try:
                 payload = {"status": "PAUSED"}
 
-                response = self.breaker.call(
-                    self.http_client.put,
+                self._api_call(
+                    "PUT",
                     f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     json=payload,
                     timeout=10,
                 )
-                assert response is not None
-                response.raise_for_status()
 
                 logger.success(f"Timer {timer_id} mis en pause")
                 return True
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la mise en pause du timer: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return False
             except Exception as e:
-                logger.error(f"Erreur inattendue lors de la mise en pause du timer: {e}")
+                logger.error(f"Erreur lors de la mise en pause du timer: {e}")
                 return False
 
     def resume_timer(self, timer_id: str) -> bool:
@@ -421,28 +356,16 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             try:
                 payload = {"status": "ON"}
 
-                response = self.breaker.call(
-                    self.http_client.put,
+                self._api_call(
+                    "PUT",
                     f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     json=payload,
                     timeout=10,
                 )
-                assert response is not None
-                response.raise_for_status()
 
                 logger.success(f"Timer {timer_id} repris")
                 return True
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la reprise du timer: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return False
             except Exception as e:
-                logger.error(f"Erreur inattendue lors de la reprise du timer: {e}")
+                logger.error(f"Erreur lors de la reprise du timer: {e}")
                 return False

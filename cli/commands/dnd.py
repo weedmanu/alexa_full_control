@@ -1,4 +1,4 @@
-"""
+﻿"""
 Commandes de gestion du mode Ne Pas Déranger (DND).
 
 Ce module gère toutes les opérations liées au DND:
@@ -16,13 +16,13 @@ import json
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.dnd_help import (
-    DISABLE_HELP,
-    DND_DESCRIPTION,
-    ENABLE_HELP,
-    SCHEDULE_HELP,
-    STATUS_HELP,
-)
+
+# Constantes de description simplifiées
+DND_DESCRIPTION = "Gérer le mode Ne Pas Déranger"
+DISABLE_HELP = "Désactiver le DND"
+ENABLE_HELP = "Activer le DND"
+SCHEDULE_HELP = "Programmer le DND"
+STATUS_HELP = "Statut DND d'un appareil"
 
 
 class DNDCommand(BaseCommand):
