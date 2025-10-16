@@ -70,6 +70,9 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
 
         # Attributs spécifiques à RoutineManager
         self.auth = auth
+        self._routines_cache: Optional[List[Dict[str, Any]]] = None
+        self._cache_timestamp: float = 0
+        self._memory_cache_ttl: float = 300  # 5 minutes (distinct du cache_ttl hérité)
 
         logger.info("RoutineManager initialisé (cache 5min mémoire + 1h disque)")
 
@@ -102,7 +105,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
 
             # 2. Cache disque (TTL 1h)
             cache_data = self.cache_service.get("routines")
-            if cache_data and isinstance(cache_data, dict):
+            if cache_data:
                 routines = cache_data.get("routines", [])
                 if routines:
                     self._update_memory_cache(routines)
@@ -144,7 +147,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 logger.warning("API returned empty response for routines")
                 return []
 
-            routines = response_data if isinstance(response_data, list) else []
+            routines: List[Dict[str, Any]] = response_data if isinstance(response_data, list) else []
 
             # Sauvegarde cache double
             self._update_memory_cache(routines)
@@ -258,23 +261,18 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                     logger.debug("Placeholder ALEXA_CUSTOMER_ID remplacé")
 
                 # 5. Exécuter la routine
-                url = f"https://{self.config.alexa_domain}/api/behaviors/preview"
-
-                payload = {
+                payload: Dict[str, Any] = {
                     "behaviorId": automation_id,
                     "sequenceJson": sequence_str,
                     "status": "ENABLED",
                 }
 
-                http_client: Any = getattr(self, "http_client", None) or self.auth
-                response = self.breaker.call(
-                    http_client.post,
-                    url,
+                _ = self._api_call(
+                    "post",
+                    "/api/behaviors/preview",
                     json=payload,
-                    headers={"csrf": getattr(http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                response.raise_for_status()
 
                 logger.success(f"Routine exécutée: {automation_id}")
                 return True
@@ -346,7 +344,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
         """Vérifie si cache mémoire expiré."""
         import time
 
-        return (time.time() - self._cache_timestamp) > self._cache_ttl
+        return (time.time() - self._cache_timestamp) > self._memory_cache_ttl
 
     def get_stats(self) -> Dict[str, Any]:
         """
