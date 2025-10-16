@@ -21,8 +21,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from loguru import logger
 
-from services.cache_service import CacheService
 from core.base_manager import create_http_client_from_auth
+from services.cache_service import CacheService
 
 if TYPE_CHECKING:
     from alexa_auth.alexa_auth import AlexaAuth
