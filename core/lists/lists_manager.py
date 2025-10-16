@@ -16,7 +16,11 @@ class ListsManager:
     """Gestionnaire thread-safe des listes via commandes vocales."""
 
     def __init__(
-        self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, voice_service: Optional[Any] = None
+        self,
+        auth: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        voice_service: Optional[Any] = None,
     ) -> None:
         self.auth = auth
         self.config = config
