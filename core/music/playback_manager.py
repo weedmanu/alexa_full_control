@@ -14,16 +14,15 @@ Fonctionnalités:
 Note: Aucune fallback VoiceCommand - si l'API échoue, la commande échoue.
 """
 
-import threading
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
-from ..circuit_breaker import CircuitBreaker
-from ..state_machine import AlexaStateMachine
+from core.base_manager import BaseManager, create_http_client_from_auth
+from core.state_machine import AlexaStateMachine
 
 
-class PlaybackManager:
+class PlaybackManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire de lecture musicale - API directe uniquement.
 
     Utilise exclusivement l'API /api/np/command pour tous les contrôles musicaux.
@@ -31,53 +30,37 @@ class PlaybackManager:
     """
 
     def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
-        self.auth = auth
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
-        self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
-        self._lock = threading.RLock()
-
+        http_client = create_http_client_from_auth(auth)
+        if state_machine is None:
+            state_machine = AlexaStateMachine()
+        super().__init__(
+            http_client=http_client,
+            config=config,
+            state_machine=state_machine,
+            cache_service=None,
+            cache_ttl=300
+        )
+        self.auth = auth  # Keep for backward compatibility
+        
         # Initialiser VoiceCommandService pour les contrôles de lecture
         from services.voice_command_service import VoiceCommandService
-
-        self.voice_service = VoiceCommandService(auth, config, state_machine)
-        # Normalize http_client for migration compatibility
-        try:
-            from core.base_manager import create_http_client_from_auth
-
-            self.http_client = create_http_client_from_auth(self.auth)
-        except Exception:
-            self.http_client = self.auth
-
-        logger.info("PlaybackManager initialisé avec VoiceCommandService")
+        
+        self.voice_service = VoiceCommandService(auth, config, self.state_machine)
+        logger.info("PlaybackManager initialisé avec VoiceCommandService (hérité de BaseManager)")
 
     def _send_np_command(self, command_data: Dict[str, Any], device_serial: str, device_type: str) -> bool:
         """Envoie une commande directe à /api/np/command (comme le script shell)."""
         try:
-            # Headers complets comme le script shell - CRITIQUE pour éviter 403/404
-            headers = {
-                "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", None)),
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:1.0) bash-script/1.0",
-                "DNT": "1",
-                "Connection": "keep-alive",
-                "Referer": f"https://{self.config.alexa_domain}/spa/index.html",
-                "Origin": f"https://{self.config.alexa_domain}",
-                "Content-Type": "application/json; charset=UTF-8",
-                "Accept": "application/json",
-                "Accept-Language": "fr-FR,fr;q=0.9",
-            }
-
-            response = self.breaker.call(
-                self.http_client.post,
-                f"https://{self.config.alexa_domain}/api/np/command",
-                params={"deviceSerialNumber": device_serial, "deviceType": device_type},
-                json=command_data,
-                headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
-            response.raise_for_status()
-            logger.debug(f"Commande NP réussie: {command_data}")
-            return True
+            with self._lock:
+                response = self._api_call(
+                    "post",
+                    "/api/np/command",
+                    params={"deviceSerialNumber": device_serial, "deviceType": device_type},
+                    json=command_data,
+                    timeout=10,
+                )
+                logger.debug(f"Commande NP réussie: {command_data}")
+                return True
         except Exception as e:
             command_type = command_data.get("type", "Unknown")
             # Pour certaines commandes (ShuffleCommand, RepeatCommand), 400 est normal
@@ -86,7 +69,7 @@ class PlaybackManager:
                 logger.info(f"⚠️  Commande {command_type} non supportée dans ce contexte (normal)")
                 return False
             else:
-                logger.warning(f"Échec commande NP {command_data}: {e} - fallback vers VoiceCommand")
+                logger.warning(f"Échec commande NP {command_data}: {e}")
                 return False
 
     def set_shuffle(self, device_serial: str, device_type: str, enabled: bool) -> bool:
@@ -177,19 +160,17 @@ class PlaybackManager:
             if not self.state_machine.can_execute_commands:
                 return False
             try:
-                payload = {
+                payload: Dict[str, Any] = {
                     "deviceSerialNumber": device_serial,
                     "deviceType": device_type,
                     "mediaPosition": position_ms,
                 }
-                response = self.breaker.call(
-                    self.http_client.put,
-                    f"https://{self.config.alexa_domain}/api/np/command",
+                _ = self._api_call(
+                    "put",
+                    "/api/np/command",
                     json=payload,
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                response.raise_for_status()
                 logger.success(f"Position: {position_ms}ms")
                 return True
             except Exception as e:
@@ -202,22 +183,15 @@ class PlaybackManager:
             if not self.state_machine.can_execute_commands:
                 return []
             try:
-                response = self.breaker.call(
-                    self.http_client.get,
-                    f"https://{self.config.alexa_domain}/api/media/history",
+                response = self._api_call(
+                    "get",
+                    "/api/media/history",
                     params={"size": limit},
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                response.raise_for_status()
-                from typing import cast
-
-                data = cast(Dict[str, Any], response.json())
-                from typing import Dict as _Dict
-                from typing import List as _List
-                from typing import cast as _cast
-
-                return _cast(_List[_Dict[str, Any]], data.get("history", []))
+                if isinstance(response, dict):
+                    return response.get("history", [])  # type: ignore
+                return []
             except Exception as e:
                 logger.error(f"Erreur historique: {e}")
                 return []
@@ -260,7 +234,7 @@ class PlaybackManager:
 
             try:
                 # Construire params comme le script shell
-                params = {"deviceSerialNumber": device_serial, "deviceType": device_type}
+                params: Dict[str, Any] = {"deviceSerialNumber": device_serial, "deviceType": device_type}
 
                 # Ajouter parent si multiroom (comme le script shell)
                 if parent_id:
@@ -268,60 +242,36 @@ class PlaybackManager:
                     if parent_type is not None:
                         params["lemurDeviceType"] = parent_type
 
-                # Headers complets comme le script shell - CRITIQUE pour éviter 403
-                headers = {
-                    "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", None)),
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:1.0) bash-script/1.0",
-                    "DNT": "1",
-                    "Connection": "keep-alive",
-                    "Referer": f"https://{self.config.alexa_domain}/spa/index.html",
-                    "Origin": f"https://{self.config.alexa_domain}",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Accept": "application/json",
-                    "Accept-Language": "fr-FR,fr;q=0.9",
-                }
-
                 # 1. État du player (comme show_queue() du shell)
                 logger.debug(f"Récupération état player pour {device_serial}")
-                player_response = self.breaker.call(
-                    self.http_client.get,
-                    f"https://{self.config.alexa_domain}/api/np/player",
+                player_data = self._api_call(
+                    "get",
+                    "/api/np/player",
                     params=params,
-                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                player_response.raise_for_status()
-                from typing import cast
-
-                player_data = cast(Dict[str, Any], player_response.json())
 
                 # 2. État média
                 logger.debug(f"Récupération état média pour {device_serial}")
-                media_params = {"deviceSerialNumber": device_serial, "deviceType": device_type}
-                media_response = self.breaker.call(
-                    self.http_client.get,
-                    f"https://{self.config.alexa_domain}/api/media/state",
+                media_params: Dict[str, Any] = {"deviceSerialNumber": device_serial, "deviceType": device_type}
+                media_data = self._api_call(
+                    "get",
+                    "/api/media/state",
                     params=media_params,
-                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                media_response.raise_for_status()
-                media_data = cast(Dict[str, Any], media_response.json())
 
                 # 3. Queue complète
                 logger.debug(f"Récupération queue pour {device_serial}")
-                queue_response = self.breaker.call(
-                    self.http_client.get,
-                    f"https://{self.config.alexa_domain}/api/np/queue",
+                queue_data = self._api_call(
+                    "get",
+                    "/api/np/queue",
                     params=media_params,
-                    headers={**headers, "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                queue_response.raise_for_status()
-                queue_data = cast(Dict[str, Any], queue_response.json())
 
                 # Combiner les 3 réponses (comme le script shell)
-                result = {"player": player_data, "media": media_data, "queue": queue_data}
+                result: Dict[str, Any] = {"player": player_data, "media": media_data, "queue": queue_data}
 
                 logger.success(f"État complet récupéré pour {device_serial}")
                 return result
