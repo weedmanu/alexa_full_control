@@ -2,36 +2,33 @@
 Gestionnaire TuneIn (radio en ligne) - Thread-safe.
 """
 
-import threading
 from typing import Any, Dict, List, cast
 
 from loguru import logger
 
-from ..circuit_breaker import CircuitBreaker
-from ..state_machine import AlexaStateMachine
+from core.base_manager import BaseManager, create_http_client_from_auth
+from core.state_machine import AlexaStateMachine
 
 
-class TuneInManager:
+class TuneInManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire thread-safe pour TuneIn (radio)."""
 
     def __init__(self, auth_or_http: Any, config: Any, state_machine: Any = None) -> None:
-        # Normalize to http_client wrapper when possible
-        try:
-            from core.base_manager import create_http_client_from_auth
-
-            self.http_client = (
-                create_http_client_from_auth(auth_or_http) if hasattr(auth_or_http, "session") else auth_or_http
-            )
-        except Exception:
-            self.http_client = getattr(auth_or_http, "session", auth_or_http)
-
+        # Créer le client HTTP depuis auth
+        http_client = create_http_client_from_auth(auth_or_http)
+        
+        # Initialiser BaseManager
+        super().__init__(
+            http_client=http_client,
+            config=config,
+            state_machine=state_machine or AlexaStateMachine(),
+            cache_service=None,
+            cache_ttl=300
+        )
+        
         # Keep auth reference for backward compatibility
         self.auth = getattr(auth_or_http, "auth", auth_or_http)
-        self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
-        self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
-        self._lock = threading.RLock()
-        logger.info("TuneInManager initialisé")
+        logger.info("TuneInManager initialisé (hérité de BaseManager)")
 
     def search_stations(self, query: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Recherche des stations radio."""
@@ -39,17 +36,16 @@ class TuneInManager:
             if not self.state_machine.can_execute_commands:
                 return []
             try:
-                response = self.breaker.call(
-                    self.http_client.get,
-                    f"https://{self.config.alexa_domain}/api/tunein/search",
+                data = self._api_call(
+                    "get",
+                    "/api/tunein/search",
                     params={"query": query, "mediaOwnerCustomerId": getattr(self.auth, "customer_id", None)},
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                response.raise_for_status()
-                data = cast(Dict[str, Any], response.json())
-                results = data.get("results", [])
-                return cast(list[dict[str, Any]], results[:limit])
+                if isinstance(data, dict):
+                    results = data.get("results", [])
+                    return cast(list[dict[str, Any]], results[:limit])
+                return []
             except Exception as e:
                 logger.error(f"Erreur recherche stations: {e}")
                 return []
@@ -60,20 +56,18 @@ class TuneInManager:
             if not self.state_machine.can_execute_commands:
                 return False
             try:
-                payload = {
+                payload: Dict[str, Any] = {
                     "deviceSerialNumber": device_serial,
                     "deviceType": device_type,
                     "guideId": station_id,
                     "contentType": "station",
                 }
-                response = self.breaker.call(
-                    self.http_client.post,
-                    f"https://{self.config.alexa_domain}/api/tunein/queue-and-play",
+                _ = self._api_call(
+                    "post",
+                    "/api/tunein/queue-and-play",
                     json=payload,
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                response.raise_for_status()
                 logger.success(f"Station {station_id} en lecture")
                 return True
             except Exception as e:
@@ -86,15 +80,14 @@ class TuneInManager:
             if not self.state_machine.can_execute_commands:
                 return []
             try:
-                response = self.breaker.call(
-                    self.http_client.get,
-                    f"https://{self.config.alexa_domain}/api/tunein/favorites",
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
+                data = self._api_call(
+                    "get",
+                    "/api/tunein/favorites",
                     timeout=10,
                 )
-                response.raise_for_status()
-                data = cast(Dict[str, Any], response.json())
-                return cast(list[dict[str, Any]], data.get("favorites", []))
+                if isinstance(data, dict):
+                    return cast(list[dict[str, Any]], data.get("favorites", []))
+                return []
             except Exception as e:
                 logger.error(f"Erreur récupération favoris: {e}")
                 return []
@@ -105,14 +98,12 @@ class TuneInManager:
             if not self.state_machine.can_execute_commands:
                 return False
             try:
-                response = self.breaker.call(
-                    self.http_client.post,
-                    f"https://{self.config.alexa_domain}/api/tunein/favorites",
+                _ = self._api_call(
+                    "post",
+                    "/api/tunein/favorites",
                     json={"guideId": station_id},
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                     timeout=10,
                 )
-                response.raise_for_status()
                 logger.success(f"Station {station_id} ajoutée aux favoris")
                 return True
             except Exception as e:
