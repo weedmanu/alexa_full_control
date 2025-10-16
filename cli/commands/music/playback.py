@@ -12,7 +12,6 @@ import argparse
 from cli.command_parser import ActionHelpFormatter
 from cli.commands.music.base import MusicSubCommand
 
-
 # Constantes de description simplifiées
 CONTROL_HELP = "Contrôler la lecture musicale"
 PAUSE_HELP = "Mettre en pause la lecture"

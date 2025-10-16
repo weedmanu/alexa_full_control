@@ -83,9 +83,7 @@ class ActivityManager:
         }
 
         # Body de la requête
-        body = {
-            "previousRequestToken": None  # Pour pagination (None = première page)
-        }
+        body = {"previousRequestToken": None}  # Pour pagination (None = première page)
 
         # Appel à l'API Privacy avec le Circuit Breaker
         response = self.breaker.call(

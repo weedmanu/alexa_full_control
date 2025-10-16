@@ -1,6 +1,7 @@
 """
 Aide simplifiée pour la catégorie DND.
 """
+
 # ruff: noqa: E501
 
 DND_DESCRIPTION = """\

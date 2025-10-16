@@ -2,7 +2,7 @@
 # Re-export the real install implementation from the `install` package.
 from importlib import import_module
 
-_real = import_module('install.install')
+_real = import_module("install.install")
 
 # Re-export top-level names from the real module
 for _name in dir(_real):

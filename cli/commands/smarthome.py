@@ -20,7 +20,6 @@ from typing import Any, Dict, List
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
-
 # Constantes de description simplifiées
 SMARTHOME_DESCRIPTION = "Contrôler les appareils Smart Home"
 CONTROL_HELP = "Contrôler un appareil (on/off)"

@@ -41,11 +41,12 @@ Autres fonctions communes :
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from utils.colorizer import colorize
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🎨 PALETTE DE COULEURS STANDARDISÉE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 from utils.term import Colors
-from utils.colorizer import colorize
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🏗️ COMPOSANTS DE BASE

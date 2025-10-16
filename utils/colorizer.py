@@ -11,8 +11,8 @@ Tous les fichiers help_texts et command_parser utilisent UNIQUEMENT ce module.
 """
 
 from typing import List, Optional
-from utils.term import Colors, COLOR_KEY_MAP, span, should_colorize
 
+from utils.term import COLOR_KEY_MAP, Colors, should_colorize, span
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🎨 API DE COLORATION MÉTIER
@@ -21,7 +21,7 @@ from utils.term import Colors, COLOR_KEY_MAP, span, should_colorize
 
 def colorize(text: str, key: str) -> str:
     """Alias de span() pour cohérence avec l'API CLI.
-    
+
     Délègue directement à span() de term.py.
     """
     if not should_colorize(no_color=False):
@@ -83,18 +83,18 @@ def colorize_usage_line(
         Ligne d'usage colorée.
     """
     parts = [colorize("alexa", "color_text_dim")]
-    
+
     if global_options:
         parts.append(f"[{colorize('OPTIONS_GLOBALES', 'color_action_options')}]")
-    
+
     parts.append(colorize(category, "color_category"))
-    
+
     if action:
         parts.append(colorize(action, "color_action"))
-    
+
     if action_options:
         parts.append(f"[{colorize('OPTIONS_ACTION', 'color_action_options')}]")
-    
+
     return " ".join(parts)
 
 
@@ -124,9 +124,9 @@ def colorize_action_line(
         action_part = action_colored + " " + option_colored
     else:
         action_part = action_colored
-    
+
     description_colored = colorize(description, "color_text_dim")
-    
+
     # Alignement : compléter avec des espaces jusqu'à align_column
     padding = max(0, align_column - len(action_part))
     return f"  • {action_part}{' ' * padding} : {description_colored}"
@@ -152,15 +152,17 @@ def colorize_category_line(
     Returns:
         Ligne de catégorie formatée et colorée.
     """
-    category_colored = colorize(category, "color_category")  # Utilise "color_category" (vert) au lieu de "action" (bleu)
+    category_colored = colorize(
+        category, "color_category"
+    )  # Utilise "color_category" (vert) au lieu de "action" (bleu)
     if option_suffix:
         option_colored = colorize(option_suffix, "color_action_options")
         category_part = category_colored + " " + option_colored
     else:
         category_part = category_colored
-    
+
     description_colored = colorize(description, "color_text_dim")
-    
+
     # Alignement : compléter avec des espaces jusqu'à align_column
     padding = max(0, align_column - len(category_part))
     return f"  • {category_part}{' ' * padding} : {description_colored}"
@@ -187,15 +189,15 @@ def colorize_option_line(
         Ligne d'option formatée et colorée.
     """
     flag_colored = colorize(flag, "color_action_options")
-    
+
     if metavar:
         metavar_colored = colorize(metavar, "color_action")
         flag_part = f"{flag_colored} {metavar_colored}"
     else:
         flag_part = flag_colored
-    
+
     description_colored = colorize(description, "color_text_dim")
-    
+
     # Alignement
     padding = max(0, align_column - len(flag_part))
     return f"  {flag_part}{' ' * padding} : {description_colored}"
@@ -215,18 +217,34 @@ def colorize_example(command: str) -> str:
     """
     # Remplacer les éléments connus avec leurs couleurs respectives
     result = command.replace("alexa", colorize("alexa", "color_text_dim"))
-    
+
     # Colorer les catégories (mots après "alexa" s'il y a un espace)
     # Ceci est simplifié : on pourrait parser plus sophistiqué au besoin
-    for cat in ["device", "auth", "alarm", "music", "activity", "reminder", 
-                "routine", "calendar", "lists", "multiroom", "announcement",
-                "dnd", "cache", "smarthome", "timers", "notification"]:
+    for cat in [
+        "device",
+        "auth",
+        "alarm",
+        "music",
+        "activity",
+        "reminder",
+        "routine",
+        "calendar",
+        "lists",
+        "multiroom",
+        "announcement",
+        "dnd",
+        "cache",
+        "smarthome",
+        "timers",
+        "notification",
+    ]:
         result = result.replace(f" {cat} ", f" {colorize(cat, 'color_category')} ")
-    
+
     # Colorer les drapeaux (--...)
     import re
-    result = re.sub(r'(--?\w+)', lambda m: colorize(m.group(1), 'color_action_options'), result)
-    
+
+    result = re.sub(r"(--?\w+)", lambda m: colorize(m.group(1), "color_action_options"), result)
+
     return result
 
 
@@ -262,6 +280,7 @@ def strip_colors(text: str) -> str:
         Texte sans codes ANSI.
     """
     import re
+
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_escape.sub("", text)
 
@@ -294,9 +313,9 @@ def generate_help_section(
     """
     separator_colored = colorize(separator_char * separator_length, "color_text_dim")
     title_colored = colorize_section_title(emoji, title, title_key)
-    
+
     content = "\n".join(content_lines)
-    
+
     return f"\n{separator_colored}\n{title_colored}\n{separator_colored}\n\n{content}"
 
 

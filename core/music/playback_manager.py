@@ -213,7 +213,9 @@ class PlaybackManager:
                 from typing import cast
 
                 data = cast(Dict[str, Any], response.json())
-                from typing import cast as _cast, List as _List, Dict as _Dict
+                from typing import Dict as _Dict
+                from typing import List as _List
+                from typing import cast as _cast
 
                 return _cast(_List[_Dict[str, Any]], data.get("history", []))
             except Exception as e:

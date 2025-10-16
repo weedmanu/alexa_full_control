@@ -21,7 +21,6 @@ from cli.commands.music.playback import PlaybackCommands
 from cli.commands.music.status import StatusCommands
 from cli.commands.music.tunein import TuneInCommands
 
-
 # Constante de description simplifiée
 MUSIC_DESCRIPTION = "Gérer la musique et la lecture audio"
 

@@ -44,104 +44,252 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
     """
     actions_map = {
         "device": [
-            {"name": "list", "description": "Lister tous les appareils Alexa", "options": "--filter PATTERN, --online-only, --refresh, --json"},
-            {"name": "info", "description": "Informations détaillées sur un appareil", "options": "-d/--device DEVICE, --json"},
-            {"name": "volume", "description": "Gérer le volume d'un appareil", "options": "get/set -d/--device DEVICE [--level VOLUME]"},
+            {
+                "name": "list",
+                "description": "Lister tous les appareils Alexa",
+                "options": "--filter PATTERN, --online-only, --refresh, --json",
+            },
+            {
+                "name": "info",
+                "description": "Informations détaillées sur un appareil",
+                "options": "-d/--device DEVICE, --json",
+            },
+            {
+                "name": "volume",
+                "description": "Gérer le volume d'un appareil",
+                "options": "get/set -d/--device DEVICE [--level VOLUME]",
+            },
         ],
         "music": [
-            {"name": "play", "description": "Lire de la musique", "options": "-d/--device DEVICE, --provider PROVIDER, --search QUERY"},
+            {
+                "name": "play",
+                "description": "Lire de la musique",
+                "options": "-d/--device DEVICE, --provider PROVIDER, --search QUERY",
+            },
             {"name": "pause", "description": "Mettre en pause la lecture", "options": "-d/--device DEVICE"},
             {"name": "stop", "description": "Arrêter la lecture", "options": "-d/--device DEVICE"},
-            {"name": "control", "description": "Contrôler la lecture", "options": "-d/--device DEVICE, --action next/prev/play/pause"},
-            {"name": "shuffle", "description": "Activer/désactiver le mode aléatoire", "options": "-d/--device DEVICE, --state on/off"},
-            {"name": "repeat", "description": "Activer/désactiver la répétition", "options": "-d/--device DEVICE, --state on/off"},
-            {"name": "track", "description": "Jouer un morceau de bibliothèque", "options": "-d/--device DEVICE, --track-id ID ou --album ALBUM --artist ARTIST, --shuffle"},
-            {"name": "playlist", "description": "Lire une playlist", "options": "-d/--device DEVICE, --id PLAYLIST_ID, --type library/prime-asin/prime-station/prime-queue, --shuffle"},
-            {"name": "library", "description": "Bibliothèque musicale", "options": "--playlists, --purchases, --imported, --prime-playlists, --prime-stations, -d/--device DEVICE, --json"},
-            {"name": "radio", "description": "Jouer une station TuneIn", "options": "-d/--device DEVICE, --station-id STATION_ID"},
+            {
+                "name": "control",
+                "description": "Contrôler la lecture",
+                "options": "-d/--device DEVICE, --action next/prev/play/pause",
+            },
+            {
+                "name": "shuffle",
+                "description": "Activer/désactiver le mode aléatoire",
+                "options": "-d/--device DEVICE, --state on/off",
+            },
+            {
+                "name": "repeat",
+                "description": "Activer/désactiver la répétition",
+                "options": "-d/--device DEVICE, --state on/off",
+            },
+            {
+                "name": "track",
+                "description": "Jouer un morceau de bibliothèque",
+                "options": "-d/--device DEVICE, --track-id ID ou --album ALBUM --artist ARTIST, --shuffle",
+            },
+            {
+                "name": "playlist",
+                "description": "Lire une playlist",
+                "options": "-d/--device DEVICE, --id PLAYLIST_ID, --type library/prime-asin/prime-station/prime-queue, --shuffle",
+            },
+            {
+                "name": "library",
+                "description": "Bibliothèque musicale",
+                "options": "--playlists, --purchases, --imported, --prime-playlists, --prime-stations, -d/--device DEVICE, --json",
+            },
+            {
+                "name": "radio",
+                "description": "Jouer une station TuneIn",
+                "options": "-d/--device DEVICE, --station-id STATION_ID",
+            },
             {"name": "status", "description": "État de la lecture", "options": "-d/--device DEVICE, --complete"},
             {"name": "queue", "description": "Afficher la file d'attente", "options": "-d/--device DEVICE"},
         ],
         "alarm": [
-            {"name": "create", "description": "Créer une alarme", "options": "-d/--device DEVICE, --time HH:MM, --label LABEL, --repeat PATTERN, --sound SOUND_ID"},
+            {
+                "name": "create",
+                "description": "Créer une alarme",
+                "options": "-d/--device DEVICE, --time HH:MM, --label LABEL, --repeat PATTERN, --sound SOUND_ID",
+            },
             {"name": "list", "description": "Lister les alarmes", "options": "-d/--device DEVICE, --active-only"},
             {"name": "delete", "description": "Supprimer une alarme", "options": "-d/--device DEVICE, --id ALARM_ID"},
-            {"name": "update", "description": "Modifier une alarme", "options": "-d/--device DEVICE, --id ALARM_ID, --time HH:MM, --label LABEL, --repeat PATTERN, --sound SOUND_ID"},
+            {
+                "name": "update",
+                "description": "Modifier une alarme",
+                "options": "-d/--device DEVICE, --id ALARM_ID, --time HH:MM, --label LABEL, --repeat PATTERN, --sound SOUND_ID",
+            },
             {"name": "enable", "description": "Activer une alarme", "options": "-d/--device DEVICE, --id ALARM_ID"},
             {"name": "disable", "description": "Désactiver une alarme", "options": "-d/--device DEVICE, --id ALARM_ID"},
         ],
         "timer": [
-            {"name": "countdown", "description": "Gérer les minuteurs", "options": "create/list/cancel/pause/resume -d/--device DEVICE"},
-            {"name": "create", "description": "Créer un minuteur", "options": "-d/--device DEVICE, --duration DURATION, --label LABEL"},
+            {
+                "name": "countdown",
+                "description": "Gérer les minuteurs",
+                "options": "create/list/cancel/pause/resume -d/--device DEVICE",
+            },
+            {
+                "name": "create",
+                "description": "Créer un minuteur",
+                "options": "-d/--device DEVICE, --duration DURATION, --label LABEL",
+            },
             {"name": "list", "description": "Lister les minuteurs", "options": "-d/--device DEVICE, --active-only"},
-            {"name": "cancel", "description": "Annuler un minuteur", "options": "-d/--device DEVICE, --id TIMER_ID ou --all"},
-            {"name": "pause", "description": "Mettre en pause un minuteur", "options": "-d/--device DEVICE, --id TIMER_ID"},
+            {
+                "name": "cancel",
+                "description": "Annuler un minuteur",
+                "options": "-d/--device DEVICE, --id TIMER_ID ou --all",
+            },
+            {
+                "name": "pause",
+                "description": "Mettre en pause un minuteur",
+                "options": "-d/--device DEVICE, --id TIMER_ID",
+            },
             {"name": "resume", "description": "Reprendre un minuteur", "options": "-d/--device DEVICE, --id TIMER_ID"},
         ],
         "reminder": [
-            {"name": "list", "description": "Lister les rappels", "options": "-d/--device DEVICE, --active-only, --all"},
-            {"name": "create", "description": "Créer un rappel", "options": "--label TEXT, --datetime YYYY-MM-DD HH:MM ou --recurrence daily/weekly/monthly --time HH:MM"},
+            {
+                "name": "list",
+                "description": "Lister les rappels",
+                "options": "-d/--device DEVICE, --active-only, --all",
+            },
+            {
+                "name": "create",
+                "description": "Créer un rappel",
+                "options": "--label TEXT, --datetime YYYY-MM-DD HH:MM ou --recurrence daily/weekly/monthly --time HH:MM",
+            },
             {"name": "delete", "description": "Supprimer un rappel", "options": "--id REMINDER_ID, --force"},
             {"name": "complete", "description": "Marquer un rappel comme complété", "options": "--id REMINDER_ID"},
         ],
         "routine": [
             {"name": "list", "description": "Lister les routines", "options": "--only-active"},
-            {"name": "info", "description": "Détails d'une routine", "options": "--name ROUTINE_NAME, -d/--device DEVICE"},
-            {"name": "execute", "description": "Exécuter une routine", "options": "--name ROUTINE_NAME, -d/--device DEVICE"},
-            {"name": "enable", "description": "Activer une routine", "options": "--name ROUTINE_NAME, -d/--device DEVICE"},
-            {"name": "disable", "description": "Désactiver une routine", "options": "--name ROUTINE_NAME, -d/--device DEVICE"},
+            {
+                "name": "info",
+                "description": "Détails d'une routine",
+                "options": "--name ROUTINE_NAME, -d/--device DEVICE",
+            },
+            {
+                "name": "execute",
+                "description": "Exécuter une routine",
+                "options": "--name ROUTINE_NAME, -d/--device DEVICE",
+            },
+            {
+                "name": "enable",
+                "description": "Activer une routine",
+                "options": "--name ROUTINE_NAME, -d/--device DEVICE",
+            },
+            {
+                "name": "disable",
+                "description": "Désactiver une routine",
+                "options": "--name ROUTINE_NAME, -d/--device DEVICE",
+            },
         ],
         "lists": [
-            {"name": "add", "description": "Ajouter un élément", "options": "TEXT, --list shopping/todo, -d/--device DEVICE, --priority low/medium/high, --due-date YYYY-MM-DD"},
-            {"name": "remove", "description": "Supprimer un élément", "options": "TEXT, --list shopping/todo, -d/--device DEVICE"},
-            {"name": "clear", "description": "Vider la liste", "options": "--list shopping/todo, -d/--device DEVICE, --completed-only"},
+            {
+                "name": "add",
+                "description": "Ajouter un élément",
+                "options": "TEXT, --list shopping/todo, -d/--device DEVICE, --priority low/medium/high, --due-date YYYY-MM-DD",
+            },
+            {
+                "name": "remove",
+                "description": "Supprimer un élément",
+                "options": "TEXT, --list shopping/todo, -d/--device DEVICE",
+            },
+            {
+                "name": "clear",
+                "description": "Vider la liste",
+                "options": "--list shopping/todo, -d/--device DEVICE, --completed-only",
+            },
         ],
         "announcement": [
-            {"name": "send", "description": "Envoyer une annonce", "options": "-d/--device DEVICE, --message TEXT, --title TITLE"},
+            {
+                "name": "send",
+                "description": "Envoyer une annonce",
+                "options": "-d/--device DEVICE, --message TEXT, --title TITLE",
+            },
             {"name": "list", "description": "Lister les annonces", "options": "--limit N, --device DEVICE"},
             {"name": "clear", "description": "Supprimer les annonces", "options": "-d/--device DEVICE, --all"},
             {"name": "read", "description": "Marquer comme lu", "options": "--id ANNOUNCEMENT_ID"},
         ],
         "smarthome": [
-            {"name": "list", "description": "Lister les appareils Smart Home", "options": "--filter KEYWORD, --type TYPE"},
+            {
+                "name": "list",
+                "description": "Lister les appareils Smart Home",
+                "options": "--filter KEYWORD, --type TYPE",
+            },
             {"name": "info", "description": "Informations détaillées", "options": "--entity ENTITY_ID"},
-            {"name": "control", "description": "Allumer/éteindre un appareil", "options": "--entity ENTITY_ID, --operation on/off/toggle"},
+            {
+                "name": "control",
+                "description": "Allumer/éteindre un appareil",
+                "options": "--entity ENTITY_ID, --operation on/off/toggle",
+            },
             {"name": "lock", "description": "Verrouiller une serrure", "options": "--entity ENTITY_ID, --code CODE"},
-            {"name": "unlock", "description": "Déverrouiller une serrure", "options": "--entity ENTITY_ID, --code CODE"},
+            {
+                "name": "unlock",
+                "description": "Déverrouiller une serrure",
+                "options": "--entity ENTITY_ID, --code CODE",
+            },
             {"name": "status", "description": "État actuel", "options": "--entity ENTITY_ID"},
         ],
         "dnd": [
             {"name": "status", "description": "Statut DND d'un appareil", "options": "-d/--device DEVICE"},
             {"name": "enable", "description": "Activer le mode DND", "options": "-d/--device DEVICE"},
             {"name": "disable", "description": "Désactiver le mode DND", "options": "-d/--device DEVICE"},
-            {"name": "schedule", "description": "Programmer le DND", "options": "-d/--device DEVICE, --start HH:MM, --end HH:MM, --days DAYS"},
+            {
+                "name": "schedule",
+                "description": "Programmer le DND",
+                "options": "-d/--device DEVICE, --start HH:MM, --end HH:MM, --days DAYS",
+            },
         ],
         "multiroom": [
             {"name": "list", "description": "Lister les groupes multiroom", "options": ""},
-            {"name": "create", "description": "Créer un groupe", "options": "--name GROUP_NAME, --devices DEVICE1,DEVICE2,... --primary DEVICE"},
+            {
+                "name": "create",
+                "description": "Créer un groupe",
+                "options": "--name GROUP_NAME, --devices DEVICE1,DEVICE2,... --primary DEVICE",
+            },
             {"name": "delete", "description": "Supprimer un groupe", "options": "--name GROUP_NAME, --force"},
             {"name": "info", "description": "Informations sur un groupe", "options": "--name GROUP_NAME"},
         ],
         "calendar": [
             {"name": "list", "description": "Consulter les événements", "options": "-d/--device DEVICE, --days N"},
-            {"name": "add", "description": "Ajouter un événement", "options": "--title TEXT, --start DATETIME, --end DATETIME, --location TEXT, --description TEXT"},
+            {
+                "name": "add",
+                "description": "Ajouter un événement",
+                "options": "--title TEXT, --start DATETIME, --end DATETIME, --location TEXT, --description TEXT",
+            },
             {"name": "delete", "description": "Supprimer un événement", "options": "--id EVENT_ID"},
             {"name": "info", "description": "Détails d'un événement", "options": "--id EVENT_ID, --json"},
         ],
         "activity": [
-            {"name": "list", "description": "Lister les activités récentes", "options": "--type voice/music/alarm/timer/reminder/smart_home/all, --limit N"},
+            {
+                "name": "list",
+                "description": "Lister les activités récentes",
+                "options": "--type voice/music/alarm/timer/reminder/smart_home/all, --limit N",
+            },
             {"name": "lastdevice", "description": "Dernier appareil utilisé", "options": ""},
             {"name": "lastcommand", "description": "Dernière commande vocale", "options": "-d/--device DEVICE"},
             {"name": "lastresponse", "description": "Dernière réponse d'Alexa", "options": "-d/--device DEVICE"},
         ],
         "cache": [
             {"name": "status", "description": "Afficher statistiques cache", "options": ""},
-            {"name": "refresh", "description": "Forcer resynchronisation", "options": "--category devices/smart_home/alarms_and_reminders/all"},
+            {
+                "name": "refresh",
+                "description": "Forcer resynchronisation",
+                "options": "--category devices/smart_home/alarms_and_reminders/all",
+            },
             {"name": "clear", "description": "Supprimer tout le cache", "options": ""},
-            {"name": "show", "description": "Afficher contenu JSON", "options": "--category devices/smart_home/alarms_and_reminders/routines/sync_stats"},
+            {
+                "name": "show",
+                "description": "Afficher contenu JSON",
+                "options": "--category devices/smart_home/alarms_and_reminders/routines/sync_stats",
+            },
         ],
         "auth": [
-            {"name": "create", "description": "Créer une nouvelle authentification", "options": "--email EMAIL, --password PASSWORD, --method METHOD"},
+            {
+                "name": "create",
+                "description": "Créer une nouvelle authentification",
+                "options": "--email EMAIL, --password PASSWORD, --method METHOD",
+            },
             {"name": "list", "description": "Lister les authentifications", "options": ""},
             {"name": "delete", "description": "Supprimer une authentification", "options": "--id AUTH_ID"},
             {"name": "test", "description": "Tester une authentification", "options": "--id AUTH_ID"},
@@ -304,7 +452,7 @@ def generate_category_help(
                     action_options = action.get("options", "")
                     if action_options:
                         # Diviser les options par virgule et prendre les 2-3 premières
-                        option_parts = [opt.strip() for opt in action_options.split(',') if opt.strip()][:3]
+                        option_parts = [opt.strip() for opt in action_options.split(",") if opt.strip()][:3]
                         for opt in option_parts:
                             # Colorer l'option avec la couleur category_options (vert non bold)
                             opt_colored = colorize(opt, "color_category_options")
@@ -355,7 +503,7 @@ def generate_category_help(
             # Sous-liste des options si elles existent
             if options:
                 # Diviser les options par virgule et nettoyer
-                option_parts = [opt.strip() for opt in options.split(',') if opt.strip()]
+                option_parts = [opt.strip() for opt in options.split(",") if opt.strip()]
                 for opt in option_parts:
                     # Colorer l'option avec la couleur category_options (vert non bold)
                     opt_colored = colorize(opt, "color_category_options")

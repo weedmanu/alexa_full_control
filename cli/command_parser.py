@@ -12,7 +12,6 @@ Date: 7 octobre 2025
 """
 
 import argparse
-import sys
 from typing import Dict, List, Optional, Type
 
 from loguru import logger

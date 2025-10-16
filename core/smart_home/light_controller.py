@@ -66,9 +66,7 @@ class LightController(BaseManager[Dict[str, Any]]):
         # Voice Command Service: si un auth legacy est présent dans http_client,
         # on l'utilise pour conserver le comportement existant.
         raw_auth = (
-            getattr(self.http_client, "_session", None)
-            or getattr(self.http_client, "auth", None)
-            or self.http_client
+            getattr(self.http_client, "_session", None) or getattr(self.http_client, "auth", None) or self.http_client
         )
         try:
             self._voice_service = VoiceCommandService(raw_auth, config, self.state_machine)

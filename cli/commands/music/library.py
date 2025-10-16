@@ -15,7 +15,6 @@ import json
 from cli.command_parser import ActionHelpFormatter
 from cli.commands.music.base import MusicSubCommand
 
-
 # Constantes de description simplifiées
 LIBRARY_HELP = "Gérer la bibliothèque musicale"
 PLAYLIST_HELP = "Gérer les playlists"
