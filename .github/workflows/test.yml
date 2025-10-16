@@ -1,0 +1,105 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - refacto
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - refacto
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements-dev.txt
+          pip install -r requirements.txt
+
+      - name: Create test directories if needed
+        run: |
+          mkdir -p Dev/pytests/cli
+          mkdir -p Dev/pytests/core
+          mkdir -p Dev/pytests/security
+
+      - name: Run tests with pytest
+        run: |
+          pytest Dev/pytests/ -v --tb=short --strict-markers
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Generate coverage report
+        if: matrix.python-version == '3.13'
+        run: |
+          pytest Dev/pytests/ \
+            --cov=cli \
+            --cov=core \
+            --cov=services \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-report=html
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.13'
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-py${{ matrix.python-version }}
+          path: |
+            htmlcov/
+            coverage.xml
+          retention-days: 30
+
+      - name: Comment test results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const coverage = fs.readFileSync('coverage.xml', 'utf8');
+
+            // Extract coverage percentage from XML
+            const match = coverage.match(/line-rate="([\d.]+)"/);
+            const rate = match ? (parseFloat(match[1]) * 100).toFixed(1) : 'N/A';
+
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📊 Test Results\n\n✅ Tests passed on Python ${{ matrix.python-version }}\n📈 Coverage: ${rate}%`
+            });

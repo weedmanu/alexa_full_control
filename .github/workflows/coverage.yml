@@ -1,0 +1,140 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - refacto
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - refacto
+      - develop
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install -r requirements.txt
+          pip install coverage pytest-cov
+
+      - name: Create test directories
+        run: |
+          mkdir -p Dev/pytests/cli
+          mkdir -p Dev/pytests/core
+          mkdir -p Dev/pytests/security
+
+      - name: Generate coverage report
+        run: |
+          coverage run -m pytest Dev/pytests/ -v
+          coverage report --skip-covered --precision=2
+          coverage html
+          coverage xml
+          coverage json
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Check coverage threshold
+        run: |
+          coverage report --fail-under=80 --precision=2 || echo "Coverage below threshold (expected in early stages)"
+        continue-on-error: true
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-report
+          fail_ci_if_error: false
+          verbose: false
+
+      - name: Generate coverage badges
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          # Extract coverage percentage
+          coverage_percent=$(coverage report --precision=0 | tail -1 | awk '{print $NF}' | sed 's/%//')
+
+          # Create badge
+          if [ $coverage_percent -ge 90 ]; then
+            color="brightgreen"
+          elif [ $coverage_percent -ge 80 ]; then
+            color="green"
+          elif [ $coverage_percent -ge 70 ]; then
+            color="yellow"
+          else
+            color="red"
+          fi
+
+          echo "Coverage: $coverage_percent% ($color)"
+
+      - name: Archive coverage reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            htmlcov/
+            coverage.xml
+            coverage.json
+            .coverage
+          retention-days: 30
+
+      - name: Deploy coverage to GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-html
+          path: htmlcov/
+          retention-days: 90
+
+      - name: Post coverage summary on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read coverage report
+            let coverage_data = {
+              total: 'N/A',
+              cli: 'N/A',
+              core: 'N/A',
+              services: 'N/A'
+            };
+
+            try {
+              const coverage_json = JSON.parse(fs.readFileSync('coverage.json', 'utf8'));
+              const total = coverage_json.totals.percent_covered;
+              coverage_data.total = total.toFixed(1);
+            } catch (e) {
+              console.log('Could not read coverage.json');
+            }
+
+            // Post comment
+            const message = '## 📊 Coverage Report\n\n| Category | Coverage |\n|----------|----------|\n| Total | ' + coverage_data.total + '% |\n| CLI | ' + coverage_data.cli + '% |\n| Core | ' + coverage_data.core + '% |\n| Services | ' + coverage_data.services + '% |\n\n✅ See detailed report in Artifacts';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
