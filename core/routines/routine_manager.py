@@ -559,7 +559,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 timeout=15,
             )
 
-            actions = response if isinstance(response, list) else []
+            actions: list[Any] = response if isinstance(response, list) else []
             
             # Mettre en cache
             with self._lock:

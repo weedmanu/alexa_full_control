@@ -2,9 +2,11 @@
 Gestionnaire d'égaliseur audio - Thread-safe.
 """
 
+import threading
 from typing import Any, Dict, Optional, cast
 
 from core.base_manager import BaseManager, create_http_client_from_auth
+from core.circuit_breaker import CircuitBreaker
 from loguru import logger
 
 from ..state_machine import AlexaStateMachine

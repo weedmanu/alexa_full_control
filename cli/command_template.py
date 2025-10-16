@@ -163,13 +163,10 @@ class ManagerCommand(ABC):
                 f"Executing {self.command_name} with params: {params}"
             )
 
-            # Note: This is a sync wrapper - actual execution should be async
+            # Execute async command using event loop
             import asyncio
-            if asyncio.iscoroutinefunction(self.execute):
-                loop = asyncio.get_event_loop()
-                result = loop.run_until_complete(self.execute(params))
-            else:
-                result = self.execute(params)
+            loop = asyncio.get_event_loop()
+            result = loop.run_until_complete(self.execute(params))
 
             self.logger.info(
                 f"Executed {self.command_name} successfully: {result}"
