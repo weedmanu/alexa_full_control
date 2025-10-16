@@ -27,7 +27,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
         # auth_or_http peut être soit l'ancien AuthClient, soit un http_client
         # compatible (ayant get/post/put/delete et attribut csrf)
         self.config = config
-        self.state_machine = state_machine or AlexaStateMachine()
+        state_machine = state_machine or AlexaStateMachine()
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
         self._lock = threading.RLock()
 
@@ -36,14 +36,17 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
             from core.base_manager import create_http_client_from_auth
 
             # Si auth_or_http ressemble à un auth legacy, la fabrique retournera un wrapper
-            self.http_client = (
+            http_client = (
                 create_http_client_from_auth(auth_or_http) if hasattr(auth_or_http, "session") else auth_or_http
             )
         except Exception:
-            self.http_client = getattr(auth_or_http, "session", auth_or_http)
+            http_client = getattr(auth_or_http, "session", auth_or_http)
 
         # Exposer également auth pour compatibilité code existant
         self.auth = getattr(auth_or_http, "auth", auth_or_http)
+
+        # Appeler le constructeur parent pour initialiser les attributs de base
+        super().__init__(http_client, config, state_machine)
 
         logger.info("DeviceSettingsManager initialisé")
 
