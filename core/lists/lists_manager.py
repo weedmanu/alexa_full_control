@@ -352,14 +352,14 @@ class ListsManager(BaseManager[Dict[str, Any]]):
         """Raccourci pour la liste de courses."""
         lists = self.get_lists()
         for lst in lists:
-        if lst.get("type") == "SHOPPING_ITEM":
-            return lst
+            if lst.get("type") == "SHOPPING_ITEM":
+                return lst
         return None
 
     def get_todo_list(self) -> Optional[Dict[str, Any]]:
         """Raccourci pour la liste de tâches."""
         lists = self.get_lists()
         for lst in lists:
-        if lst.get("type") == "TASK":
-            return lst
+            if lst.get("type") == "TASK":
+                return lst
         return None

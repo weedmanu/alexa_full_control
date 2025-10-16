@@ -219,23 +219,23 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
         Customer ID ou None si erreur
         """
         try:
-        url = f"https://{self.config.alexa_domain}/api/bootstrap?version=0"
-        response = self.breaker.call(
-            self.http_client.get,
-            url,
-            headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-            timeout=10,
-        )
-        data = response
+            url = f"https://{self.config.alexa_domain}/api/bootstrap?version=0"
+            response = self.breaker.call(
+                self.http_client.get,
+                url,
+                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
+                timeout=10,
+            )
+            data = response
 
-        customer_id = data.get("authentication", {}).get("customerId")
-        if customer_id:
-            logger.debug(f"Customer ID: {customer_id}")
-            return cast(str | None, customer_id)
-        else:
-            logger.warning("Customer ID non trouvé dans bootstrap")
-            return None
+            customer_id = data.get("authentication", {}).get("customerId")
+            if customer_id:
+                logger.debug(f"Customer ID: {customer_id}")
+                return cast(str | None, customer_id)
+            else:
+                logger.warning("Customer ID non trouvé dans bootstrap")
+                return None
 
         except Exception as e:
-        logger.error(f"Erreur récupération customer ID: {e}")
+            logger.error(f"Erreur récupération customer ID: {e}")
         return None
