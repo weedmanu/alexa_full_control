@@ -15,7 +15,6 @@ from typing import Any, Optional
 from cli.base_command import BaseCommand
 from cli.command_adapter import get_command_adapter
 
-
 # ============================================================================
 # PLAYBACK PLAY COMMAND
 # ============================================================================

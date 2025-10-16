@@ -81,7 +81,7 @@ class SyncService:
         except Exception:
             self.http_client = self.auth
 
-    def sync_devices_only(self, force: bool = False) -> Dict[str, Any]:
+    def sync_devices_only(self, force: bool = False) -> Dict[str, Any]:  # pylint: disable=unused-argument
         """
         Synchronise uniquement les appareils Alexa au démarrage.
 

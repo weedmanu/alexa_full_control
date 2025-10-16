@@ -5,13 +5,14 @@ Manages all dependencies and provides centralized instance resolution
 for managers, services, and components.
 """
 
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, Dict, Optional, TypeVar
+
 from loguru import logger
 
-from core.config import Config
-from core.state_machine import AlexaStateMachine
-from core.manager_factory import ManagerFactory
 from alexa_auth.alexa_auth import AlexaAuth
+from core.config import Config
+from core.manager_factory import ManagerFactory
+from core.state_machine import AlexaStateMachine
 
 T = TypeVar("T")
 

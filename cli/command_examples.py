@@ -6,6 +6,7 @@ using the ManagerCommand base class.
 """
 
 from typing import Any, Dict
+
 from cli.command_template import ManagerCommand
 from core.di_container import DIContainer
 from core.exceptions import ValidationError
@@ -38,13 +39,13 @@ class PlaybackPlayCommand(ManagerCommand):
         """
         if "device" not in params:
             raise ValidationError("Device serial is required")
-        
+
         if not isinstance(params["device"], str):
             raise ValidationError("Device must be a string")
-        
+
         if len(params["device"]) == 0:
             raise ValidationError("Device serial cannot be empty")
-        
+
         return True
 
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -60,9 +61,9 @@ class PlaybackPlayCommand(ManagerCommand):
         try:
             device = params["device"]
             manager = self.get_manager("playback_manager")
-            
+
             result = await manager.play(device_serial=device)
-            
+
             return {
                 "success": True,
                 "data": result,
@@ -136,14 +137,14 @@ class DeviceListCommand(ManagerCommand):
         try:
             manager = self.get_manager("device_manager")
             devices = await manager.get_devices()
-            
+
             formatted = f"Found {len(devices)} device(s):\n"
             for device in devices:
                 formatted += (
                     f"  - {device.get('name', 'Unknown')} "
                     f"({device.get('serial', 'N/A')})\n"
                 )
-            
+
             return {
                 "success": True,
                 "data": devices,
@@ -199,7 +200,7 @@ class AlarmAddCommand(ManagerCommand):
         """
         if "time" not in params:
             raise ValidationError("Alarm time is required (format: HH:MM)")
-        
+
         # Validate time format
         time_str = params["time"]
         try:
@@ -208,7 +209,7 @@ class AlarmAddCommand(ManagerCommand):
                 raise ValueError()
         except (ValueError, AttributeError):
             raise ValidationError("Invalid time format. Use HH:MM (e.g., 07:30)")
-        
+
         # Validate recurring pattern if provided
         if "recurring" in params:
             valid_patterns = ["daily", "weekdays", "weekends", "weekly", "once"]
@@ -216,7 +217,7 @@ class AlarmAddCommand(ManagerCommand):
                 raise ValidationError(
                     f"Invalid recurring pattern. Valid: {', '.join(valid_patterns)}"
                 )
-        
+
         return True
 
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -231,15 +232,15 @@ class AlarmAddCommand(ManagerCommand):
         """
         try:
             manager = self.get_manager("alarm_manager")
-            
+
             alarm_data = {
                 "time": params["time"],
                 "recurring": params.get("recurring", "once"),
                 "label": params.get("label", "Alarm")
             }
-            
+
             result = await manager.add_alarm(**alarm_data)
-            
+
             return {
                 "success": True,
                 "data": result,

@@ -16,7 +16,7 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
     def __init__(self, auth_or_http: Any, config: Any, state_machine: Any = None) -> None:
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth_or_http)
-        
+
         # Initialiser BaseManager
         super().__init__(
             http_client=http_client,
@@ -25,7 +25,7 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
             cache_service=None,
             cache_ttl=300
         )
-        
+
         # Keep auth reference for backward compatibility
         self.auth = getattr(auth_or_http, "auth", auth_or_http)
         logger.info("TuneInManager initialisé (hérité de BaseManager)")

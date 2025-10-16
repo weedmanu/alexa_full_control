@@ -6,12 +6,13 @@ in different contexts (CLI, tests, API, etc.).
 """
 
 from typing import Any, Optional
+
 from loguru import logger
 
-from core.di_container import DIContainer, setup_di_container, reset_di_container, get_di_container
-from core.config import Config
-from core.state_machine import AlexaStateMachine
 from alexa_auth.alexa_auth import AlexaAuth
+from core.config import Config
+from core.di_container import DIContainer, get_di_container, reset_di_container, setup_di_container
+from core.state_machine import AlexaStateMachine
 
 
 class DISetup:

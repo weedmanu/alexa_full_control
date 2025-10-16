@@ -12,11 +12,12 @@ Date: 7 octobre 2025
 """
 
 import argparse
-from typing import Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Dict, List, Optional, Type
 
 from loguru import logger
 
-from cli.base_command import BaseCommand
+if TYPE_CHECKING:
+    from cli.base_command import BaseCommand
 
 
 class UniversalHelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -88,7 +89,7 @@ class CommandParser:
 
         return parser
 
-    def register_command(self, name: str, command_class: Type[BaseCommand]) -> None:
+    def register_command(self, name: str, command_class: "Type[BaseCommand]") -> None:
         """
         Enregistre une commande dans le parser.
 
@@ -122,7 +123,7 @@ class CommandParser:
         """
         return self.parser.parse_args(args)
 
-    def get_command_class(self, category: str) -> Optional[Type[BaseCommand]]:
+    def get_command_class(self, category: str) -> Optional["Type[BaseCommand]"]:
         """
         Récupère la classe de commande pour une catégorie.
 

@@ -16,11 +16,7 @@ from loguru import logger
 from utils.logger import SharedIcons
 
 if TYPE_CHECKING:
-    from core.circuit_breaker import CircuitBreaker
-    from core.state_machine import AlexaStateMachine
-else:
-    CircuitBreaker = None
-    AlexaStateMachine = None
+    pass
 
 
 class VoiceCommandService:
@@ -91,7 +87,7 @@ class VoiceCommandService:
 
         logger.info(f"{SharedIcons.GEAR} VoiceCommandService initialisé")
 
-    def speak(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:
+    def speak(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:  # pylint: disable=unused-argument
         """
         Fait parler Alexa et exécute la commande vocale.
 
@@ -228,7 +224,7 @@ class VoiceCommandService:
                 logger.error(f"❌ Erreur commande vocale: {e}")
                 return False
 
-    def speak_as_voice(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:
+    def speak_as_voice(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:  # pylint: disable=unused-argument
         """
         Simule une commande vocale avec Alexa.Speak (comme si on parlait au micro).
 

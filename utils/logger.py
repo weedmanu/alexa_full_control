@@ -422,7 +422,7 @@ class InstallLogger:
             # analyze the module implementation.
             from importlib import import_module
 
-            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+            FallbackLogger = import_module("scripts.install").Logger
 
             FallbackLogger.header(msg, emoji)
 
@@ -432,7 +432,7 @@ class InstallLogger:
         else:
             from importlib import import_module
 
-            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+            FallbackLogger = import_module("scripts.install").Logger
 
             FallbackLogger.step(msg, emoji)
 
@@ -442,7 +442,7 @@ class InstallLogger:
         else:
             from importlib import import_module
 
-            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+            FallbackLogger = import_module("scripts.install").Logger
 
             FallbackLogger.progress(msg)
 
@@ -452,7 +452,7 @@ class InstallLogger:
         else:
             from importlib import import_module
 
-            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+            FallbackLogger = import_module("scripts.install").Logger
 
             FallbackLogger.success(msg, emoji)
 
@@ -462,7 +462,7 @@ class InstallLogger:
         else:
             from importlib import import_module
 
-            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+            FallbackLogger = import_module("scripts.install").Logger
 
             FallbackLogger.error(msg, emoji)
 
@@ -472,7 +472,7 @@ class InstallLogger:
         else:
             from importlib import import_module
 
-            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+            FallbackLogger = import_module("scripts.install").Logger
 
             FallbackLogger.warning(msg, emoji)
 
@@ -482,7 +482,7 @@ class InstallLogger:
         else:
             from importlib import import_module
 
-            FallbackLogger = getattr(import_module("scripts.install"), "Logger")
+            FallbackLogger = import_module("scripts.install").Logger
 
             FallbackLogger.info(msg, emoji)
 

@@ -6,7 +6,8 @@ with standardized dependencies and configuration.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Type, List
+from typing import Any, Callable, Dict, List
+
 from loguru import logger
 
 
@@ -54,15 +55,15 @@ class ManagerFactory:
         """Load default configurations for standard managers."""
         # Import here to avoid circular imports
         try:
-            from core.music.playback_manager import PlaybackManager
-            from core.routines.routine_manager import RoutineManager
-            from core.device_manager import DeviceManager
             from core.alarms.alarm_manager import AlarmManager
-            from core.music.library_manager import LibraryManager
-            from core.music.tunein_manager import TuneInManager
-            from core.lists.lists_manager import ListsManager
             from core.audio.bluetooth_manager import BluetoothManager
             from core.audio.equalizer_manager import EqualizerManager
+            from core.device_manager import DeviceManager
+            from core.lists.lists_manager import ListsManager
+            from core.music.library_manager import LibraryManager
+            from core.music.playback_manager import PlaybackManager
+            from core.music.tunein_manager import TuneInManager
+            from core.routines.routine_manager import RoutineManager
             from core.settings.device_settings_manager import DeviceSettingsManager
 
             # Register standard managers

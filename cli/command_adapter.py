@@ -23,7 +23,7 @@ from core.di_container import get_di_container
 class CommandAdapter:
     """
     Adapter that bridges old BaseCommand and new ManagerCommand patterns.
-    
+
     Provides:
     - DIContainer access for all commands
     - Manager lookup and injection
@@ -39,13 +39,13 @@ class CommandAdapter:
     def get_manager(self, manager_name: str) -> Any:
         """
         Get manager instance from DI container by name.
-        
+
         Args:
             manager_name: Name of manager to retrieve (e.g., 'playback_manager')
-            
+
         Returns:
             Manager instance or None if not found
-            
+
         Raises:
             ValueError: If manager not registered in container
         """
@@ -58,9 +58,9 @@ class CommandAdapter:
     def inject_di_container(self, command: Any) -> None:
         """
         Inject DIContainer into command instance.
-        
+
         Allows old BaseCommand subclasses to access DI container.
-        
+
         Args:
             command: Command instance to inject into
         """
@@ -81,12 +81,12 @@ class CommandAdapter:
     ) -> ManagerCommand:
         """
         Create and initialize a ManagerCommand instance.
-        
+
         Args:
             command_class: ManagerCommand subclass
             command_name: Name of the command (defaults to class name)
             args: Optional arguments dict (not directly assigned to command)
-            
+
         Returns:
             Initialized ManagerCommand instance
         """
@@ -105,25 +105,25 @@ class CommandAdapter:
     ) -> Any:
         """
         Execute command with error handling and logging.
-        
+
         Args:
             command: Command instance (BaseCommand or ManagerCommand)
             args: Optional arguments
-            
+
         Returns:
             Command result
         """
         try:
             # Inject DI container
             self.inject_di_container(command)
-            
+
             # Execute
             if isinstance(command, ManagerCommand):
                 return command.execute(args or {})
             else:
                 # Old BaseCommand pattern
                 return command.execute(args or {})
-                
+
         except Exception as e:
             self.logger.error(f"Command execution failed: {e}")
             raise
@@ -132,14 +132,14 @@ class CommandAdapter:
 class CommandContext:
     """
     Context object for passing managers and services to commands.
-    
+
     Provides a unified interface for command dependencies.
     """
 
     def __init__(self, di_container: Optional[Any] = None) -> None:
         """
         Initialize context with optional DI container.
-        
+
         Args:
             di_container: DIContainer instance (defaults to get_di_container())
         """
@@ -149,10 +149,10 @@ class CommandContext:
     def get_manager(self, manager_name: str) -> Any:
         """
         Get manager from DI container with caching.
-        
+
         Args:
             manager_name: Name of manager
-            
+
         Returns:
             Manager instance
         """
@@ -163,7 +163,7 @@ class CommandContext:
     def set_manager(self, manager_name: str, instance: Any) -> None:
         """
         Set manager instance directly (for testing).
-        
+
         Args:
             manager_name: Name of manager
             instance: Manager instance
@@ -178,7 +178,7 @@ class CommandContext:
 class CommandFactory:
     """
     Factory for creating commands with proper initialization.
-    
+
     Handles both old and new command patterns.
     """
 
@@ -194,11 +194,11 @@ class CommandFactory:
     ) -> Any:
         """
         Create BaseCommand instance with context.
-        
+
         Args:
             command_class: BaseCommand subclass
             context: Optional CommandContext
-            
+
         Returns:
             Initialized command instance
         """
@@ -219,10 +219,10 @@ class CommandFactory:
     ) -> ManagerCommand:
         """
         Create ManagerCommand instance with DI container.
-        
+
         Args:
             command_class: ManagerCommand subclass
-            
+
         Returns:
             Initialized ManagerCommand instance
         """
@@ -235,11 +235,11 @@ class CommandFactory:
     ) -> Any:
         """
         Create command (auto-detects type).
-        
+
         Args:
             command_class: Command class
             context: Optional CommandContext
-            
+
         Returns:
             Initialized command instance
         """

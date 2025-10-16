@@ -2,7 +2,7 @@
 Commandes restantes - Tier 2 (Announcements, Activity, Reminders) - Refactorisé.
 
 Annonces: broadcast, send (direct message)
-Activité: list, get (history)  
+Activité: list, get (history)
 Rappels: add, list, delete
 
 Chaque commande est une classe BaseCommand indépendante avec CommandAdapter DI.
@@ -16,7 +16,6 @@ from typing import Any, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_adapter import get_command_adapter
-
 
 # ============================================================================
 # ANNOUNCEMENT COMMANDS
@@ -54,7 +53,7 @@ class AnnouncementBroadcastCommand(BaseCommand):
             result = self.notification_mgr.announce(args.message)
 
             if result:
-                self.success(f"✅ Annonce envoyée")
+                self.success("✅ Annonce envoyée")
                 return True
 
             return False
@@ -199,7 +198,7 @@ class ActivityGetCommand(BaseCommand):
                 self.error("Paramètre requis: activity_id")
                 return False
 
-            self.info(f"📜 Récupération des détails de l'activité...")
+            self.info("📜 Récupération des détails de l'activité...")
 
             if not self.activity_mgr:
                 self.activity_mgr = self.adapter.get_manager("ActivityManager")
@@ -352,7 +351,7 @@ class ReminderDeleteCommand(BaseCommand):
                 self.error("Paramètre requis: reminder_id")
                 return False
 
-            self.info(f"🔔 Suppression du rappel...")
+            self.info("🔔 Suppression du rappel...")
 
             if not self.reminder_mgr:
                 self.reminder_mgr = self.adapter.get_manager("ReminderManager")
@@ -363,7 +362,7 @@ class ReminderDeleteCommand(BaseCommand):
             result = self.reminder_mgr.delete_reminder(args.reminder_id)
 
             if result:
-                self.success(f"✅ Rappel supprimé")
+                self.success("✅ Rappel supprimé")
                 return True
 
             return False

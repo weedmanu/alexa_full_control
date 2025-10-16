@@ -18,7 +18,6 @@ from cli.base_command import BaseCommand
 from cli.command_adapter import get_command_adapter
 from data.device_family_mapping import get_device_display_name
 
-
 # ============================================================================
 # DEVICE LIST COMMAND
 # ============================================================================

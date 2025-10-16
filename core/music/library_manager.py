@@ -11,7 +11,6 @@ from loguru import logger
 
 from core.base_manager import BaseManager, create_http_client_from_auth
 from core.state_machine import AlexaStateMachine
-from services.cache_service import CacheService
 
 
 class LibraryManager(BaseManager[Dict[str, Any]]):

@@ -17,7 +17,6 @@ from typing import Any, Optional
 from cli.base_command import BaseCommand
 from cli.command_adapter import get_command_adapter
 
-
 # ============================================================================
 # TIMER COMMANDS
 # ============================================================================
@@ -101,7 +100,7 @@ class TimerListCommand(BaseCommand):
 
             serial, device_type = device_info
 
-            self.info(f"⏲️  Récupération des minuteurs...")
+            self.info("⏲️  Récupération des minuteurs...")
 
             if not self.timer_mgr:
                 self.timer_mgr = self.adapter.get_manager("TimerManager")
@@ -158,7 +157,7 @@ class TimerDeleteCommand(BaseCommand):
                 self.error("Paramètre requis: timer_id")
                 return False
 
-            self.info(f"⏲️  Suppression du minuteur...")
+            self.info("⏲️  Suppression du minuteur...")
 
             if not self.timer_mgr:
                 self.timer_mgr = self.adapter.get_manager("TimerManager")
@@ -169,7 +168,7 @@ class TimerDeleteCommand(BaseCommand):
             result = self.timer_mgr.delete_timer(args.timer_id)
 
             if result:
-                self.success(f"✅ Minuteur supprimé")
+                self.success("✅ Minuteur supprimé")
                 return True
 
             return False
@@ -212,7 +211,7 @@ class AuthLoginCommand(BaseCommand):
             result = self.auth_service.login()
 
             if result:
-                self.success(f"✅ Connexion réussie")
+                self.success("✅ Connexion réussie")
                 return True
 
             return False
@@ -250,7 +249,7 @@ class AuthLogoutCommand(BaseCommand):
             result = self.auth_service.logout()
 
             if result:
-                self.success(f"✅ Déconnexion réussie")
+                self.success("✅ Déconnexion réussie")
                 return True
 
             return False
@@ -339,7 +338,7 @@ class CacheClearCommand(BaseCommand):
             result = self.cache_service.clear_cache(cache_type)
 
             if result:
-                self.success(f"✅ Cache vidé")
+                self.success("✅ Cache vidé")
                 return True
 
             return False
@@ -379,7 +378,7 @@ class CacheUpdateCommand(BaseCommand):
             result = self.cache_service.update_cache(cache_type)
 
             if result:
-                self.success(f"✅ Cache mis à jour")
+                self.success("✅ Cache mis à jour")
                 return True
 
             return False

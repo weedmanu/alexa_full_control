@@ -6,9 +6,10 @@ import json
 import threading
 from typing import Any, Dict, Optional, cast
 
-from core.base_manager import BaseManager, create_http_client_from_auth
-from core.circuit_breaker import CircuitBreaker
 from loguru import logger
+
+from core.base_manager import BaseManager
+from core.circuit_breaker import CircuitBreaker
 
 from ..state_machine import AlexaStateMachine
 
@@ -77,7 +78,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "wakeWord": wake_word,
             }
-            response = self.breaker.call(
+            self.breaker.call(
                 self.http_client.put,
                 f"https://{self.config.alexa_domain}/api/wake-word",
                 json=payload,
@@ -100,7 +101,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "timeZoneId": timezone,
             }
-            response = self.breaker.call(
+            self.breaker.call(
                 self.http_client.put,
                 f"https://{self.config.alexa_domain}/api/device-preferences/time-zone",
                 json=payload,
@@ -123,7 +124,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "locale": locale,
             }
-            response = self.breaker.call(
+            self.breaker.call(
                 self.http_client.put,
                 f"https://{self.config.alexa_domain}/api/device-preferences/locale",
                 json=payload,
@@ -178,7 +179,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "status": "ENABLED",
             }
 
-            response = self._api_call("post", r"/api/behaviors/preview",
+            self._api_call("post", r"/api/behaviors/preview",
                 json=payload,
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,

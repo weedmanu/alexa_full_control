@@ -41,10 +41,10 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
             cache_ttl=300
         )
         self.auth = auth  # Keep for backward compatibility
-        
+
         # Initialiser VoiceCommandService pour les contrôles de lecture
         from services.voice_command_service import VoiceCommandService
-        
+
         self.voice_service = VoiceCommandService(auth, config, self.state_machine)
         logger.info("PlaybackManager initialisé avec VoiceCommandService (hérité de BaseManager)")
 
@@ -52,7 +52,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
         """Envoie une commande directe à /api/np/command (comme le script shell)."""
         try:
             with self._lock:
-                response = self._api_call(
+                self._api_call(
                     "post",
                     "/api/np/command",
                     params={"deviceSerialNumber": device_serial, "deviceType": device_type},

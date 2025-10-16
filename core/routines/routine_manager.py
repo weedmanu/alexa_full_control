@@ -401,14 +401,14 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
 
         try:
             routine_id = f"amzn1.alexa.routine.{uuid.uuid4().hex[:12]}"
-            
+
             payload: Dict[str, Any] = {
                 "automationId": routine_id,
                 "name": name,
                 "status": "ENABLED",
                 "sequence": actions or [],
             }
-            
+
             if description:
                 payload["description"] = description
 
@@ -506,7 +506,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
 
         try:
             payload: Dict[str, Any] = {}
-            
+
             if name is not None:
                 payload["name"] = name
             if actions is not None:
@@ -560,7 +560,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             )
 
             actions: list[Any] = response if isinstance(response, list) else []
-            
+
             # Mettre en cache
             with self._lock:
                 self._available_actions_cache = actions
@@ -645,7 +645,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 "automationId": routine_id,
                 "scheduledTime": time_str,
             }
-            
+
             if recurring:
                 payload["recurring"] = recurring
 

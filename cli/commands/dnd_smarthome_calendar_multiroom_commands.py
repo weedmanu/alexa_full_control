@@ -18,7 +18,6 @@ from typing import Any, Optional
 from cli.base_command import BaseCommand
 from cli.command_adapter import get_command_adapter
 
-
 # ============================================================================
 # DND (DO NOT DISTURB) COMMANDS
 # ============================================================================
@@ -153,7 +152,7 @@ class DNDDeleteCommand(BaseCommand):
             result = self.dnd_mgr.delete_dnd(serial, device_type)
 
             if result:
-                self.success(f"✅ DND réinitialisé")
+                self.success("✅ DND réinitialisé")
                 return True
 
             return False
@@ -189,7 +188,7 @@ class SmartHomeGetCommand(BaseCommand):
                 self.error("Paramètre requis: device_id")
                 return False
 
-            self.info(f"🏠 Récupération de l'état de l'appareil...")
+            self.info("🏠 Récupération de l'état de l'appareil...")
 
             if not self.smarthome_mgr:
                 self.smarthome_mgr = self.adapter.get_manager("SmartHomeManager")
@@ -390,7 +389,7 @@ class CalendarGetCommand(BaseCommand):
                 self.error("Paramètre requis: calendar_id")
                 return False
 
-            self.info(f"📅 Récupération des événements...")
+            self.info("📅 Récupération des événements...")
 
             if not self.calendar_mgr:
                 self.calendar_mgr = self.adapter.get_manager("CalendarManager")

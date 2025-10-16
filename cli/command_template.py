@@ -24,13 +24,12 @@ Usage:
             return {"success": True, "data": await manager.play()}
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Coroutine
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 from core.di_container import DIContainer
-from core.exceptions import ValidationError, APIError
-
+from core.exceptions import APIError, ValidationError
 
 logger = logging.getLogger(__name__)
 

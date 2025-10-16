@@ -12,10 +12,10 @@ import json
 from threading import RLock
 from typing import Any, Dict, List, Optional
 
+from config import Config
 from loguru import logger
 from pybreaker import CircuitBreaker
 
-from config import Config
 from services.auth import AuthClient
 from utils.logger import SharedIcons, setup_loguru_logger
 
