@@ -1,4 +1,4 @@
-"""
+﻿"""
 Service de cache persistant multi-niveaux.
 
 Gère le cache disque avec TTL, thread-safe et statistiques.
@@ -13,7 +13,7 @@ import time
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from threading import RLock
-from typing import Any, Dict, List, Optional, cast, Generator
+from typing import Any, Dict, Generator, List, Optional, cast
 
 from loguru import logger
 
@@ -21,7 +21,7 @@ from utils.logger import SharedIcons
 
 # Optional inter-process locking: use portalocker when available
 try:
-    import portalocker as _portalocker
+    import portalocker as _portalocker  # type: ignore
 except Exception:
     _portalocker = None
 
@@ -232,9 +232,7 @@ class CacheService:
                 if self.save_json_copy and self.use_compression:
                     # Write JSON copy atomically as well
                     json_file = self.cache_dir / f"{key}.json"
-                    tmp_fd, tmp_path = tempfile.mkstemp(
-                        dir=self.cache_dir, prefix=f"{key}._copy.", suffix=".json.tmp"
-                    )
+                    tmp_fd, tmp_path = tempfile.mkstemp(dir=self.cache_dir, prefix=f"{key}._copy.", suffix=".json.tmp")
                     try:
                         with os.fdopen(tmp_fd, "w", encoding="utf-8") as tf:
                             tf.write(json.dumps(data, indent=2, ensure_ascii=False))
@@ -431,7 +429,9 @@ class CacheService:
         with self._file_lock(".metadata"):
             if self.metadata_file.exists():
                 try:
-                    self.metadata = cast(Dict[str, Dict[str, Any]], json.loads(self.metadata_file.read_text(encoding="utf-8")))
+                    self.metadata = cast(
+                        Dict[str, Dict[str, Any]], json.loads(self.metadata_file.read_text(encoding="utf-8"))
+                    )
                     logger.debug(f"Metadata chargé: {len(self.metadata)} entrée(s)")
                 except (json.JSONDecodeError, OSError) as e:
                     logger.warning(f"Erreur chargement metadata: {e}, réinitialisation")

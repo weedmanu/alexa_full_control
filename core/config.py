@@ -1,4 +1,4 @@
-"""
+﻿"""
 Configuration centralisée et validation pour Alexa CLI.
 
 Gère tous les paramètres de configuration avec validation robuste.
@@ -108,16 +108,16 @@ class Config:
             tmp_env = os.getenv("TEMP")
             tmp_path = Path(tmp_env) if tmp_env else Path(tempfile.gettempdir())
         else:
-            # For non-Windows platforms prefer the conventional '/tmp'.
-            # Tests may patch sys.platform to 'linux' and expect '/tmp'.
+            # For non-Windows platforms prefer the system temporary directory.
+            # Use tempfile.gettempdir() rather than hardcoding '/tmp' to avoid
+            # Bandit warnings about hardcoded temp dirs and to be portable.
             try:
-                tmp_path = Path("/tmp")
+                # Use a platform-independent temporary directory instead of hardcoding /tmp
+                tmp_dir = tempfile.gettempdir()
+                tmp_path = Path(tmp_dir)
             except Exception:
-                # Fallback to system tempdir or current working directory
-                try:
-                    tmp_path = Path(tempfile.gettempdir())
-                except Exception:
-                    tmp_path = Path(".")
+                # Fallback to current working directory if tempfile fails
+                tmp_path = Path(".")
 
         # Vérifier que le répertoire existe et est accessible
         if not tmp_path.exists():

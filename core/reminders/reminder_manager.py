@@ -1,21 +1,13 @@
-"""
-Gestionnaire de rappels Alexa.
-
-Ce module fournit une interface thread-safe pour créer, lister,
-modifier et supprimer des rappels via l'API Alexa.
-"""
-
-import threading
+﻿import threading
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import requests
 from loguru import logger
 
 from core.base_manager import BaseManager
 from core.circuit_breaker import CircuitBreaker
-from core.state_machine import AlexaStateMachine, ConnectionState
+from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 
 
@@ -136,22 +128,13 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 logger.debug(f"Création rappel: {payload}")
 
-                response = self.breaker.call(
-                    self.http_client.post,
+                result = self._api_call(
+                    "POST",
                     f"https://{self.config.alexa_domain}/api/notifications",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     json=payload,
                     timeout=10,
                 )
-                response.raise_for_status()
 
-                from typing import cast
-
-                result = cast(Dict[str, Any], response.json())
                 logger.success(f"Rappel créé pour {device_serial}")
 
                 # Invalider le cache
@@ -159,13 +142,8 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 return result
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la création du rappel: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return None
             except Exception as e:
-                logger.error(f"Erreur inattendue lors de la création du rappel: {e}")
+                logger.error(f"Erreur lors de la création du rappel: {e}")
                 return None
 
     def create_recurring_reminder(
@@ -204,22 +182,13 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 logger.debug(f"Création rappel récurrent: {payload}")
 
-                response = self.breaker.call(
-                    self.http_client.post,
+                result = self._api_call(
+                    "POST",
                     f"https://{self.config.alexa_domain}/api/notifications",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     json=payload,
                     timeout=10,
                 )
-                response.raise_for_status()
 
-                from typing import cast
-
-                result = cast(Dict[str, Any], response.json())
                 logger.success(f"Rappel récurrent créé pour {device_serial}")
 
                 # Invalider le cache
@@ -227,13 +196,8 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 return result
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la création du rappel récurrent: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return None
             except Exception as e:
-                logger.error(f"Erreur inattendue lors de la création du rappel récurrent: {e}")
+                logger.error(f"Erreur lors de la création du rappel récurrent: {e}")
                 return None
 
     def get_reminders(self, device_serial: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -260,7 +224,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             else:
                 # Charger depuis le cache disque d'abord
                 cached_data = self.cache_service.get("reminders")
-                if cached_data and isinstance(cached_data, dict):
+                if cached_data:
                     cached_reminders = cached_data.get("reminders", [])
                     logger.debug(f"💾 Cache disque: {len(cached_reminders)} rappel(s)")
 
@@ -292,26 +256,16 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
         try:
             logger.debug("🌐 Récupération de tous les rappels depuis l'API notifications")
 
-            response = self.breaker.call(
-                self.http_client.get,
+            data = self._api_call(
+                "GET",
                 f"https://{self.config.alexa_domain}/api/notifications",
-                headers={
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                    "csrf": getattr(self.http_client, "csrf", None),
-                },
                 timeout=10,
             )
-            response.raise_for_status()
 
-            # Gérer le cas où la réponse est vide
-            if not response.content.strip():
+            if data is None:
                 logger.info("Aucun rappel trouvé (réponse vide)")
                 reminders = []
             else:
-                from typing import cast
-
-                data = cast(Dict[str, Any], response.json())
                 # Les rappels sont dans la liste des notifications
                 notifications = data.get("notifications", [])
 
@@ -328,17 +282,8 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             logger.info(f"✅ {len(reminders)} rappel(s) récupéré(s) et mis en cache (mémoire + disque)")
             return reminders
 
-        except ValueError as e:
-            # Erreur de parsing JSON (réponse vide ou malformée)
-            logger.warning(f"Réponse JSON invalide pour les rappels: {e}")
-            return []
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Erreur lors de la récupération des rappels: {e}")
-            if self.breaker.state.name == "OPEN":
-                self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-            return []
         except Exception as e:
-            logger.error(f"Erreur inattendue lors de la récupération des rappels: {e}")
+            logger.error(f"Erreur lors de la récupération des rappels: {e}")
             return []
 
     def delete_reminder(self, reminder_id: str) -> bool:
@@ -356,17 +301,11 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 return False
 
             try:
-                response = self.breaker.call(
-                    self.http_client.delete,
+                self._api_call(
+                    "DELETE",
                     f"https://{self.config.alexa_domain}/api/notifications/{reminder_id}",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     timeout=10,
                 )
-                response.raise_for_status()
 
                 logger.success(f"Rappel {reminder_id} supprimé")
 
@@ -375,13 +314,8 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 return True
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors de la suppression du rappel: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return False
             except Exception as e:
-                logger.error(f"Erreur inattendue lors de la suppression du rappel: {e}")
+                logger.error(f"Erreur lors de la suppression du rappel: {e}")
                 return False
 
     def complete_reminder(self, reminder_id: str) -> bool:
@@ -401,18 +335,12 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             try:
                 payload = {"status": "COMPLETED"}
 
-                response = self.breaker.call(
-                    self.http_client.put,
+                self._api_call(
+                    "PUT",
                     f"https://{self.config.alexa_domain}/api/notifications/{reminder_id}",
-                    headers={
-                        "Content-Type": "application/json; charset=UTF-8",
-                        "Referer": f"https://alexa.{self.config.amazon_domain}/spa/index.html",
-                        "csrf": getattr(self.http_client, "csrf", None),
-                    },
                     json=payload,
                     timeout=10,
                 )
-                response.raise_for_status()
 
                 logger.success(f"Rappel {reminder_id} marqué comme complété")
 
@@ -421,11 +349,6 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 return True
 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Erreur lors du marquage du rappel comme complété: {e}")
-                if self.breaker.state.name == "OPEN":
-                    self.state_machine.transition_to(ConnectionState.CIRCUIT_OPEN)
-                return False
             except Exception as e:
-                logger.error(f"Erreur inattendue lors du marquage du rappel comme complété: {e}")
+                logger.error(f"Erreur lors du marquage du rappel comme complété: {e}")
                 return False

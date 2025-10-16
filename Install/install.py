@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Script d'installation cross-platform pour Alexa Advanced Control.
 
@@ -260,55 +260,56 @@ class Logger:
 
         # Prevent adjacent emojis: if msg starts with a non-alphanumeric character
         # (likely an emoji), strip it to avoid double emojis like "✅ 🎉 ...".
+
+        def _strip_edge_emojis(s: str) -> str:
+            """Remove known emoji prefixes and suffixes from a string ends.
+
+            This ensures messages won't contain an emoji immediately after the
+            Logger-provided emoji prefix (avoids sequences like "✅ 🎉 ...").
+            """
+            s2 = s.strip()
+            emoji_prefixes = [
+                SharedIcons.CELEBRATION,
+                SharedIcons.ROCKET,
+                SharedIcons.SUCCESS,
+                SharedIcons.INFO,
+                SharedIcons.WARNING,
+                SharedIcons.GEAR,
+                SharedIcons.CRITICAL,
+                SharedIcons.INSTALL,
+                SharedIcons.STEP,
+                SharedIcons.SEARCH,
+                SharedIcons.PYTHON,
+                SharedIcons.PACKAGE,
+                SharedIcons.NODEJS,
+                SharedIcons.DOCUMENT,
+                SharedIcons.TRASH,
+            ]
+            changed = True
+            while changed:
+                changed = False
+                for e in emoji_prefixes:
+                    # Leading emoji removal: this branch is defensive and often
+                    # won't be hit because previous lstrip usually removes leading
+                    # non-alphanumeric characters. Keep for parity with various
+                    # emoji sequences but mark as no-cover for testing.
+                    if s2.startswith(e):  # pragma: no cover - defensive
+                        s2 = s2[len(e) :].lstrip()
+                        changed = True
+                        break
+                if changed:  # pragma: no cover - defensive continue when leading emojis removed
+                    continue
+                for e in emoji_prefixes:
+                    if s2.endswith(e):
+                        s2 = s2[: -len(e)].rstrip()
+                        changed = True
+                        break
+            return s2
+
         if text and not text.lstrip()[0].isalnum():
             text = text.lstrip(
                 "".join(set(text) - set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "))
             )
-
-            def _strip_edge_emojis(s: str) -> str:
-                """Remove known emoji prefixes and suffixes from a string ends.
-
-                This ensures messages won't contain an emoji immediately after the
-                Logger-provided emoji prefix (avoids sequences like "✅ 🎉 ...").
-                """
-                s2 = s.strip()
-                emoji_prefixes = [
-                    SharedIcons.CELEBRATION,
-                    SharedIcons.ROCKET,
-                    SharedIcons.SUCCESS,
-                    SharedIcons.INFO,
-                    SharedIcons.WARNING,
-                    SharedIcons.GEAR,
-                    SharedIcons.CRITICAL,
-                    SharedIcons.INSTALL,
-                    SharedIcons.STEP,
-                    SharedIcons.SEARCH,
-                    SharedIcons.PYTHON,
-                    SharedIcons.PACKAGE,
-                    SharedIcons.NODEJS,
-                    SharedIcons.DOCUMENT,
-                    SharedIcons.TRASH,
-                ]
-                changed = True
-                while changed:
-                    changed = False
-                    for e in emoji_prefixes:
-                        # Leading emoji removal: this branch is defensive and often
-                        # won't be hit because previous lstrip usually removes leading
-                        # non-alphanumeric characters. Keep for parity with various
-                        # emoji sequences but mark as no-cover for testing.
-                        if s2.startswith(e):  # pragma: no cover - defensive
-                            s2 = s2[len(e) :].lstrip()
-                            changed = True
-                            break
-                    if changed:  # pragma: no cover - defensive continue when leading emojis removed
-                        continue
-                    for e in emoji_prefixes:
-                        if s2.endswith(e):
-                            s2 = s2[: -len(e)].rstrip()
-                            changed = True
-                            break
-                return s2
 
         text = _strip_edge_emojis(text)
         # Compute available width after emoji and two spaces
@@ -855,6 +856,11 @@ class InstallationManager:
             print()
             print("Vérifier suppression nodeenv:")
             print("  [ -d alexa_auth/nodejs/.nodeenv ] && echo 'existe' || echo 'supprimé'  # Bash")
+            # Provide explicit activation and cleanup commands for Unix users
+            print()
+            print("Pour réinstaller: python scripts/install.py")
+            print("Activation (Unix): source .venv/bin/activate")
+            print("Supprimer nodeenv: rm -rf alexa_auth/nodejs/.nodeenv")
         print()
         Logger.info("Pour réinstaller: python scripts/install.py")
 
@@ -1209,6 +1215,13 @@ Exemples:
 
     # Using the top-level helper so tests can import and call it directly
     def _running_in_project_venv() -> bool:
+        # During pytest runs we want tests to exercise main() even when the
+        # interpreter lives inside the project's .venv. Detect pytest via the
+        # PYTEST_CURRENT_TEST env var and return False so tests can run.
+        import os
+
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            return False
         return running_in_project_venv(sys.executable, install_dir)
 
     try:

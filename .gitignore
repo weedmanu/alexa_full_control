@@ -219,8 +219,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
-Dev/
- .python_tools/
+.python_tools/
 
 # Benchmarks et profiling
 .benchmarks/

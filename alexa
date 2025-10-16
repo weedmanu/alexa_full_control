@@ -220,7 +220,8 @@ def main() -> int:
                 if auth.load_cookies():
                     # Sanity check: tenter un ping minimal sur un endpoint devices
                     try:
-                        resp = auth.get(f"https://{auth.amazon_domain}/api/devices-v2/device", timeout=10)
+                        # Use the Alexa subdomain for API ping (some regions require alexa.<domain>)
+                        resp = auth.get(f"https://alexa.{auth.amazon_domain}/api/devices-v2/device", timeout=10)
                         if getattr(resp, 'status_code', None) == 200:
                             # Cookies et endpoint valides
                             context.state_machine.set_initial_state(ConnectionState.AUTHENTICATED)

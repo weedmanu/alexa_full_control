@@ -1,13 +1,13 @@
-"""
-Commandes de contrôle des appareils Smart Home génériques.
+﻿"""
+Commandes de contrÃ´le des appareils Smart Home gÃ©nÃ©riques.
 
-Ce module gère le contrôle des appareils intelligents connectés:
+Ce module gÃ¨re le contrÃ´le des appareils intelligents connectÃ©s:
 - list: Lister tous les appareils
-- info: Informations détaillées
-- control: Allumer/éteindre un appareil
+- info: Informations dÃ©taillÃ©es
+- control: Allumer/Ã©teindre un appareil
 - lock: Verrouiller une serrure
-- unlock: Déverrouiller une serrure
-- status: État des appareils
+- unlock: DÃ©verrouiller une serrure
+- status: Ã‰tat des appareils
 
 Auteur: M@nu
 Date: 7 octobre 2025
@@ -19,30 +19,31 @@ from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.smarthome_help import (
-    CONTROL_HELP,
-    INFO_HELP,
-    LIST_HELP,
-    LOCK_HELP,
-    SMARTHOME_DESCRIPTION,
-    STATUS_HELP,
-    UNLOCK_HELP,
-)
+
+
+# Constantes de description simplifiÃ©es
+SMARTHOME_DESCRIPTION = "ContrÃ´ler les appareils Smart Home"
+CONTROL_HELP = "ContrÃ´ler un appareil (on/off)"
+INFO_HELP = "Informations dÃ©taillÃ©es sur un appareil"
+LIST_HELP = "Lister tous les appareils"
+LOCK_HELP = "Verrouiller une serrure"
+STATUS_HELP = "Ã‰tat des appareils"
+UNLOCK_HELP = "DÃ©verrouiller une serrure"
 
 
 class SmartHomeCommand(BaseCommand):
     """
-    Commande de contrôle des appareils Smart Home.
+    Commande de contrÃ´le des appareils Smart Home.
 
-    Gère list, info, control, lock, unlock, status.
+    GÃ¨re list, info, control, lock, unlock, status.
 
     Actions:
         - list: Lister tous les appareils intelligents
-        - info: Informations détaillées sur un appareil
-        - control: Allumer/éteindre un appareil
-        - lock: Verrouiller une serrure connectée
-        - unlock: Déverrouiller une serrure
-        - status: État actuel des appareils
+        - info: Informations dÃ©taillÃ©es sur un appareil
+        - control: Allumer/Ã©teindre un appareil
+        - lock: Verrouiller une serrure connectÃ©e
+        - unlock: DÃ©verrouiller une serrure
+        - status: Ã‰tat actuel des appareils
 
     Example:
         >>> alexa smarthome list
@@ -53,18 +54,18 @@ class SmartHomeCommand(BaseCommand):
         >>> alexa smarthome status --entity switch.garage
     """
 
-    # Types d'appareils supportés
+    # Types d'appareils supportÃ©s
     DEVICE_TYPES = {
-        "switch": "🔌 Interrupteur",
-        "plug": "🔌 Prise",
-        "lock": "🔒 Serrure",
-        "sensor": "📡 Capteur",
-        "camera": "📷 Caméra",
-        "fan": "💨 Ventilateur",
-        "blind": "🪟 Store",
-        "garage": "🚗 Garage",
-        "valve": "🚰 Valve",
-        "other": "📦 Autre",
+        "switch": "ðŸ”Œ Interrupteur",
+        "plug": "ðŸ”Œ Prise",
+        "lock": "ðŸ”’ Serrure",
+        "sensor": "ðŸ“¡ Capteur",
+        "camera": "ðŸ“· CamÃ©ra",
+        "fan": "ðŸ’¨ Ventilateur",
+        "blind": "ðŸªŸ Store",
+        "garage": "ðŸš— Garage",
+        "valve": "ðŸš° Valve",
+        "other": "ðŸ“¦ Autre",
     }
 
     def setup_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -72,21 +73,21 @@ class SmartHomeCommand(BaseCommand):
         Configure le parser pour les commandes smarthome.
 
         Args:
-            parser: Sous-parser pour la catégorie 'smarthome'
+            parser: Sous-parser pour la catÃ©gorie 'smarthome'
         """
-        # Utiliser le formatter universel pour l'ordre exact demandé
+        # Utiliser le formatter universel pour l'ordre exact demandÃ©
         parser.formatter_class = UniversalHelpFormatter
 
-        # Définir un usage plus détaillé
+        # DÃ©finir un usage plus dÃ©taillÃ©
         parser.usage = "alexa [OPTIONS_GLOBALES] smarthome <ACTION> [OPTIONS_ACTION]"
 
-        # Description réorganisée : utiliser la constante partagée
+        # Description rÃ©organisÃ©e : utiliser la constante partagÃ©e
         parser.description = SMARTHOME_DESCRIPTION
 
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
-            help="Action à exécuter",
+            help="Action Ã  exÃ©cuter",
             required=True,
         )
 
@@ -96,7 +97,7 @@ class SmartHomeCommand(BaseCommand):
             help="Lister les appareils",
             description=LIST_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=False,
+            add_help=True,
         )
         list_parser.add_argument("--filter", type=str, metavar="KEYWORD", help="Filtrer par nom ou type")
         list_parser.add_argument(
@@ -109,34 +110,34 @@ class SmartHomeCommand(BaseCommand):
         # Action: info
         info_parser = subparsers.add_parser(
             "info",
-            help="Informations détaillées",
+            help="Informations dÃ©taillÃ©es",
             description=INFO_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=False,
+            add_help=True,
         )
         info_parser.add_argument(
             "--entity",
             type=str,
             required=True,
             metavar="ENTITY_ID",
-            help="ID de l'entité (ex: switch.salon, lock.entree)",
+            help="ID de l'entitÃ© (ex: switch.salon, lock.entree)",
         )
 
         # Action: control
         control_parser = subparsers.add_parser(
             "control",
-            help="Allumer/éteindre",
+            help="Allumer/Ã©teindre",
             description=CONTROL_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=False,
+            add_help=True,
         )
-        control_parser.add_argument("--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité")
+        control_parser.add_argument("--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entitÃ©")
         control_parser.add_argument(
             "--operation",
             type=str,
             required=True,
             choices=["on", "off", "toggle"],
-            help="Opération: on, off ou toggle",
+            help="OpÃ©ration: on, off ou toggle",
         )
 
         # Action: lock
@@ -145,49 +146,49 @@ class SmartHomeCommand(BaseCommand):
             help="Verrouiller",
             description=LOCK_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=False,
+            add_help=True,
         )
         lock_parser.add_argument(
             "--entity",
             type=str,
             required=True,
             metavar="ENTITY_ID",
-            help="ID de l'entité serrure (ex: lock.entree)",
+            help="ID de l'entitÃ© serrure (ex: lock.entree)",
         )
-        lock_parser.add_argument("--code", type=str, metavar="CODE", help="Code de sécurité (optionnel)")
+        lock_parser.add_argument("--code", type=str, metavar="CODE", help="Code de sÃ©curitÃ© (optionnel)")
 
         # Action: unlock
         unlock_parser = subparsers.add_parser(
             "unlock",
-            help="Déverrouiller",
+            help="DÃ©verrouiller",
             description=UNLOCK_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=False,
+            add_help=True,
         )
         unlock_parser.add_argument(
-            "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité serrure"
+            "--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entitÃ© serrure"
         )
-        unlock_parser.add_argument("--code", type=str, required=True, metavar="CODE", help="Code de sécurité")
+        unlock_parser.add_argument("--code", type=str, required=True, metavar="CODE", help="Code de sÃ©curitÃ©")
 
         # Action: status
         status_parser = subparsers.add_parser(
             "status",
-            help="État actuel",
+            help="Ã‰tat actuel",
             description=STATUS_HELP,
             formatter_class=ActionHelpFormatter,
-            add_help=False,
+            add_help=True,
         )
-        status_parser.add_argument("--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entité")
+        status_parser.add_argument("--entity", type=str, required=True, metavar="ENTITY_ID", help="ID de l'entitÃ©")
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
-        Exécute la commande smarthome.
+        ExÃ©cute la commande smarthome.
 
         Args:
-            args: Arguments parsés
+            args: Arguments parsÃ©s
 
         Returns:
-            True si succès, False sinon
+            True si succÃ¨s, False sinon
         """
         # Validation connexion
         if not self.validate_connection():
@@ -212,7 +213,7 @@ class SmartHomeCommand(BaseCommand):
     def _list_devices(self, args: argparse.Namespace) -> bool:
         """Lister les appareils."""
         try:
-            self.info("🏠 Récupération des appareils Smart Home...")
+            self.info("ðŸ  RÃ©cupÃ©ration des appareils Smart Home...")
 
             ctx = self.require_context()
             device_ctrl = getattr(ctx, "device_ctrl", None)
@@ -220,13 +221,13 @@ class SmartHomeCommand(BaseCommand):
                 self.error("DeviceController non disponible")
                 return False
 
-            # Vérifier si les données smart home sont en cache
+            # VÃ©rifier si les donnÃ©es smart home sont en cache
             devices = device_ctrl.get_smart_home_devices()
 
-            # Si pas de données en cache, déclencher le chargement lazy
+            # Si pas de donnÃ©es en cache, dÃ©clencher le chargement lazy
             sync_service = getattr(ctx, "sync_service", None)
             if not devices and sync_service:
-                self.info("🔄 Chargement lazy des appareils Smart Home...")
+                self.info("ðŸ”„ Chargement lazy des appareils Smart Home...")
                 devices = sync_service.get_smart_home_devices()
 
             if devices:
@@ -244,7 +245,7 @@ class SmartHomeCommand(BaseCommand):
                     ]
 
                 if not devices:
-                    self.warning("Aucun appareil trouvé avec ces critères")
+                    self.warning("Aucun appareil trouvÃ© avec ces critÃ¨res")
                     return True
 
                 if hasattr(args, "json_output") and args.json_output:
@@ -254,7 +255,7 @@ class SmartHomeCommand(BaseCommand):
 
                 return True
 
-            self.warning("Aucun appareil trouvé")
+            self.warning("Aucun appareil trouvÃ©")
             return True
 
         except Exception as e:
@@ -265,7 +266,7 @@ class SmartHomeCommand(BaseCommand):
     def _show_info(self, args: argparse.Namespace) -> bool:
         """Afficher les informations."""
         try:
-            self.info(f"📋 Informations de '{args.entity}'...")
+            self.info(f"ðŸ“‹ Informations de '{args.entity}'...")
 
             ctx = self.require_context()
             device_ctrl = getattr(ctx, "device_ctrl", None)
@@ -283,21 +284,21 @@ class SmartHomeCommand(BaseCommand):
 
                 return True
 
-            self.error(f"Appareil '{args.entity}' non trouvé")
+            self.error(f"Appareil '{args.entity}' non trouvÃ©")
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la récupération des informations")
+            self.logger.exception("Erreur lors de la rÃ©cupÃ©ration des informations")
             self.error(f"Erreur: {e}")
             return False
 
     def _control_device(self, args: argparse.Namespace) -> bool:
-        """Contrôler un appareil."""
+        """ContrÃ´ler un appareil."""
         try:
             action_text = {
-                "on": "🟢 Allumage",
-                "off": "🔴 Extinction",
-                "toggle": "🔄 Basculement",
+                "on": "ðŸŸ¢ Allumage",
+                "off": "ðŸ”´ Extinction",
+                "toggle": "ðŸ”„ Basculement",
             }.get(args.operation, args.operation)
 
             self.info(f"{action_text} de '{args.entity}'...")
@@ -316,20 +317,20 @@ class SmartHomeCommand(BaseCommand):
                 result = self.call_with_breaker(device_ctrl.toggle, args.entity)
 
             if result:
-                self.success(f"✅ {action_text} effectué")
+                self.success(f"âœ… {action_text} effectuÃ©")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors du contrôle de l'appareil")
+            self.logger.exception("Erreur lors du contrÃ´le de l'appareil")
             self.error(f"Erreur: {e}")
             return False
 
     def _lock_device(self, args: argparse.Namespace) -> bool:
         """Verrouiller une serrure."""
         try:
-            self.info(f"🔒 Verrouillage de '{args.entity}'...")
+            self.info(f"ðŸ”’ Verrouillage de '{args.entity}'...")
 
             ctx = self.require_context()
             device_ctrl = getattr(ctx, "device_ctrl", None)
@@ -342,7 +343,7 @@ class SmartHomeCommand(BaseCommand):
             result = self.call_with_breaker(device_ctrl.lock, args.entity, code)
 
             if result:
-                self.success("✅ Serrure verrouillée")
+                self.success("âœ… Serrure verrouillÃ©e")
                 return True
 
             return False
@@ -353,9 +354,9 @@ class SmartHomeCommand(BaseCommand):
             return False
 
     def _unlock_device(self, args: argparse.Namespace) -> bool:
-        """Déverrouiller une serrure."""
+        """DÃ©verrouiller une serrure."""
         try:
-            self.info(f"🔓 Déverrouillage de '{args.entity}'...")
+            self.info(f"ðŸ”“ DÃ©verrouillage de '{args.entity}'...")
 
             ctx = self.require_context()
             device_ctrl = getattr(ctx, "device_ctrl", None)
@@ -364,26 +365,26 @@ class SmartHomeCommand(BaseCommand):
                 return False
 
             if not args.code:
-                self.error("Un code de sécurité est requis pour déverrouiller")
+                self.error("Un code de sÃ©curitÃ© est requis pour dÃ©verrouiller")
                 return False
 
             result = self.call_with_breaker(device_ctrl.unlock, args.entity, args.code)
 
             if result:
-                self.success("✅ Serrure déverrouillée")
+                self.success("âœ… Serrure dÃ©verrouillÃ©e")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors du déverrouillage")
+            self.logger.exception("Erreur lors du dÃ©verrouillage")
             self.error(f"Erreur: {e}")
             return False
 
     def _show_status(self, args: argparse.Namespace) -> bool:
-        """Afficher l'état."""
+        """Afficher l'Ã©tat."""
         try:
-            self.info(f"📊 État de '{args.entity}'...")
+            self.info(f"ðŸ“Š Ã‰tat de '{args.entity}'...")
 
             ctx = self.require_context()
             device_ctrl = getattr(ctx, "device_ctrl", None)
@@ -401,11 +402,11 @@ class SmartHomeCommand(BaseCommand):
 
                 return True
 
-            self.error(f"Impossible de récupérer l'état de '{args.entity}'")
+            self.error(f"Impossible de rÃ©cupÃ©rer l'Ã©tat de '{args.entity}'")
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la récupération de l'état")
+            self.logger.exception("Erreur lors de la rÃ©cupÃ©ration de l'Ã©tat")
             self.error(f"Erreur: {e}")
             return False
 
@@ -415,7 +416,7 @@ class SmartHomeCommand(BaseCommand):
 
     def _display_devices(self, devices: List[Dict[str, Any]]) -> None:
         """Affiche les appareils."""
-        print(f"\n🏠 {len(devices)} appareil(s) Smart Home:\n")
+        print(f"\nðŸ  {len(devices)} appareil(s) Smart Home:\n")
 
         # Grouper par type
         from typing import Dict, List
@@ -439,38 +440,38 @@ class SmartHomeCommand(BaseCommand):
                 description = device.get("description", "")
                 availability = device.get("availability", "UNKNOWN")
 
-                # Déterminer l'état basé sur la disponibilité
-                state_icon = "🟢" if availability == "AVAILABLE" else "🔴"
+                # DÃ©terminer l'Ã©tat basÃ© sur la disponibilitÃ©
+                state_icon = "ðŸŸ¢" if availability == "AVAILABLE" else "ðŸ”´"
                 state_text = "Disponible" if availability == "AVAILABLE" else "Indisponible"
 
                 print(f"  {state_icon} {name}")
                 if description and description != name:
                     print(f"     Description: {description}")
                 print(f"     ID: {device_id}")
-                print(f"     État: {state_text}")
+                print(f"     Ã‰tat: {state_text}")
 
-                # Afficher les propriétés supportées si pertinentes
+                # Afficher les propriÃ©tÃ©s supportÃ©es si pertinentes
                 supported_props = device.get("supportedProperties", [])
                 if supported_props:
-                    # Filtrer les propriétés importantes
+                    # Filtrer les propriÃ©tÃ©s importantes
                     important_props = [p for p in supported_props if not p.startswith("Alexa.Operation.")][
                         :3
-                    ]  # Limiter à 3
+                    ]  # Limiter Ã  3
                     if important_props:
                         print(f"     Actions: {', '.join(important_props)}")
                 print()
 
     def _determine_device_type(self, device: Dict[str, Any]) -> str:
-        """Détermine le type d'appareil basé sur ses propriétés."""
+        """DÃ©termine le type d'appareil basÃ© sur ses propriÃ©tÃ©s."""
         provider_data = device.get("providerData", {})
         category = provider_data.get("categoryType", "").upper()
         device_type = provider_data.get("deviceType", "").upper()
         supported_props = device.get("supportedProperties", [])
 
-        # Vérifier les propriétés pour déterminer le type
+        # VÃ©rifier les propriÃ©tÃ©s pour dÃ©terminer le type
         props_str = " ".join(supported_props).upper()
 
-        # Logique de détermination du type
+        # Logique de dÃ©termination du type
         if "LOCK" in category or "LOCK" in device_type:
             return "lock"
         elif "CAMERA" in device_type or "CAMERA" in category:
@@ -497,8 +498,8 @@ class SmartHomeCommand(BaseCommand):
             return "other"
 
     def _display_info(self, info: Dict[str, Any]) -> None:
-        """Affiche les informations détaillées."""
-        print("\n📋 Informations détaillées:\n")
+        """Affiche les informations dÃ©taillÃ©es."""
+        print("\nðŸ“‹ Informations dÃ©taillÃ©es:\n")
 
         device_type = info.get("type", "unknown").lower()
         type_icon = self._get_device_icon(device_type)
@@ -507,9 +508,9 @@ class SmartHomeCommand(BaseCommand):
         print(f"  Type: {type_icon} {type_name}")
         print(f"  Nom: {info.get('name', 'N/A')}")
         print(f"  ID: {info.get('entity_id', 'N/A')}")
-        print(f"  État: {info.get('state', 'N/A')}")
+        print(f"  Ã‰tat: {info.get('state', 'N/A')}")
 
-        # Attributs supplémentaires
+        # Attributs supplÃ©mentaires
         if "friendly_name" in info:
             print(f"  Nom convivial: {info['friendly_name']}")
 
@@ -517,26 +518,26 @@ class SmartHomeCommand(BaseCommand):
             print(f"  Fabricant: {info['manufacturer']}")
 
         if "model" in info:
-            print(f"  Modèle: {info['model']}")
+            print(f"  ModÃ¨le: {info['model']}")
 
         if "battery_level" in info:
             print(f"  Batterie: {info['battery_level']}%")
 
         if "last_updated" in info:
-            print(f"  Dernière mise à jour: {info['last_updated']}")
+            print(f"  DerniÃ¨re mise Ã  jour: {info['last_updated']}")
 
     def _display_status(self, status: Dict[str, Any]) -> None:
-        """Affiche l'état."""
-        print("\n📊 État actuel:\n")
+        """Affiche l'Ã©tat."""
+        print("\nðŸ“Š Ã‰tat actuel:\n")
 
         state = status.get("state", "unknown")
-        state_icon = "🟢" if state == "on" else "⚫"
+        state_icon = "ðŸŸ¢" if state == "on" else "âš«"
 
-        print(f"  État: {state_icon} {state}")
+        print(f"  Ã‰tat: {state_icon} {state}")
 
         if "locked" in status:
-            lock_icon = "🔒" if status["locked"] else "🔓"
-            lock_text = "Verrouillé" if status["locked"] else "Déverrouillé"
+            lock_icon = "ðŸ”’" if status["locked"] else "ðŸ”“"
+            lock_text = "VerrouillÃ©" if status["locked"] else "DÃ©verrouillÃ©"
             print(f"  Verrouillage: {lock_icon} {lock_text}")
 
         if "position" in status:
@@ -546,22 +547,23 @@ class SmartHomeCommand(BaseCommand):
             print(f"  Vitesse: {status['speed']}")
 
         if "temperature" in status:
-            print(f"  Température: {status['temperature']}°C")
+            print(f"  TempÃ©rature: {status['temperature']}Â°C")
 
         if "humidity" in status:
-            print(f"  Humidité: {status['humidity']}%")
+            print(f"  HumiditÃ©: {status['humidity']}%")
 
     def _get_device_icon(self, device_type: str) -> str:
-        """Retourne l'icône pour un type d'appareil."""
+        """Retourne l'icÃ´ne pour un type d'appareil."""
         icons = {
-            "switch": "🔌",
-            "plug": "🔌",
-            "lock": "🔒",
-            "sensor": "📡",
-            "camera": "📷",
-            "fan": "💨",
-            "blind": "🪟",
-            "garage": "🚗",
-            "valve": "🚰",
+            "switch": "ðŸ”Œ",
+            "plug": "ðŸ”Œ",
+            "lock": "ðŸ”’",
+            "sensor": "ðŸ“¡",
+            "camera": "ðŸ“·",
+            "fan": "ðŸ’¨",
+            "blind": "ðŸªŸ",
+            "garage": "ðŸš—",
+            "valve": "ðŸš°",
         }
-        return icons.get(device_type.lower(), "📦")
+        return icons.get(device_type.lower(), "ðŸ“¦")
+
