@@ -611,12 +611,12 @@ class TestDeviceManager(unittest.TestCase):
         self.auth = MagicMock()
         # Provide a .session mock for any code that expects requests.Session on auth
         self.auth.session = MagicMock()
-        # Provide a typed http_client for tests (migration shim)
-        from core.base_manager import create_http_client_from_auth
-        self.http_client = create_http_client_from_auth(self.auth)
         self.state_machine = MagicMock()
         self.cache_service = MagicMock()
-        self.device_manager = DeviceManager(self.auth, self.state_machine, cache_service=self.cache_service, http_client=self.http_client)
+        self.device_manager = DeviceManager(self.auth, self.state_machine, cache_service=self.cache_service)
+        # Mock the http_client on the device_manager for test control
+        self.http_client = MagicMock()
+        self.device_manager.http_client = self.http_client
         self.mock_devices = [
             {"accountName": "Echo Dot", "serialNumber": "123", "online": True},
             {"accountName": "Echo Show", "serialNumber": "456", "online": False},
@@ -708,13 +708,13 @@ class TestAlarmManager(unittest.TestCase):
         self.auth = MagicMock()
         # Provide legacy session on auth to keep tests compatible with migration
         self.auth.session = MagicMock()
-        # Provide a typed http_client for tests (migration shim)
-        from core.base_manager import create_http_client_from_auth
-        self.http_client = create_http_client_from_auth(self.auth)
         self.config = MagicMock()
         self.state_machine = MagicMock()
         self.cache_service = MagicMock()
         self.alarm_manager = AlarmManager(self.auth, self.config, self.state_machine, self.cache_service)
+        # Mock the http_client on the alarm_manager for test control
+        self.http_client = MagicMock()
+        self.alarm_manager.http_client = self.http_client
         self.mock_alarms = [
             {"id": "1", "deviceSerialNumber": "123", "type": "Alarm"},
             {"id": "2", "deviceSerialNumber": "456", "type": "Alarm"},
