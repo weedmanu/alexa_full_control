@@ -56,8 +56,9 @@ class AlexaHTTPClient:
         except requests.HTTPError as e:
             # Log minimal avant conversion
             status = getattr(e.response, "status_code", None)
-            self.logger.error(f"HTTP {status}: {e}")
-            raise
+            self.logger.debug(f"HTTP {status}: {e}")
+            # Convertir plus haut via _handle_http_error
+            self._handle_http_error(e)
 
     def _handle_http_error(self, error: requests.HTTPError) -> None:
         """Convertit requests.HTTPError en exceptions typées du domaine."""
@@ -86,16 +87,23 @@ class AlexaHTTPClient:
         Raises:
             AuthenticationError, APIError
         """
+        # Provide a sane default timeout if not provided
         kwargs = self._inject_auth(kwargs)
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = 10
 
         try:
             response = self.breaker.call(self.session.get, url, **kwargs)
             self._check_response(response)
             return response
         except requests.HTTPError as e:
+            # Convert HTTP errors to domain exceptions
             self._handle_http_error(e)
-            # _handle_http_error lève une exception typée, ne retourne pas
             raise
+        except requests.RequestException as e:
+            # Network / connection level errors
+            self.logger.error(f"Request failed: {e}")
+            raise exceptions.APIError(f"Network error calling {url}") from e
 
     def post(self, url: str, **kwargs: Any) -> requests.Response:
         """Requête POST avec injection auth + retry + breaker.
@@ -104,6 +112,8 @@ class AlexaHTTPClient:
             AuthenticationError, APIError
         """
         kwargs = self._inject_auth(kwargs)
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = 10
 
         try:
             response = self.breaker.call(self.session.post, url, **kwargs)
@@ -112,3 +122,40 @@ class AlexaHTTPClient:
         except requests.HTTPError as e:
             self._handle_http_error(e)
             raise
+        except requests.RequestException as e:
+            self.logger.error(f"Request failed: {e}")
+            raise exceptions.APIError(f"Network error calling {url}") from e
+
+    def put(self, url: str, **kwargs: Any) -> requests.Response:
+        """Requête PUT similaire à post/get."""
+        kwargs = self._inject_auth(kwargs)
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = 10
+
+        try:
+            response = self.breaker.call(self.session.put, url, **kwargs)
+            self._check_response(response)
+            return response
+        except requests.HTTPError as e:
+            self._handle_http_error(e)
+            raise
+        except requests.RequestException as e:
+            self.logger.error(f"Request failed: {e}")
+            raise exceptions.APIError(f"Network error calling {url}") from e
+
+    def delete(self, url: str, **kwargs: Any) -> requests.Response:
+        """Requête DELETE similaire aux autres méthodes."""
+        kwargs = self._inject_auth(kwargs)
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = 10
+
+        try:
+            response = self.breaker.call(self.session.delete, url, **kwargs)
+            self._check_response(response)
+            return response
+        except requests.HTTPError as e:
+            self._handle_http_error(e)
+            raise
+        except requests.RequestException as e:
+            self.logger.error(f"Request failed: {e}")
+            raise exceptions.APIError(f"Network error calling {url}") from e

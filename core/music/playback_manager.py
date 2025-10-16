@@ -56,7 +56,7 @@ class PlaybackManager:
         try:
             # Headers complets comme le script shell - CRITIQUE pour éviter 403/404
             headers = {
-                "csrf": self.auth.csrf,
+                "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", None)),
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:1.0) bash-script/1.0",
                 "DNT": "1",
                 "Connection": "keep-alive",
@@ -263,7 +263,7 @@ class PlaybackManager:
 
                 # Headers complets comme le script shell - CRITIQUE pour éviter 403
                 headers = {
-                    "csrf": self.auth.csrf,
+                    "csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", None)),
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:1.0) bash-script/1.0",
                     "DNT": "1",
                     "Connection": "keep-alive",
