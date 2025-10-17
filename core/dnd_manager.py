@@ -9,6 +9,13 @@ from loguru import logger
 from .base_manager import BaseManager, create_http_client_from_auth
 from .state_machine import AlexaStateMachine
 
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.base import ResponseDTO
+    HAS_DND_DTO = True
+except ImportError:
+    HAS_DND_DTO = False
+
 
 class DNDManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire thread-safe du mode Ne Pas Déranger."""

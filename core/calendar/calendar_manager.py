@@ -20,6 +20,13 @@ from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.base import ResponseDTO
+    HAS_CALENDAR_DTO = True
+except ImportError:
+    HAS_CALENDAR_DTO = False
+
 
 class CalendarManager:
     """
