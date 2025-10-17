@@ -28,8 +28,105 @@ Il contient également des modifications sûres dans la CLI pour permettre l'enr
 Liste complète des fichiers modifiés :
 
 ```text
-$(git diff --name-only origin/main...HEAD)
+.gitignore
+AUDIT_ARCHITECTURE.md
+AmeliorationV1.md
+Dev/config/pytest.ini
+Dev/docs/CLI_SCAN_REPORT.md
+Dev/docs/EXPECTED_ARCHITECTURE.md
+Dev/docs/PROFESSIONAL_DEVELOPMENT.md
+Dev/docs/PR_DRAFT.md
+Dev/docs/Refacto_phase1.md
+Dev/docs/Refacto_phase2.md
+Dev/docs/Refacto_phase3.md
+Dev/docs/TEST_RUN_INSTRUCTIONS.md
+Dev/pytests/services/test_alexa_api_service.py
+Dev/pytests/test_cli/__init__.py
+Dev/pytests/test_cli/commands/test_favorite_command.py
+Dev/pytests/test_cli/test_command_parser.py
+Dev/pytests/test_cli/test_command_template.py
+Dev/pytests/test_core/__init__.py
+Dev/pytests/test_core/multiroom/test_multiroom_manager.py
+Dev/pytests/test_core/scenario/__init__.py
+Dev/pytests/test_core/scenario/test_scenario_manager.py
+Dev/pytests/test_core/test_device_manager.py
+Dev/pytests/test_core/test_di_injection.py
+Dev/pytests/test_core/test_manager_injection.py
+Dev/pytests/test_services/test_favorite_service.py
+Dev/pytests/test_utils/test_json_storage.py
+Dev/tests/run_scenario_tests.py
+Dev/tests/test_scenario_all.py
+Dev/tests/test_scenario_cli.py
+alexa
+cli/command_adapter.py
+cli/command_parser.py
+cli/command_template.py
+cli/commands/__init__.py
+cli/commands/device_manager.py
+cli/commands/favorite.py
+cli/commands/music_playback_manager.py
+cli/commands/scenario.py
+cli/commands/timers_manager.py
+cli/context.py
+cli/help_texts/activity_help.py
+cli/help_texts/alarm_help.py
+cli/help_texts/alexa_help.py
+cli/help_texts/announcement_help.py
+cli/help_texts/auth_help.py
+cli/help_texts/cache_help.py
+cli/help_texts/calendar_help.py
+cli/help_texts/device_help.py
+cli/help_texts/dnd_help.py
+cli/help_texts/lists_help.py
+cli/help_texts/multiroom_help.py
+cli/help_texts/music_help.py
+cli/help_texts/notification_help.py
+cli/help_texts/reminder_help.py
+cli/help_texts/routine_help.py
+cli/help_texts/scenario_help.py
+cli/help_texts/smarthome_help.py
+cli/help_texts/timers_help.py
+config/PHASE1_COMPLETE.md
+config/README.md
+config/__init__.py
+config/constants.py
+config/paths.py
+config/settings.py
+core/alarms/alarm_manager.py
+core/base_persistence_manager.py
+core/device_manager.py
+core/di_container.py
+core/dnd_manager.py
+core/lists/lists_manager.py
+core/manager_factory.py
+core/multiroom/multiroom_manager.py
+core/music/playback_manager.py
+core/notification_manager.py
+core/reminders/reminder_manager.py
+core/routines/routine_manager.py
+core/scenario/scenario_manager.py
+core/settings/device_settings_manager.py
+core/timers/timer_manager.py
+docs/MIGRATION.md
+docs/audit_report.md
+docs/design_alexa_api_service.md
+docs/endpoints_mapping.json
+mypy.ini
+pyproject.toml
+requirements-dev.txt
+services/alexa_api_service.py
+services/favorite_service.py
+utils/json_storage.py
+utils/short_help_formatter.py
+utils/text_utils.py
 ```
+
+Changelog (résumé rapide) :
+
+- Architecture : introduction du squelette `AlexaAPIService` et enregistrement via DI.
+- CLI : ajout de pilotes `ManagerCommand` (device, timers, music playback), adaptation du parser/adapter pour supporter les nouveaux patterns.
+- Core : migrations non-invasives pour plusieurs managers (reminders, playback, routines, lists, alarms) et tests unitaires associés.
+- Docs & Tests : ajout de rapports d'audit, guides de migration, instructions de test, et mise à jour des tests unitaires et de scenario.
 
 > Remarque : adapter la liste ci-dessus avant ouverture du PR si vous voulez exclure des fichiers temporaires.
 
