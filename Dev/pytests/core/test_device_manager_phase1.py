@@ -1,4 +1,4 @@
-"""Proof-of-concept tests for Device Manager with optional AlexaAPIService injection."""
+"""Proof-of-concept tests for Device Manager with AlexaAPIService (mandatory)."""
 import pytest
 from unittest.mock import Mock, MagicMock
 from core.device_manager import DeviceManager
@@ -38,23 +38,23 @@ def api_service_mock():
     return api
 
 
-def test_device_manager_accepts_api_service(
-    auth_mock, state_machine_mock, cache_service_mock, api_service_mock
+def test_device_manager_requires_api_service(
+    auth_mock, state_machine_mock, cache_service_mock
 ):
-    """Verify DeviceManager accepts optional api_service parameter."""
-    device_mgr = DeviceManager(
-        auth=auth_mock,
-        state_machine=state_machine_mock,
-        api_service=api_service_mock,
-        cache_service=cache_service_mock,
-    )
-    assert device_mgr._api_service is api_service_mock
+    """Verify DeviceManager requires api_service (no longer optional)."""
+    with pytest.raises(ValueError, match="api_service ne peut pas être None"):
+        device_mgr = DeviceManager(
+            auth=auth_mock,
+            state_machine=state_machine_mock,
+            api_service=None,
+            cache_service=cache_service_mock,
+        )
 
 
-def test_device_manager_uses_api_service_if_present(
+def test_device_manager_uses_api_service(
     auth_mock, state_machine_mock, cache_service_mock, api_service_mock
 ):
-    """Verify get_devices uses AlexaAPIService if injected."""
+    """Verify get_devices uses AlexaAPIService (mandatory)."""
     device_mgr = DeviceManager(
         auth=auth_mock,
         state_machine=state_machine_mock,
@@ -70,29 +70,22 @@ def test_device_manager_uses_api_service_if_present(
     assert devices[0]["accountName"] == "Salon"
 
 
-def test_device_manager_falls_back_without_api_service(
-    auth_mock, state_machine_mock, cache_service_mock
+def test_device_manager_stores_api_service_in_cache(
+    auth_mock, state_machine_mock, cache_service_mock, api_service_mock
 ):
-    """Verify DeviceManager still works without api_service (legacy mode)."""
-    # Setup auth mock to return devices
-    response_mock = Mock()
-    response_mock.json.return_value = {
-        "devices": [
-            {"serialNumber": "G090LF456", "accountName": "Chambre", "online": False}
-        ]
-    }
-    auth_mock.get.return_value = response_mock
-    
+    """Verify devices are cached after retrieval via AlexaAPIService."""
     device_mgr = DeviceManager(
         auth=auth_mock,
         state_machine=state_machine_mock,
-        api_service=None,  # No injection
+        api_service=api_service_mock,
         cache_service=cache_service_mock,
     )
     
     devices = device_mgr.get_devices(force_refresh=True)
     
-    # Should use legacy auth.get path
-    auth_mock.get.assert_called()
-    assert len(devices) == 1
-    assert devices[0]["accountName"] == "Chambre"
+    # Verify cache was updated
+    cache_service_mock.set.assert_called_once()
+    call_args = cache_service_mock.set.call_args
+    assert call_args[0][0] == "devices"
+    assert "devices" in call_args[0][1]
+
