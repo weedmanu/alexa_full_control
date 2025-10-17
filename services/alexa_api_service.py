@@ -284,3 +284,53 @@ class AlexaAPIService:
                 status="failed",
                 error_message=str(exc)
             )
+    
+    def get_music_status(self) -> MusicStatusResponse:
+        """Get current music playback status.
+        
+        Returns:
+            MusicStatusResponse with playback status
+        """
+        try:
+            # Make API call for music status
+            path = self.ENDPOINTS.get("music_status", "/api/np/command")
+            response_data = self.get(path, cache_key="music_status")
+            
+            # Parse response DTO
+            if not response_data:
+                response_data = {"isPlaying": False, "volume": 0}
+            return self._parse_dto(response_data, MusicStatusResponse)
+            
+        except Exception as exc:
+            logger.error("get_music_status failed: %s", exc)
+            # Return default status (stopped)
+            return MusicStatusResponse(is_playing=False, volume=0)
+    
+    def play_music(self, track_id: str, device_serial: Optional[str] = None) -> PlayMusicResponse:
+        """Play music track.
+        
+        Args:
+            track_id: ID of track to play
+            device_serial: Optional device serial number
+            
+        Returns:
+            PlayMusicResponse with play status
+        """
+        try:
+            # Make API call to play track
+            path = self.ENDPOINTS.get("play_music", "/api/np/player")
+            payload = {"trackId": track_id}
+            if device_serial:
+                payload["deviceSerialNumber"] = device_serial
+            
+            response_data = self.post(path, json=payload)
+            
+            # Parse response DTO
+            if not response_data:
+                response_data = {"success": True, "isPlaying": True}
+            return self._parse_dto(response_data, PlayMusicResponse)
+            
+        except Exception as exc:
+            logger.error("play_music failed: %s", exc)
+            # Return error response DTO
+            return PlayMusicResponse(success=False, error=str(exc))
