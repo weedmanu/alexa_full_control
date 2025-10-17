@@ -15,6 +15,13 @@ from loguru import logger
 from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine, ConnectionState
 
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.alarm_schemas import GetAlarmsResponse, AlarmDTO
+    HAS_ALARM_DTO = True
+except ImportError:
+    HAS_ALARM_DTO = False
+
 
 class AlarmManager:
     """
@@ -178,6 +185,51 @@ class AlarmManager:
             except Exception as e:
                 logger.error(f"Erreur inattendue: {e}")
                 return []
+
+    def get_alarms_typed(self) -> Optional["GetAlarmsResponse"]:
+        """
+        Phase 3.7: Typed DTO version of list_alarms returning GetAlarmsResponse.
+        
+        Returns alarms as GetAlarmsResponse DTO with full type safety.
+        Falls back gracefully if DTOs not available.
+        
+        Returns:
+            GetAlarmsResponse DTO or None if DTOs unavailable
+        """
+        if not HAS_ALARM_DTO:
+            logger.debug("DTO not available, falling back to legacy path")
+            return None
+        
+        try:
+            # Get alarms as dict list
+            alarms_list = self.list_alarms()
+            
+            # Convert to AlarmDTO objects
+            alarm_dtos = []
+            for a in alarms_list:
+                try:
+                    # Map dict to AlarmDTO with camelCase aliases
+                    alarm_dict = {
+                        "alarmId": a.get("id") or a.get("alarmId", f"alarm_{len(alarm_dtos)}"),
+                        "label": a.get("label", "Alarm"),
+                        "time": a.get("time", "00:00:00"),
+                        "enabled": a.get("enabled", True),
+                        "recurring": a.get("recurring", False),
+                        "daysOfWeek": a.get("daysOfWeek") or a.get("days_of_week", []),
+                        "soundUri": a.get("soundUri", a.get("sound_uri")),
+                    }
+                    alarm_dtos.append(AlarmDTO(**alarm_dict))
+                except Exception as e:
+                    logger.warning(f"Could not convert alarm to DTO: {e}, skipping")
+                    continue
+            
+            response = GetAlarmsResponse(alarms=alarm_dtos)
+            logger.debug(f"Returning {len(alarm_dtos)} alarms as DTO")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error in get_alarms_typed: {e}")
+            return None
 
     def delete_alarm(self, alarm_id: str) -> bool:
         """

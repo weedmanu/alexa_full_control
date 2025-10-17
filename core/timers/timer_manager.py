@@ -9,6 +9,13 @@ from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.timer_schemas import GetTimersResponse, TimerDTO
+    HAS_TIMER_DTO = True
+except ImportError:
+    HAS_TIMER_DTO = False
+
 
 class TimerManager(BaseManager[Dict[str, Any]]):
     """
@@ -214,6 +221,53 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 timers = [t for t in timers if t.get("deviceSerialNumber") == device_serial]
 
             return timers
+
+    def get_timers_typed(self, force_refresh: bool = False) -> Optional["GetTimersResponse"]:
+        """
+        Phase 3.7: Typed DTO version of list_timers returning GetTimersResponse.
+        
+        Returns timers as GetTimersResponse DTO with full type safety.
+        Falls back gracefully if DTOs not available.
+        
+        Args:
+            force_refresh: Force refresh from API
+            
+        Returns:
+            GetTimersResponse DTO or None if DTOs unavailable
+        """
+        if not HAS_TIMER_DTO:
+            logger.debug("DTO not available, falling back to legacy path")
+            return None
+        
+        try:
+            # Get timers as dict list
+            timers_list = self.list_timers(force_refresh=force_refresh)
+            
+            # Convert to TimerDTO objects
+            timer_dtos = []
+            for t in timers_list:
+                try:
+                    # Map dict to TimerDTO with camelCase aliases
+                    timer_dict = {
+                        "timerId": t.get("id") or t.get("timerId", f"timer_{len(timer_dtos)}"),
+                        "label": t.get("timerLabel", t.get("label", "Timer")),
+                        "durationMs": t.get("durationMs", t.get("duration", 0)),
+                        "state": t.get("status") or t.get("state"),
+                        "remainingMs": t.get("remainingMs", t.get("remaining")),
+                        "soundUri": t.get("soundUri", t.get("sound_uri")),
+                    }
+                    timer_dtos.append(TimerDTO(**timer_dict))
+                except Exception as e:
+                    logger.warning(f"Could not convert timer to DTO: {e}, skipping")
+                    continue
+            
+            response = GetTimersResponse(timers=timer_dtos)
+            logger.debug(f"Returning {len(timer_dtos)} timers as DTO")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error in get_timers_typed: {e}")
+            return None
 
     def _refresh_timers_cache(self) -> List[Dict[str, Any]]:
         """

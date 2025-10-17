@@ -123,3 +123,31 @@ class ReminderResponse(ResponseDTO):
         extra='forbid',
         str_strip_whitespace=True
     )
+
+
+class GetRemindersResponse(ResponseDTO):
+    """
+    Response containing list of all reminders.
+    
+    Response DTO for GET /api/reminders endpoint.
+    
+    Attributes:
+        reminders: List of ReminderDTO objects
+    
+    Example:
+        >>> response = GetRemindersResponse(
+        ...     reminders=[
+        ...         ReminderDTO(reminder_id="r1", label="Meeting", trigger_time=datetime.now(timezone.utc))
+        ...     ]
+        ... )
+    """
+    
+    reminders: list[ReminderDTO] = Field(default_factory=list)
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        frozen=True,
+        extra='forbid',
+        str_strip_whitespace=True
+    )
+

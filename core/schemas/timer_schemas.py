@@ -140,3 +140,31 @@ class TimerResponse(ResponseDTO):
         extra='forbid',
         str_strip_whitespace=True
     )
+
+
+class GetTimersResponse(ResponseDTO):
+    """
+    Response containing list of all timers.
+    
+    Response DTO for GET /api/timers endpoint.
+    
+    Attributes:
+        timers: List of TimerDTO objects
+    
+    Example:
+        >>> response = GetTimersResponse(
+        ...     timers=[
+        ...         TimerDTO(timer_id="timer1", label="Cooking", duration_ms=300000, state="RUNNING")
+        ...     ]
+        ... )
+    """
+    
+    timers: list[TimerDTO] = Field(default_factory=list)
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        frozen=True,
+        extra='forbid',
+        str_strip_whitespace=True
+    )
+
