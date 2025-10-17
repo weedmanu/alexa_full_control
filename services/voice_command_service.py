@@ -298,7 +298,7 @@ class VoiceCommandService:
                             "deviceSerialNumber": device_serial,
                             "locale": "fr-FR",
                             "customerId": self._customer_id,
-                            "textToSpeak": f"Alexa, {text_clean}",  # ← Préfixer avec "Alexa,"
+                            "textToSpeak": text_clean,  # ← PAS de "Alexa," prefix (comme shell script)
                         },
                     },
                 }
@@ -309,7 +309,7 @@ class VoiceCommandService:
                     "status": "ENABLED",
                 }
 
-                logger.debug(f"📤 Envoi commande vocale simulée: 'Alexa, {text_clean}'")
+                logger.debug(f"📤 Envoi commande vocale simulée: '{text_clean}'")
                 logger.debug(f"📦 Device: {dtype} / {device_serial}")
 
                 response = self.http_client.post(
@@ -332,7 +332,7 @@ class VoiceCommandService:
                 except Exception as e:
                     logger.debug(f"📥 Réponse API: status={response.status_code}, no JSON body: {e}")
 
-                logger.success(f"✅ Commande vocale simulée envoyée: 'Alexa, {text_clean}'")
+                logger.success(f"✅ Commande vocale simulée envoyée: '{text_clean}'")
                 return True
 
             except Exception as e:
@@ -669,3 +669,153 @@ class VoiceCommandService:
             except Exception as e:
                 logger.exception(f"❌ Erreur lors de la récupération de la réponse: {e}")
                 return None
+
+    def play_sound(self, device_name: str, sound_id: str) -> bool:
+        """
+        Joue un son d'effet sur l'appareil.
+
+        Args:
+            device_name: Nom de l'appareil
+            sound_id: ID du son (ex: amzn1.ask.skillId.airhorn)
+
+        Returns:
+            True si le son a été joué, False sinon
+        """
+        with self._lock:
+            try:
+                logger.debug(f"🔊 Jouant son {sound_id} sur {device_name}")
+
+                # Récupérer customer_id
+                if not self._customer_id:
+                    self._customer_id = self._get_customer_id()
+                    if not self._customer_id:
+                        logger.error("❌ Customer ID non disponible")
+                        return False
+
+                # Récupérer le device depuis le cache
+                from services.cache_service import CacheService
+
+                cache = CacheService()
+                devices_data = cache.get("devices") or {}
+                devices = devices_data.get("devices", [])
+
+                device_serial = None
+                device_type = None
+                for dev in devices:
+                    if dev.get("accountName") == device_name:
+                        device_serial = dev.get("serialNumber")
+                        device_type = dev.get("deviceType")
+                        break
+
+                if not device_serial or not device_type:
+                    logger.error(f"❌ Appareil '{device_name}' non trouvé")
+                    return False
+
+                logger.debug(f"🔊 Device trouvé: {device_name} (serial={device_serial})")
+
+                # Construire le payload pour jouer le son
+                sequence_json_content = {
+                    "@type": "com.amazon.alexa.behaviors.model.Sequence",
+                    "startNode": {
+                        "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
+                        "type": "Alexa.Sound",
+                        "operationPayload": {
+                            "deviceType": device_type,
+                            "deviceSerialNumber": device_serial,
+                            "locale": "fr-FR",
+                            "customerId": self._customer_id,
+                            "soundId": sound_id,
+                        },
+                    },
+                }
+
+                return self.speak_as_voice.__wrapped__(self, f"Sound: {sound_id}", device_serial, device_type)
+
+            except Exception as e:
+                logger.exception(f"❌ Erreur lors de la lecture du son: {e}")
+                return False
+
+    def execute_text_command(self, device_name: str, text: str) -> bool:
+        """
+        Exécute une commande texte (comme si elle était vocale).
+
+        Args:
+            device_name: Nom de l'appareil
+            text: Commande texte à exécuter (ex: 'allume les lumières')
+
+        Returns:
+            True si la commande a été exécutée, False sinon
+        """
+        with self._lock:
+            try:
+                logger.debug(f"📝 Exécutant commande texte: '{text}' sur {device_name}")
+
+                # Récupérer customer_id
+                if not self._customer_id:
+                    self._customer_id = self._get_customer_id()
+                    if not self._customer_id:
+                        logger.error("❌ Customer ID non disponible")
+                        return False
+
+                # Récupérer le device depuis le cache
+                from services.cache_service import CacheService
+
+                cache = CacheService()
+                devices_data = cache.get("devices") or {}
+                devices = devices_data.get("devices", [])
+
+                device_serial = None
+                device_type = None
+                for dev in devices:
+                    if dev.get("accountName") == device_name:
+                        device_serial = dev.get("serialNumber")
+                        device_type = dev.get("deviceType")
+                        break
+
+                if not device_serial or not device_type:
+                    logger.error(f"❌ Appareil '{device_name}' non trouvé")
+                    return False
+
+                logger.debug(f"📝 Device trouvé: {device_name} (serial={device_serial})")
+
+                # Construire le payload pour exécuter la commande texte
+                sequence_json_content = {
+                    "@type": "com.amazon.alexa.behaviors.model.Sequence",
+                    "startNode": {
+                        "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
+                        "type": "Alexa.TextCommand",
+                        "operationPayload": {
+                            "deviceType": device_type,
+                            "deviceSerialNumber": device_serial,
+                            "locale": "fr-FR",
+                            "customerId": self._customer_id,
+                            "text": text,
+                            "skillId": "amzn1.ask.1p.tellalexa",
+                        },
+                    },
+                }
+
+                payload = {
+                    "behaviorId": "PREVIEW",
+                    "sequenceJson": sequence_json_content,
+                    "status": "ENABLED",
+                }
+
+                # Envoyer la commande
+                result = self.auth.post_api(
+                    "/api/behaviors/preview",
+                    json=payload,
+                    headers={"Origin": "https://alexa.amazon.fr"},
+                )
+
+                if result and result.status_code == 200:
+                    logger.success(f"✅ Commande texte exécutée: '{text}'")
+                    return True
+                else:
+                    logger.error(f"❌ Erreur lors de l'exécution: {result.status_code if result else 'No response'}")
+                    return False
+
+            except Exception as e:
+                logger.exception(f"❌ Erreur lors de l'exécution du textcommand: {e}")
+                return False
+

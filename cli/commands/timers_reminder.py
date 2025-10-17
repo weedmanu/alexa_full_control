@@ -9,7 +9,7 @@ import argparse
 from typing import Any, Dict, List
 
 from cli.command_parser import UniversalHelpFormatter
-from cli.commands.timers.base import TimeSubCommand
+from cli.commands.base_subcommand import BaseSubCommand as TimeSubCommand
 
 
 class RemindersCommands(TimeSubCommand):

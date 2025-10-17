@@ -219,10 +219,8 @@ class MultiroomCommand(BaseCommand):
                     return False
                 device_serials.append(serial)
 
-            # Serial de l'appareil principal
-            primary_serial = self.get_device_serial(primary_device)
-
-            result = self.call_with_breaker(ctx.multiroom_mgr.create_group, args.name, device_serials, primary_serial)
+            # Créer le groupe (pas de device principal spécifique dans MultiRoomManager)
+            result = self.call_with_breaker(ctx.multiroom_mgr.create_group, args.name, device_serials)
 
             if result:
                 self.success(f"✅ Groupe '{args.name}' créé avec succès")
@@ -297,52 +295,40 @@ class MultiroomCommand(BaseCommand):
         print(f"\n🔊 Groupes Multiroom ({len(groups)}):")
         print("=" * 80)
 
-        for group in groups:
-            group_name = group.get("name", "N/A")
-            devices = group.get("devices", [])
-            primary = group.get("primary_device", "N/A")
+        # groups est un dictionnaire {normalized_name: group_data}
+        if isinstance(groups, dict):
+            for key, group in groups.items():
+                group_name = group.get("name", "N/A")
+                devices = group.get("devices", [])
+                primary = group.get("primary_device", "N/A")
 
-            print(f"\n📁 {group_name} ({len(devices)} appareil(s))")
+                print(f"\n📁 {group_name} ({len(devices)} appareil(s))")
 
-            if verbose:
-                print(f"   Principal: {primary}")
-                print("   Appareils:")
-                for device in devices:
-                    device_name = device.get("name", "N/A")
-                    is_primary = device.get("serialNumber") == primary
-                    marker = "⭐" if is_primary else "  "
-                    print(f"     {marker} {device_name}")
-            else:
-                device_names = [d.get("name", "N/A") for d in devices]
-                print(f"   Appareils: {', '.join(device_names)}")
+                if verbose:
+                    print(f"   Principal: {primary}")
+                    print("   Appareils:")
+                    for device in devices:
+                        print(f"     - {device}")
+                else:
+                    print(f"   Appareils: {', '.join(devices)}")
 
     def _display_group_details(self, group: dict) -> None:
         """Affiche les détails d'un groupe de manière formatée."""
         group_name = group.get("name", "N/A")
-        group_id = group.get("groupId", "N/A")
         devices = group.get("devices", [])
-        primary = group.get("primary_device", "N/A")
 
         print(f"\n🔊 Groupe Multiroom: {group_name}")
         print("=" * 80)
-        print(f"ID: {group_id}")
         print(f"Nombre d'appareils: {len(devices)}")
 
-        # Trouver le nom de l'appareil principal
-        primary_name = "N/A"
-        for device in devices:
-            if device.get("serialNumber") == primary:
-                primary_name = device.get("name", "N/A")
-                break
-
-        print(f"Appareil principal: {primary_name}")
-
         print("\nAppareils du groupe:")
-        for device in devices:
-            device_name = device.get("name", "N/A")
-            device_serial = device.get("serialNumber", "N/A")
-            is_primary = device_serial == primary
-
-            marker = "⭐ Principal" if is_primary else "  Membre"
-            print(f"  {marker} - {device_name}")
-            print(f"           Serial: {device_serial}")
+        for device_serial in devices:
+            # Les devices sont juste des serials (strings)
+            print(f"  - {device_serial}")
+        
+        # Afficher les dates
+        created = group.get("created", "N/A")
+        modified = group.get("modified", "N/A")
+        print(f"\nCréé: {created}")
+        if modified and modified != "N/A":
+            print(f"Modifié: {modified}")

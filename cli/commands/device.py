@@ -475,7 +475,10 @@ class DeviceCommand(BaseCommand):
 
     def _send_message(self, args: argparse.Namespace) -> bool:
         """
-        Envoie un message (annonce) à un appareil.
+        Envoie un message (annonce vocale) à un appareil via l'API Alexa.Speak.
+
+        Utilise /api/behaviors/preview pour simuler une commande vocale
+        (text-to-speech), qui fait parler Alexa.
 
         Args:
             args: Arguments (device, message, title)
@@ -489,19 +492,22 @@ class DeviceCommand(BaseCommand):
             if not serial:
                 return False
 
-            title = getattr(args, "title", None) or "Message"
-
             self.info(f"📬 Envoi message à '{args.device}'...")
 
             ctx = self.require_context()
-            if not ctx.notification_mgr:
-                self.error("Gestionnaire de notifications non disponible")
+            
+            # Utiliser VoiceCommandService pour envoyer le message
+            # via /api/behaviors/preview avec Alexa.Speak
+            voice_service = ctx.voice_service
+            if not voice_service:
+                self.error("Service de commandes vocales non disponible")
                 return False
 
-            result = self.call_with_breaker(ctx.notification_mgr.send_notification, serial, args.message, title)
+            # speak_as_voice envoie via /api/behaviors/preview avec Alexa.Speak
+            result = self.call_with_breaker(voice_service.speak_as_voice, args.message, device_serial=serial)
 
             if result:
-                self.success(f"✅ Message envoyé à '{args.device}'")
+                self.success(f"✅ Message envoyé à '{args.device}': '{args.message}'")
                 return True
 
             return False

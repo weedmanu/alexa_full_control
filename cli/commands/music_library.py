@@ -13,7 +13,7 @@ import argparse
 import json
 
 from cli.command_parser import ActionHelpFormatter
-from cli.commands.music.base import MusicSubCommand
+from cli.commands.base_subcommand import BaseSubCommand as MusicSubCommand
 
 # Constantes de description simplifiées
 LIBRARY_HELP = "Gérer la bibliothèque musicale"

@@ -32,11 +32,15 @@ from cli.commands.auth import AuthCommand
 from cli.commands.cache import CacheCommand
 from cli.commands.calendar import CalendarCommand
 from cli.commands.device import DeviceCommand
+from cli.commands.device_communicate import DeviceCommunicateCommand
 from cli.commands.dnd import DNDCommand
+from cli.commands.favorite import FavoriteCommand
 from cli.commands.lists import ListsCommand
+from cli.commands.multiroom import MultiroomCommand
 from cli.commands.music import MusicCommand
 from cli.commands.reminder import ReminderCommand
 from cli.commands.routine import RoutineCommand
+from cli.commands.scenario import ScenarioCommand
 from cli.commands.smarthome import SmartHomeCommand
 from cli.commands.timers import TimerCommand
 
@@ -47,11 +51,15 @@ __all__ = [
     "CacheCommand",
     "CalendarCommand",
     "DeviceCommand",
+    "DeviceCommunicateCommand",
     "DNDCommand",
+    "FavoriteCommand",
     "ListsCommand",
+    "MultiroomCommand",
     "MusicCommand",
     "ReminderCommand",
     "RoutineCommand",
+    "ScenarioCommand",
     "SmartHomeCommand",
     "TimerCommand",
 ]

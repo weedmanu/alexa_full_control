@@ -58,10 +58,14 @@ from cli.commands import (
     CacheCommand,
     CalendarCommand,
     DeviceCommand,
+    DeviceCommunicateCommand,
     DNDCommand,
+    FavoriteCommand,
     ListsCommand,
+    MultiroomCommand,
     MusicCommand,
     RoutineCommand,
+    ScenarioCommand,
     SmartHomeCommand,
     TimerCommand,
 )
@@ -108,6 +112,18 @@ def register_all_commands(parser: Any) -> None:
     # Phase 1 - Sprint 1 ✅
     parser.register_command("auth", AuthCommand)
     parser.register_command("device", DeviceCommand)
+
+    # Phase 1.5 - Communication ✅ NEW
+    parser.register_command("device communicate", DeviceCommunicateCommand)
+
+    # Phase 1.6 - Favorites ✅ NEW
+    parser.register_command("favorite", FavoriteCommand)
+
+    # Phase 1.7 - Multiroom ✅ NEW
+    parser.register_command("multiroom", MultiroomCommand)
+
+    # Phase 1.8 - Scenarios ✅ NEW
+    parser.register_command("scenario", ScenarioCommand)
 
     # Phase 2 - Sprint 2 ✅
     parser.register_command("music", MusicCommand)

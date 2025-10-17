@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from core.device_manager import DeviceManager
     from core.dnd_manager import DNDManager
     from core.lists.lists_manager import ListsManager
+    from core.multiroom import MultiRoomManager
     from core.music import LibraryManager, PlaybackManager, TuneInManager
     from core.notification_manager import NotificationManager
     from core.reminders import ReminderManager
@@ -43,6 +44,10 @@ from core.circuit_breaker import CircuitBreaker
 from core.config import Config
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
+from services.favorite_service import FavoriteService
+
+if TYPE_CHECKING:
+    from core.multiroom.multiroom_manager import MultiRoomManager
 
 
 class Context:
@@ -113,8 +118,13 @@ class Context:
         self.auth: Optional[AlexaAuth] = None
         self._device_mgr_instance: Optional[DeviceManager] = None
         self._sync_service: Optional[SyncService] = None
+        
+        # Services additionnels
+        self.favorite_service = FavoriteService()  # Service de gestion des favoris
 
         # Managers de fonctionnalités (lazy-loaded)
+        self._multiroom_mgr: Optional[MultiRoomManager] = None
+        self._scenario_mgr: Optional["ScenarioManager"] = None
         self._timer_mgr: Optional[TimerManager] = None
         self._alarm_mgr: Optional[AlarmManager] = None
         self._reminder_mgr: Optional[ReminderManager] = None
@@ -133,6 +143,7 @@ class Context:
         # self._announcement_mgr: Optional["AnnouncementManager"] = None
         self._calendar_mgr: Optional[CalendarManager] = None
         self._routine_mgr: Optional[RoutineManager] = None
+        self._multiroom_mgr: Optional[MultiRoomManager] = None
         self._list_mgr: Optional[ListsManager] = None
         self._equalizer_mgr: Optional[EqualizerManager] = None
         self._bluetooth_mgr: Optional[BluetoothManager] = None
@@ -334,6 +345,26 @@ class Context:
         return self._routine_mgr
 
     @property
+    def multiroom_mgr(self) -> Optional["MultiRoomManager"]:
+        """Gestionnaire multiroom (lazy-loaded)."""
+        if self._multiroom_mgr is None:
+            from core.multiroom import MultiRoomManager
+
+            self._multiroom_mgr = MultiRoomManager()
+            logger.debug("MultiRoomManager chargé")
+        return self._multiroom_mgr
+
+    @property
+    def scenario_mgr(self) -> Optional["ScenarioManager"]:
+        """Gestionnaire de scénarios (lazy-loaded)."""
+        if self._scenario_mgr is None:
+            from core.scenario.scenario_manager import ScenarioManager
+
+            self._scenario_mgr = ScenarioManager()
+            logger.debug("ScenarioManager chargé")
+        return self._scenario_mgr
+
+    @property
     def list_mgr(self) -> Optional["ListsManager"]:
         """Gestionnaire de listes (lazy-loaded)."""
         if self._list_mgr is None and self.auth:
@@ -462,6 +493,8 @@ class Context:
         self._dnd_mgr = None
         self._activity_mgr = None
         self._calendar_mgr = None
+        self._multiroom_mgr = None
+        self._scenario_mgr = None
         self._equalizer_mgr = None
         self._bluetooth_mgr = None
         self._device_settings_mgr = None

@@ -9,7 +9,7 @@ Date: 8 octobre 2025
 
 import argparse
 
-from cli.commands.music.base import MusicSubCommand
+from cli.commands.base_subcommand import BaseSubCommand as MusicSubCommand
 
 
 class TuneInCommands(MusicSubCommand):

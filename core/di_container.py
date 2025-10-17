@@ -12,7 +12,9 @@ from loguru import logger
 from alexa_auth.alexa_auth import AlexaAuth
 from core.config import Config
 from core.manager_factory import ManagerFactory
+from core.multiroom.multiroom_manager import MultiRoomManager
 from core.state_machine import AlexaStateMachine
+from services.favorite_service import FavoriteService
 
 T = TypeVar("T")
 
@@ -170,6 +172,14 @@ def setup_di_container(
     if state_machine is None:
         state_machine = AlexaStateMachine()
     container.register_singleton("state_machine", state_machine)
+
+    # Register services
+    favorite_service = FavoriteService()
+    container.register_singleton("FavoriteService", favorite_service)
+
+    # Register managers
+    multiroom_manager = MultiRoomManager()
+    container.register_singleton("MultiRoomManager", multiroom_manager)
 
     logger.info("✅ DI Container initialized with core dependencies")
 
