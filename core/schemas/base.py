@@ -38,8 +38,8 @@ Author: Phase 3 - DTO Layer
 Date: 17 octobre 2025
 """
 
-from datetime import datetime
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from datetime import datetime, timezone
+from typing import Any, Dict, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -152,7 +152,7 @@ class ResponseDTO(BaseDTOModel):
     ----------
     - **Immutable**: frozen=True prevents accidental modification of API data
     - **Type-Safe**: All response fields validated against schema
-    - **Timestamped**: Optional created_at field for audit trails
+    - **Timestamped**: Auto-set created_at field for audit trails
     - **Read-Only**: Once parsed, response data cannot be changed
 
     Usage:
@@ -168,8 +168,8 @@ class ResponseDTO(BaseDTOModel):
         >>> response.devices.append(...)  # ❌ FrozenInstanceError
     """
 
-    # Optional timestamp when response was created
-    created_at: Optional[datetime] = None
+    # Auto-set timestamp when response was created
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     model_config = ConfigDict(
         frozen=True,                    # Immutable - read-only API data

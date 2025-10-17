@@ -293,13 +293,15 @@ class TestGetDevicesResponse:
             GetDevicesResponse(**response_data)
 
     def test_get_devices_response_has_created_at(self):
-        """Response should have optional created_at timestamp."""
+        """Response should have auto-set created_at timestamp."""
         from core.schemas.device_schemas import GetDevicesResponse
+        from datetime import datetime
         
         response = GetDevicesResponse(devices=[])
         
-        # created_at should be None by default
-        assert response.created_at is None
+        # created_at should be auto-set to current time
+        assert response.created_at is not None
+        assert isinstance(response.created_at, datetime)
 
     def test_get_devices_response_is_immutable(self):
         """GetDevicesResponse should be immutable (frozen)."""
