@@ -42,28 +42,25 @@ Example Amazon Auth Response:
 }
 """
 
-from typing import Optional
 from datetime import datetime, timedelta, timezone
+from typing import Optional
+
 from pydantic import Field, field_validator
 
-from core.schemas.base import (
-    RequestDTO,
-    ResponseDTO,
-    DomainModel,
-)
+from core.schemas.base import DomainModel, RequestDTO, ResponseDTO
 
 
 class LoginRequest(RequestDTO):
     """
     Authentication request with user credentials.
-    
+
     Sent by client to authenticate with Alexa API.
-    
+
     Attributes:
         username: User email or username
         password: User password (plaintext - should be sent over HTTPS)
         device_id: Optional device identifier for session binding
-    
+
     Example:
         >>> request = LoginRequest(
         ...     username="user@example.com",
@@ -87,16 +84,16 @@ class LoginRequest(RequestDTO):
 class SessionDTO(DomainModel):
     """
     Session information for authenticated user.
-    
+
     Represents an authenticated session with expiration.
     Used to manage user sessions and their lifecycle.
-    
+
     Attributes:
         session_id: Unique session identifier
         token: Session token for API calls
         expires_at: Absolute expiration timestamp
         device_id: Optional associated device
-    
+
     Example:
         >>> session = SessionDTO(
         ...     sessionId="SESSION_ABC",
@@ -128,16 +125,16 @@ class SessionDTO(DomainModel):
 class TokenDTO(ResponseDTO):
     """
     OAuth2-style access token with expiration.
-    
+
     Represents an access token for API authentication.
     Tracks expiration time (absolute or relative).
-    
+
     Attributes:
         access_token: The access token string (JWT or opaque)
         token_type: Token type (default: "Bearer")
         expires_in: Seconds until expiration (optional, relative)
         refresh_token: Token to refresh this token
-    
+
     Example:
         >>> token = TokenDTO(
         ...     access_token="eyJhbGciOiJIUzI1NiIs...",
@@ -181,17 +178,17 @@ class TokenDTO(ResponseDTO):
 class LoginResponse(ResponseDTO):
     """
     Response from authentication endpoint.
-    
+
     Contains session and token information after successful login.
     May contain error information if login failed.
-    
+
     Attributes:
         success: Whether authentication was successful
         session: Session information (if success)
         token: Access token (if success)
         error: Error message (if failed)
         error_code: Machine-readable error code
-    
+
     Example:
         >>> response = LoginResponse(
         ...     success=True,
@@ -222,14 +219,14 @@ class LoginResponse(ResponseDTO):
 class RefreshTokenRequest(RequestDTO):
     """
     Request to refresh an expired access token.
-    
+
     Sent by client when access token has expired.
     Uses refresh_token to obtain a new access_token.
-    
+
     Attributes:
         refresh_token: Token used to refresh access token
         device_id: Optional device identifier
-    
+
     Example:
         >>> request = RefreshTokenRequest(
         ...     refresh_token="REFRESH_TOKEN_123"

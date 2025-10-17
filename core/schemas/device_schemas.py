@@ -40,25 +40,20 @@ Example Amazon API Response:
 }
 """
 
-from typing import List, Optional, Literal
-from datetime import datetime
+from typing import List, Optional
+
 from pydantic import Field, field_validator
 
-from core.schemas.base import (
-    RequestDTO,
-    ResponseDTO,
-    DomainModel,
-    BaseDTOModel,
-)
+from core.schemas.base import DomainModel, RequestDTO, ResponseDTO
 
 
 class Device(DomainModel):
     """
     Individual Alexa device information.
-    
+
     Represents a single registered Alexa device with its capabilities,
     online status, and device metadata.
-    
+
     Attributes:
         serial_number: Unique device identifier (Amazon serial number)
         device_name: User-friendly device name (e.g., "Salon")
@@ -72,7 +67,7 @@ class Device(DomainModel):
         mac_address: Device MAC address for network identification
         firmware_version: Current firmware version
         parent_serial_number: Serial number of parent device (for paired devices)
-    
+
     Example:
         >>> device = Device(
         ...     serialNumber="ABC123",
@@ -114,10 +109,10 @@ class Device(DomainModel):
 class GetDevicesRequest(RequestDTO):
     """
     Request to retrieve all Alexa devices.
-    
+
     GET /api/devices typically has empty request body.
     Parameters may be passed as query strings instead.
-    
+
     Example:
         >>> request = GetDevicesRequest()
         >>> # Send empty body request
@@ -131,14 +126,14 @@ class GetDevicesRequest(RequestDTO):
 class GetDevicesResponse(ResponseDTO):
     """
     Response containing list of all registered Alexa devices.
-    
+
     This is the main response from device listing endpoint.
     Contains all devices registered to the Amazon account.
-    
+
     Attributes:
         devices: List of Device objects
         created_at: Response generation timestamp (from ResponseDTO base)
-    
+
     Example:
         >>> response = GetDevicesResponse(devices=[
         ...     Device(serialNumber="ABC123", deviceName="Salon", ...)

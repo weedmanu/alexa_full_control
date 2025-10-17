@@ -39,11 +39,11 @@ from core.schemas.base import (
 
 __all__ = [
     # Base classes
-    'BaseDTOModel',
-    'RequestDTO',
-    'ResponseDTO',
-    'DomainModel',
-    'APIErrorDTO',
-    'APISuccessResponse',
-    'ValidationErrorDetail',
+    "BaseDTOModel",
+    "RequestDTO",
+    "ResponseDTO",
+    "DomainModel",
+    "APIErrorDTO",
+    "APISuccessResponse",
+    "ValidationErrorDetail",
 ]

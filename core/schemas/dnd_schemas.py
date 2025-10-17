@@ -14,54 +14,40 @@ API Endpoints Covered:
 - DELETE /api/dnd: Clear DND mode
 """
 
-from typing import Optional
 from datetime import datetime
-from pydantic import Field, ConfigDict
+from typing import Optional
+
+from pydantic import ConfigDict, Field
 
 from core.schemas.base import DomainModel, RequestDTO, ResponseDTO
 
 
 class DNDStatusDTO(DomainModel):
     """Data model for DND status."""
-    
+
     enabled: bool
     duration_ms: Optional[int] = Field(None, alias="durationMs")
     end_time: Optional[datetime] = Field(None, alias="endTime")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)
 
 
 class SetDNDRequest(RequestDTO):
     """Request to set DND mode."""
-    
+
     device_serial_number: str = Field(..., alias="deviceSerialNumber")
     enabled: bool
     duration_ms: Optional[int] = Field(None, alias="durationMs")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)
 
 
 class DNDResponse(ResponseDTO):
     """Response from DND operation."""
-    
+
     success: bool
     dnd_enabled: Optional[bool] = Field(None, alias="dndEnabled")
     error: Optional[str] = None
     error_code: Optional[str] = Field(None, alias="errorCode")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)

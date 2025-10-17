@@ -15,52 +15,39 @@ API Endpoints Covered:
 - DELETE /api/lists/{listId}: Delete list
 """
 
-from typing import Optional, List as ListType
-from pydantic import Field, ConfigDict
+from typing import List as ListType
+from typing import Optional
+
+from pydantic import ConfigDict, Field
 
 from core.schemas.base import DomainModel, RequestDTO, ResponseDTO
 
 
 class ListDTO(DomainModel):
     """Data model for a shopping list."""
-    
+
     list_id: str = Field(..., alias="listId")
     name: str
     items: ListType[str] = Field(default_factory=list)
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)
 
 
 class CreateListRequest(RequestDTO):
     """Request to create a shopping list."""
-    
+
     device_serial_number: str = Field(..., alias="deviceSerialNumber")
     name: str
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)
 
 
 class ListResponse(ResponseDTO):
     """Response from list operation."""
-    
+
     success: bool
     list_id: Optional[str] = Field(None, alias="listId")
     error: Optional[str] = None
     error_code: Optional[str] = Field(None, alias="errorCode")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)

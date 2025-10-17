@@ -61,24 +61,19 @@ POST /api/np/player (play track):
 """
 
 from typing import List, Optional
-from datetime import datetime
+
 from pydantic import Field, field_validator
 
-from core.schemas.base import (
-    RequestDTO,
-    ResponseDTO,
-    DomainModel,
-    BaseDTOModel,
-)
+from core.schemas.base import DomainModel, RequestDTO, ResponseDTO
 
 
 class TrackDTO(DomainModel):
     """
     Individual track metadata.
-    
+
     Represents a single music track with its metadata:
     artist, title, duration, album, etc.
-    
+
     Attributes:
         track_id: Unique track identifier (Spotify URI format or Amazon ID)
         title: Track/song title
@@ -86,7 +81,7 @@ class TrackDTO(DomainModel):
         album: Album name (optional)
         duration: Track duration in seconds (optional)
         art_url: Album art URL (optional)
-    
+
     Example:
         >>> track = TrackDTO(
         ...     trackId="spotify:track:123",
@@ -112,15 +107,15 @@ class TrackDTO(DomainModel):
 class PlaylistDTO(DomainModel):
     """
     Playlist metadata and information.
-    
+
     Represents a music playlist.
-    
+
     Attributes:
         playlist_id: Unique playlist identifier
         title: Playlist name
         track_count: Number of tracks in playlist
         art_url: Playlist art/cover URL
-    
+
     Example:
         >>> playlist = PlaylistDTO(
         ...     playlistId="PLabc123",
@@ -138,16 +133,16 @@ class PlaylistDTO(DomainModel):
 class PlayMusicRequest(RequestDTO):
     """
     Request to play music on a device.
-    
+
     Supports playing by track ID, queue token, or other parameters.
-    
+
     Attributes:
         track_id: Track to play (optional - use with deviceSerialNumber)
         queue_token: Queue to play (optional - alternative to trackId)
         device_serial_number: Target device serial number (required)
         shuffle_mode: "on" or "off" (optional)
         repeat_mode: "off", "all", "one" (optional)
-    
+
     Example:
         >>> request = PlayMusicRequest(
         ...     trackId="TRACK123",
@@ -195,14 +190,14 @@ class PlayMusicRequest(RequestDTO):
 class PlayMusicResponse(ResponseDTO):
     """
     Response from play music command.
-    
+
     Indicates whether music playback was initiated successfully.
-    
+
     Attributes:
         success: Whether play command succeeded
         is_playing: Whether music is now playing
         error: Error message if failed (optional)
-    
+
     Example:
         >>> response = PlayMusicResponse(
         ...     success=True,
@@ -218,10 +213,10 @@ class PlayMusicResponse(ResponseDTO):
 class MusicStatusResponse(ResponseDTO):
     """
     Current music playback status.
-    
+
     Returns current playback information including current track,
     playback position, volume, etc.
-    
+
     Attributes:
         is_playing: Whether music is currently playing
         volume: Current volume level (0-100)
@@ -230,7 +225,7 @@ class MusicStatusResponse(ResponseDTO):
         duration: Total track duration in seconds
         queue_length: Number of tracks in queue
         queue_index: Current position in queue
-    
+
     Example:
         >>> status = MusicStatusResponse(
         ...     isPlaying=True,
@@ -253,13 +248,13 @@ class MusicStatusResponse(ResponseDTO):
 class MusicSearchResponse(ResponseDTO):
     """
     Search results for music query.
-    
+
     Contains list of tracks/playlists matching search criteria.
-    
+
     Attributes:
         results: List of matching tracks
         total_count: Total number of results available (may be > len(results))
-    
+
     Example:
         >>> response = MusicSearchResponse(
         ...     results=[
@@ -276,14 +271,14 @@ class MusicSearchResponse(ResponseDTO):
 class MusicLibraryResponse(ResponseDTO):
     """
     User's music library information.
-    
+
     Returns playlists, artists, albums from user's library.
-    
+
     Attributes:
         playlists: User's playlists
         artists: Artists in library
         albums: Albums in library
-    
+
     Example:
         >>> response = MusicLibraryResponse(
         ...     playlists=[
@@ -300,13 +295,13 @@ class MusicLibraryResponse(ResponseDTO):
 class QueueResponse(ResponseDTO):
     """
     Current playback queue.
-    
+
     List of tracks in queue with current playing index.
-    
+
     Attributes:
         tracks: List of queued tracks
         current_index: Index of currently playing track
-    
+
     Example:
         >>> response = QueueResponse(
         ...     tracks=[

@@ -16,6 +16,7 @@ from core.base_persistence_manager import BasePersistenceManager
 # Phase 3.7: Import DTO for typed return
 try:
     from core.schemas.base import ResponseDTO
+
     HAS_SCENARIO_DTO = True
 except ImportError:
     HAS_SCENARIO_DTO = False

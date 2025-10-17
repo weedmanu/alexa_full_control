@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 ============================================================================
 🎙️  Alexa Voice Control CLI - Architecture Modulaire
@@ -61,7 +60,6 @@ from cli.commands import (
     AuthCommand,
     CacheCommand,
     CalendarCommand,
-    DeviceCommand,
     DeviceCommunicateCommand,
     DeviceManagerCommand,
     DNDCommand,
@@ -72,7 +70,6 @@ from cli.commands import (
     RoutineCommand,
     ScenarioCommand,
     SmartHomeCommand,
-    TimerCommand,
     TimersManagerCommand,
 )
 from utils.logger import setup_loguru_logger
@@ -270,6 +267,7 @@ def main() -> int:
         if context.auth:
             try:
                 from core.di_container import setup_di_container
+
                 setup_di_container(context.auth, context.config, context.state_machine)
                 logger.debug("✅ DI Container initialisé avec context.auth")
             except Exception as e:
@@ -287,7 +285,7 @@ def main() -> int:
                 result = adapter.execute_command(command, vars(args))
                 # result is dict from ManagerCommand.validate_and_execute
                 success = bool(result and result.get("success", False))
-                
+
                 # Display result if successful
                 if success:
                     if result.get("formatted"):
@@ -296,6 +294,7 @@ def main() -> int:
                         # If JSON output requested
                         if getattr(args, "json", False):
                             import json
+
                             print(json.dumps(result.get("data"), indent=2, ensure_ascii=False))
                         else:
                             # Display structured data (device list, etc)

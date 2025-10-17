@@ -15,6 +15,7 @@ from .state_machine import AlexaStateMachine
 # Phase 3.7: Import DTO for typed return
 try:
     from core.schemas.base import ResponseDTO
+
     HAS_ACTIVITY_DTO = True
 except ImportError:
     HAS_ACTIVITY_DTO = False

@@ -12,6 +12,7 @@ from services.cache_service import CacheService
 # Phase 3.7: Import DTO for typed return
 try:
     from core.schemas.timer_schemas import GetTimersResponse, TimerDTO
+
     HAS_TIMER_DTO = True
 except ImportError:
     HAS_TIMER_DTO = False
@@ -69,7 +70,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
         # In Phase 2+, config is not needed for operations, only for headers
         class _MinimalConfig:
             amazon_domain = "amazon.com"
-        
+
         minimal_config = _MinimalConfig()
 
         # Phase 2: Mandatory API Service (no fallback)
@@ -225,24 +226,24 @@ class TimerManager(BaseManager[Dict[str, Any]]):
     def get_timers_typed(self, force_refresh: bool = False) -> Optional["GetTimersResponse"]:
         """
         Phase 3.7: Typed DTO version of list_timers returning GetTimersResponse.
-        
+
         Returns timers as GetTimersResponse DTO with full type safety.
         Falls back gracefully if DTOs not available.
-        
+
         Args:
             force_refresh: Force refresh from API
-            
+
         Returns:
             GetTimersResponse DTO or None if DTOs unavailable
         """
         if not HAS_TIMER_DTO:
             logger.debug("DTO not available, falling back to legacy path")
             return None
-        
+
         try:
             # Get timers as dict list
             timers_list = self.list_timers(force_refresh=force_refresh)
-            
+
             # Convert to TimerDTO objects
             timer_dtos = []
             for t in timers_list:
@@ -260,11 +261,11 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 except Exception as e:
                     logger.warning(f"Could not convert timer to DTO: {e}, skipping")
                     continue
-            
+
             response = GetTimersResponse(timers=timer_dtos)
             logger.debug(f"Returning {len(timer_dtos)} timers as DTO")
             return response
-            
+
         except Exception as e:
             logger.error(f"Error in get_timers_typed: {e}")
             return None

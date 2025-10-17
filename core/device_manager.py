@@ -25,7 +25,8 @@ from services.cache_service import CacheService
 
 # Phase 3.7: Import DTO for type-safe responses
 try:
-    from core.schemas.device_schemas import GetDevicesResponse, Device
+    from core.schemas.device_schemas import Device, GetDevicesResponse
+
     HAS_DEVICE_DTO = True
 except ImportError:
     HAS_DEVICE_DTO = False
@@ -102,7 +103,7 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         # Attributs spécifiques à DeviceManager
         self.auth: AlexaAuth = auth
         # AlexaAPIService for centralized API calls (REQUIRED)
-        self._api_service: "AlexaAPIService" = api_service
+        self._api_service: AlexaAPIService = api_service
 
         # Pré-calcul de l'URL de base pour optimisation
         self._base_url = f"https://{self.config.amazon_domain}"
@@ -179,9 +180,9 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         try:
             # Call API service which returns typed DTO
             response = self._api_service.get_devices()
-            
+
             # Cache the response
-            if response and hasattr(response, 'devices'):
+            if response and hasattr(response, "devices"):
                 with self._lock:
                     self._cache = response.devices  # Cache the device list
                     self._cache_timestamp = time.time()
@@ -189,11 +190,11 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
                     if response.devices:
                         self.cache_service.set(
                             "devices",
-                            {"devices": [d.model_dump() if hasattr(d, 'model_dump') else d for d in response.devices]},
-                            ttl_seconds=3600
+                            {"devices": [d.model_dump() if hasattr(d, "model_dump") else d for d in response.devices]},
+                            ttl_seconds=3600,
                         )
                     logger.info(f"✅ {len(response.devices)} appareils récupérés via DTO (mémoire + disque)")
-            
+
             return response
         except Exception as exc:
             logger.exception(f"Erreur lors de la récupération des appareils via DTO: {exc}")

@@ -15,56 +15,42 @@ API Endpoints Covered:
 - DELETE /api/calendar/events/{eventId}: Delete event
 """
 
-from typing import Optional
 from datetime import datetime
-from pydantic import Field, ConfigDict
+from typing import Optional
+
+from pydantic import ConfigDict, Field
 
 from core.schemas.base import DomainModel, RequestDTO, ResponseDTO
 
 
 class CalendarEventDTO(DomainModel):
     """Data model for a calendar event."""
-    
+
     event_id: str = Field(..., alias="eventId")
     title: str
     start_time: datetime = Field(..., alias="startTime")
     end_time: Optional[datetime] = Field(None, alias="endTime")
     description: Optional[str] = None
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)
 
 
 class EventRequest(RequestDTO):
     """Request for calendar operations."""
-    
+
     device_serial_number: str = Field(..., alias="deviceSerialNumber")
     title: str
     start_time: datetime = Field(..., alias="startTime")
     end_time: Optional[datetime] = Field(None, alias="endTime")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)
 
 
 class CalendarResponse(ResponseDTO):
     """Response from calendar operation."""
-    
+
     success: bool
     error: Optional[str] = None
     error_code: Optional[str] = Field(None, alias="errorCode")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        frozen=True,
-        extra='forbid',
-        str_strip_whitespace=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, frozen=True, extra="forbid", str_strip_whitespace=True)

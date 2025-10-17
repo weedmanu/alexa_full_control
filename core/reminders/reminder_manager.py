@@ -50,7 +50,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
         """
         if api_service is None:
             raise ValueError("api_service is mandatory in Phase 2")
-        
+
         # Use central factory to obtain an http_client from legacy auth or return auth
         from core.base_manager import create_http_client_from_auth
 

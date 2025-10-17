@@ -43,7 +43,7 @@ from typing import Any, Dict, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-T = TypeVar('T')  # Generic type variable for APISuccessResponse
+T = TypeVar("T")  # Generic type variable for APISuccessResponse
 
 
 class BaseDTOModel(BaseModel):
@@ -70,43 +70,39 @@ class BaseDTOModel(BaseModel):
     Example:
         >>> class MyDTO(BaseDTOModel):
         ...     name: str = Field(..., alias='firstName')
-        >>> 
+        >>>
         >>> MyDTO(firstName='  John  ')  # Input: camelCase with spaces
         MyDTO(name='John')  # Output: snake_case, trimmed
     """
 
     model_config = ConfigDict(
         # String transformation
-        str_strip_whitespace=True,      # Automatically trim whitespace
-        str_to_lower=False,             # Keep case as-is
-        
+        str_strip_whitespace=True,  # Automatically trim whitespace
+        str_to_lower=False,  # Keep case as-is
         # Field validation
-        extra='forbid',                 # Reject unknown fields (strict mode)
-        populate_by_name=True,          # Accept both snake_case and camelCase
-        
+        extra="forbid",  # Reject unknown fields (strict mode)
+        populate_by_name=True,  # Accept both snake_case and camelCase
         # Enum handling
-        use_enum_values=True,           # Use enum values, not enum names
-        
+        use_enum_values=True,  # Use enum values, not enum names
         # Validation behavior
-        validate_default=False,         # Don't validate defaults
-        validate_assignment=False,      # Optimize: no post-init validation
-        
+        validate_default=False,  # Don't validate defaults
+        validate_assignment=False,  # Optimize: no post-init validation
         # JSON Schema generation
         json_schema_extra={
-            'examples': [],             # Override in subclasses
-        }
+            "examples": [],  # Override in subclasses
+        },
     )
 
-    @field_validator('*', mode='before')
+    @field_validator("*", mode="before")
     @classmethod
     def validate_none_strings(cls, v: Any) -> Any:
         """
         Prevent None strings like 'None', 'null', 'undefined'.
-        
+
         Some APIs might return these as strings instead of actual None.
         This validator catches them and converts to actual None.
         """
-        if isinstance(v, str) and v.lower() in ('none', 'null', 'undefined', ''):
+        if isinstance(v, str) and v.lower() in ("none", "null", "undefined", ""):
             return None
         return v
 
@@ -131,14 +127,14 @@ class RequestDTO(BaseDTOModel):
         >>> class CreateDeviceRequest(RequestDTO):
         ...     name: str
         ...     device_type: str
-        >>> 
+        >>>
         >>> request = CreateDeviceRequest(name='Salon', device_type='ECHO_DOT')
         >>> request.name = 'Kitchen'  # ❌ FrozenInstanceError
     """
 
     model_config = ConfigDict(
-        frozen=True,                    # Immutable - prevents modification
-        extra='forbid',
+        frozen=True,  # Immutable - prevents modification
+        extra="forbid",
         populate_by_name=True,
         str_strip_whitespace=True,
     )
@@ -163,7 +159,7 @@ class ResponseDTO(BaseDTOModel):
     Example:
         >>> class GetDevicesResponse(ResponseDTO):
         ...     devices: List[Device]
-        >>> 
+        >>>
         >>> response = GetDevicesResponse(devices=[...])
         >>> response.devices.append(...)  # ❌ FrozenInstanceError
     """
@@ -172,8 +168,8 @@ class ResponseDTO(BaseDTOModel):
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     model_config = ConfigDict(
-        frozen=True,                    # Immutable - read-only API data
-        extra='forbid',
+        frozen=True,  # Immutable - read-only API data
+        extra="forbid",
         populate_by_name=True,
         str_strip_whitespace=True,
     )
@@ -199,19 +195,19 @@ class DomainModel(BaseDTOModel):
         >>> class Device(DomainModel):
         ...     serial_number: str
         ...     online: bool
-        >>> 
+        >>>
         >>> # Can be used in requests
         >>> class PairDeviceRequest(RequestDTO):
         ...     device: Device
-        >>> 
+        >>>
         >>> # And in responses
         >>> class PairedDevicesResponse(ResponseDTO):
         ...     devices: List[Device]
     """
 
     model_config = ConfigDict(
-        frozen=False,                   # Mutable - allows manipulation
-        extra='forbid',
+        frozen=False,  # Mutable - allows manipulation
+        extra="forbid",
         populate_by_name=True,
         str_strip_whitespace=True,
     )
@@ -247,26 +243,26 @@ class APIErrorDTO(BaseDTOModel):
         NOT_FOUND: Device not found
     """
 
-    success: bool = False               # Always False for errors
-    error: str                          # Main error message
-    error_code: Optional[str] = None    # Machine-readable code
+    success: bool = False  # Always False for errors
+    error: str  # Main error message
+    error_code: Optional[str] = None  # Machine-readable code
     details: Optional[Dict[str, Any]] = None  # Additional context
     field_errors: Optional[Dict[str, str]] = None  # Field-level errors
 
     model_config = ConfigDict(
         frozen=True,
-        extra='forbid',
+        extra="forbid",
         populate_by_name=True,
         json_schema_extra={
-            'examples': [
+            "examples": [
                 {
-                    'success': False,
-                    'error': 'Device not found',
-                    'error_code': 'NOT_FOUND',
-                    'details': {'device_id': 'UNKNOWN123'},
+                    "success": False,
+                    "error": "Device not found",
+                    "error_code": "NOT_FOUND",
+                    "details": {"device_id": "UNKNOWN123"},
                 }
             ]
-        }
+        },
     )
 
 
@@ -303,14 +299,14 @@ class APISuccessResponse(BaseDTOModel, Generic[T]):
         >>> devices = response.data.devices  # Fully typed!
     """
 
-    success: bool = True                # Always True for success
-    data: T                             # Generic response data
-    message: Optional[str] = None       # Optional success message
+    success: bool = True  # Always True for success
+    data: T  # Generic response data
+    message: Optional[str] = None  # Optional success message
     timestamp: Optional[datetime] = None  # Optional timestamp
 
     model_config = ConfigDict(
         frozen=True,
-        extra='forbid',
+        extra="forbid",
         populate_by_name=True,
     )
 
@@ -355,46 +351,48 @@ class ValidationErrorDetail(BaseDTOModel):
         duration: Value must be between 1 and 3600
     """
 
-    field: str                          # Field that failed validation
-    message: str                        # Error message
-    value: Optional[Any] = None         # The invalid value
-    code: str                           # Error code
+    field: str  # Field that failed validation
+    message: str  # Error message
+    value: Optional[Any] = None  # The invalid value
+    code: str  # Error code
 
     model_config = ConfigDict(
         frozen=True,
-        extra='forbid',
+        extra="forbid",
         populate_by_name=True,
         json_schema_extra={
-            'examples': [
+            "examples": [
                 {
-                    'field': 'duration',
-                    'message': 'Value must be between 1 and 3600',
-                    'value': 4000,
-                    'code': 'value_error',
+                    "field": "duration",
+                    "message": "Value must be between 1 and 3600",
+                    "value": 4000,
+                    "code": "value_error",
                 }
             ]
-        }
+        },
     )
 
 
 # Utility type aliases for common DTO patterns
 class EmptyRequest(RequestDTO):
     """Utility: For GET requests that have no body"""
+
     pass
 
 
 class SimpleSuccessResponse(ResponseDTO):
     """Utility: For simple success-only responses"""
+
     success: bool = Field(default=True)
 
 
 __all__ = [
-    'BaseDTOModel',
-    'RequestDTO',
-    'ResponseDTO',
-    'DomainModel',
-    'APIErrorDTO',
-    'APISuccessResponse',
-    'ValidationErrorDetail',
-    'T',  # Type variable for generics
+    "BaseDTOModel",
+    "RequestDTO",
+    "ResponseDTO",
+    "DomainModel",
+    "APIErrorDTO",
+    "APISuccessResponse",
+    "ValidationErrorDetail",
+    "T",  # Type variable for generics
 ]

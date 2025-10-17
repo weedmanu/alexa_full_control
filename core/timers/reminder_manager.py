@@ -14,6 +14,7 @@ from services.cache_service import CacheService
 # Phase 3.7: Import DTO for typed return
 try:
     from core.schemas.reminder_schemas import GetRemindersResponse, ReminderDTO
+
     HAS_REMINDER_DTO = True
 except ImportError:
     HAS_REMINDER_DTO = False
@@ -21,6 +22,7 @@ except ImportError:
 # Phase 3.7: Import DTO for typed return
 try:
     from core.schemas.reminder_schemas import GetRemindersResponse, ReminderDTO
+
     HAS_REMINDER_DTO = True
 except ImportError:
     HAS_REMINDER_DTO = False
@@ -120,23 +122,23 @@ class ReminderManager:
     def get_reminders_typed(self) -> Optional["GetRemindersResponse"]:
         """
         Phase 3.7: Typed DTO version of list_reminders returning GetRemindersResponse.
-        
+
         Returns reminders as GetRemindersResponse DTO with full type safety.
         Falls back gracefully if DTOs not available.
-        
+
         Returns:
             GetRemindersResponse DTO or None if DTOs unavailable
         """
         if not HAS_REMINDER_DTO:
             logger.debug("DTO not available, falling back to legacy path")
             return None
-        
+
         try:
             from datetime import datetime, timezone
-            
+
             # Get reminders as dict list
             reminders_list = self.list_reminders()
-            
+
             # Convert to ReminderDTO objects
             reminder_dtos = []
             for r in reminders_list:
@@ -153,11 +155,11 @@ class ReminderManager:
                 except Exception as e:
                     logger.warning(f"Could not convert reminder to DTO: {e}, skipping")
                     continue
-            
+
             response = GetRemindersResponse(reminders=reminder_dtos)
             logger.debug(f"Returning {len(reminder_dtos)} reminders as DTO")
             return response
-            
+
         except Exception as e:
             logger.error(f"Error in get_reminders_typed: {e}")
             return None

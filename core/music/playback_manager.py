@@ -24,6 +24,7 @@ from core.state_machine import AlexaStateMachine
 # Phase 3.7: Import DTO for typed return
 try:
     from core.schemas.music_schemas import MusicStatusResponse, QueueResponse
+
     HAS_MUSIC_PLAYBACK_DTO = True
 except ImportError:
     HAS_MUSIC_PLAYBACK_DTO = False
@@ -45,7 +46,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
     ) -> None:
         if api_service is None:
             raise ValueError("api_service is mandatory in Phase 2")
-        
+
         http_client = create_http_client_from_auth(auth)
         if state_machine is None:
             state_machine = AlexaStateMachine()
@@ -200,27 +201,27 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
     def get_music_status_typed(self, device_serial: str, device_type: str) -> Optional["MusicStatusResponse"]:
         """
         Phase 3.7: Typed DTO version of get_state returning MusicStatusResponse.
-        
+
         Returns music status as MusicStatusResponse DTO with full type safety.
         Falls back gracefully if DTOs not available.
-        
+
         Args:
             device_serial: Device serial number
             device_type: Device type
-            
+
         Returns:
             MusicStatusResponse DTO or None if DTOs unavailable
         """
         if not HAS_MUSIC_PLAYBACK_DTO:
             logger.debug("DTO not available, falling back to legacy path")
             return None
-        
+
         try:
             # Get state as dict
             state_dict = self.get_state(device_serial, device_type)
             if not state_dict:
                 return None
-            
+
             # Try to build MusicStatusResponse from player data
             player_data = state_dict.get("player", {})
             return MusicStatusResponse(
@@ -230,7 +231,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
                 progress=player_data.get("progress", 0),
                 duration=player_data.get("duration"),
                 queueLength=player_data.get("queueLength"),
-                queueIndex=player_data.get("queueIndex")
+                queueIndex=player_data.get("queueIndex"),
             )
         except Exception as e:
             logger.error(f"Error in get_music_status_typed: {e}")

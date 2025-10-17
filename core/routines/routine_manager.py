@@ -93,7 +93,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
         # Phase 2: Create minimal config for BaseManager (only needs amazon_domain)
         class _MinimalConfig:
             amazon_domain = "amazon.com"
-        
+
         minimal_config = _MinimalConfig()
 
         # Initialiser BaseManager (hérite: breaker, _lock, cache_service, headers)

@@ -17,7 +17,8 @@ from core.state_machine import AlexaStateMachine, ConnectionState
 
 # Phase 3.7: Import DTO for typed return
 try:
-    from core.schemas.alarm_schemas import GetAlarmsResponse, AlarmDTO
+    from core.schemas.alarm_schemas import AlarmDTO, GetAlarmsResponse
+
     HAS_ALARM_DTO = True
 except ImportError:
     HAS_ALARM_DTO = False
@@ -189,21 +190,21 @@ class AlarmManager:
     def get_alarms_typed(self) -> Optional["GetAlarmsResponse"]:
         """
         Phase 3.7: Typed DTO version of list_alarms returning GetAlarmsResponse.
-        
+
         Returns alarms as GetAlarmsResponse DTO with full type safety.
         Falls back gracefully if DTOs not available.
-        
+
         Returns:
             GetAlarmsResponse DTO or None if DTOs unavailable
         """
         if not HAS_ALARM_DTO:
             logger.debug("DTO not available, falling back to legacy path")
             return None
-        
+
         try:
             # Get alarms as dict list
             alarms_list = self.list_alarms()
-            
+
             # Convert to AlarmDTO objects
             alarm_dtos = []
             for a in alarms_list:
@@ -222,11 +223,11 @@ class AlarmManager:
                 except Exception as e:
                     logger.warning(f"Could not convert alarm to DTO: {e}, skipping")
                     continue
-            
+
             response = GetAlarmsResponse(alarms=alarm_dtos)
             logger.debug(f"Returning {len(alarm_dtos)} alarms as DTO")
             return response
-            
+
         except Exception as e:
             logger.error(f"Error in get_alarms_typed: {e}")
             return None
