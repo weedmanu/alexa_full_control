@@ -247,7 +247,3 @@ ehthumbs.db
 Thumbs.db
 
 # Outils d'analyse de code (rapports générés)
-tools/
-tools/*.txt
-tools/*.json
-tools/*.py
