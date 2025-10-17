@@ -41,21 +41,6 @@ class ListsCommand(BaseCommand):
         # Description simplifiée
         parser.description = "Gérer les listes de courses et tâches"
 
-        # Option globale pour le type de liste
-        parser.add_argument(
-            "--list",
-            choices=["shopping", "todo"],
-            default="shopping",
-            help="Type de liste (défaut: shopping)",
-        )
-
-        # Option pour spécifier l'appareil Alexa
-        parser.add_argument(
-            "--device",
-            metavar="DEVICE_NAME",
-            help="Nom de l'appareil Alexa à utiliser (optionnel, utilise un Echo par défaut)",
-        )
-
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
@@ -68,6 +53,17 @@ class ListsCommand(BaseCommand):
             "add", help="Ajouter un élément", description="Ajouter un nouvel élément à une liste"
         )
         add_parser.add_argument("text", help="Texte de l'élément à ajouter")
+        add_parser.add_argument(
+            "--list",
+            choices=["shopping", "todo"],
+            default="shopping",
+            help="Type de liste (défaut: shopping)",
+        )
+        add_parser.add_argument(
+            "--device",
+            metavar="DEVICE_NAME",
+            help="Nom de l'appareil Alexa à utiliser (optionnel)",
+        )
         add_parser.add_argument(
             "-p",
             "--priority",
@@ -82,12 +78,34 @@ class ListsCommand(BaseCommand):
             "remove", help="Supprimer un élément", description="Supprimer un élément de la liste"
         )
         remove_parser.add_argument("text", help="Texte de l'élément à supprimer")
+        remove_parser.add_argument(
+            "--list",
+            choices=["shopping", "todo"],
+            default="shopping",
+            help="Type de liste (défaut: shopping)",
+        )
+        remove_parser.add_argument(
+            "--device",
+            metavar="DEVICE_NAME",
+            help="Nom de l'appareil Alexa à utiliser (optionnel)",
+        )
 
         # Action: clear
         clear_parser = subparsers.add_parser(
             "clear",
             help="Vider la liste",
             description="Vider complètement la liste ou supprimer uniquement les éléments complétés",
+        )
+        clear_parser.add_argument(
+            "--list",
+            choices=["shopping", "todo"],
+            default="shopping",
+            help="Type de liste (défaut: shopping)",
+        )
+        clear_parser.add_argument(
+            "--device",
+            metavar="DEVICE_NAME",
+            help="Nom de l'appareil Alexa à utiliser (optionnel)",
         )
         clear_parser.add_argument(
             "--completed-only",

@@ -35,7 +35,6 @@ from cli.commands.calendar import CalendarCommand
 from cli.commands.device import DeviceCommand
 from cli.commands.dnd import DNDCommand
 from cli.commands.lists import ListsCommand
-from cli.commands.multiroom import MultiroomCommand
 from cli.commands.music import MusicCommand
 from cli.commands.reminder import ReminderCommand
 from cli.commands.routine import RoutineCommand
@@ -51,7 +50,6 @@ __all__ = [
     "DeviceCommand",
     "DNDCommand",
     "ListsCommand",
-    "MultiroomCommand",
     "MusicCommand",
     "AnnouncementCommand",
     "ReminderCommand",

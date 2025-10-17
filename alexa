@@ -61,7 +61,6 @@ from cli.commands import (
     DeviceCommand,
     DNDCommand,
     ListsCommand,
-    MultiroomCommand,
     MusicCommand,
     RoutineCommand,
     SmartHomeCommand,
@@ -131,7 +130,6 @@ def register_all_commands(parser: Any) -> None:
 
     # Phase 6 - Sprint 6 ✅
     parser.register_command("routine", RoutineCommand)
-    parser.register_command("multiroom", MultiroomCommand)
 
     # Cache management
     parser.register_command("cache", CacheCommand)

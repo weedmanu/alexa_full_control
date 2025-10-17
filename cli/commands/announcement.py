@@ -144,6 +144,13 @@ class AnnouncementCommand(BaseCommand):
     def _send_announcement(self, args: argparse.Namespace) -> bool:
         """Envoyer une annonce."""
         try:
+            # TODO: ANNOUNCEMENT n'est pas fonctionnel - API endpoint retourne 403 Forbidden
+            # L'endpoint /api/notifications/createReminder est utilisé à la place d'annonces
+            # Besoin d'investiguer le bon endpoint pour les annonces Alexa
+            self.error("⚠️  ANNOUNCEMENT n'est pas encore fonctionnel (403 Forbidden sur l'endpoint API)")
+            self.info("   TODO: Investiguer le bon endpoint pour les annonces")
+            return False
+            
             # Récupérer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:
