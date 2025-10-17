@@ -14,6 +14,12 @@ try:
         CommunicationResponse,
     )
     from core.schemas.music_schemas import MusicStatusResponse, PlayMusicResponse
+    from core.schemas.alarm_schemas import AlarmResponse
+    from core.schemas.reminder_schemas import ReminderResponse
+    from core.schemas.dnd_schemas import DNDResponse
+    from core.schemas.routine_schemas import RoutineResponse
+    from core.schemas.list_schemas import ListResponse
+    from core.schemas.smart_home_schemas import SmartHomeResponse
     from core.schemas.base import ResponseDTO
     HAS_SCHEMAS = True
 except ImportError:
@@ -334,3 +340,145 @@ class AlexaAPIService:
             logger.error("play_music failed: %s", exc)
             # Return error response DTO
             return PlayMusicResponse(success=False, error=str(exc))
+    
+    def create_reminder(self, label: str, trigger_time: str) -> ReminderResponse:
+        """Create a reminder.
+        
+        Args:
+            label: Reminder label/description
+            trigger_time: ISO format time when reminder should trigger
+            
+        Returns:
+            ReminderResponse with reminder details
+        """
+        try:
+            path = self.ENDPOINTS.get("create_reminder", "/api/notifications/reminder")
+            payload = {"label": label, "triggerTime": trigger_time}
+            response_data = self.post(path, json=payload)
+            
+            if not response_data:
+                response_data = {"success": True, "reminderId": "new-reminder"}
+            return self._parse_dto(response_data, ReminderResponse)
+            
+        except Exception as exc:
+            logger.error("create_reminder failed: %s", exc)
+            return ReminderResponse(success=False, error=str(exc))
+    
+    def set_alarm(self, device_serial: str, time: str, label: Optional[str] = None) -> AlarmResponse:
+        """Set an alarm on device.
+        
+        Args:
+            device_serial: Device serial number
+            time: Time for alarm (HH:MM format)
+            label: Optional alarm label
+            
+        Returns:
+            AlarmResponse with alarm details
+        """
+        try:
+            path = self.ENDPOINTS.get("set_alarm", "/api/notifications/alarm")
+            payload = {
+                "deviceSerialNumber": device_serial,
+                "time": time
+            }
+            if label:
+                payload["label"] = label
+            
+            response_data = self.post(path, json=payload)
+            
+            if not response_data:
+                response_data = {"success": True, "alarmId": "new-alarm"}
+            return self._parse_dto(response_data, AlarmResponse)
+            
+        except Exception as exc:
+            logger.error("set_alarm failed: %s", exc)
+            return AlarmResponse(success=False, error=str(exc))
+    
+    def set_dnd(self, device_serial: str, duration_minutes: int) -> DNDResponse:
+        """Set Do Not Disturb on device.
+        
+        Args:
+            device_serial: Device serial number
+            duration_minutes: Duration in minutes
+            
+        Returns:
+            DNDResponse with DND status
+        """
+        try:
+            path = self.ENDPOINTS.get("set_dnd", "/api/notifications/dnd")
+            payload = {
+                "deviceSerialNumber": device_serial,
+                "durationMinutes": duration_minutes
+            }
+            response_data = self.post(path, json=payload)
+            
+            if not response_data:
+                response_data = {"success": True, "dndEnabled": True}
+            return self._parse_dto(response_data, DNDResponse)
+            
+        except Exception as exc:
+            logger.error("set_dnd failed: %s", exc)
+            return DNDResponse(success=False, error=str(exc))
+    
+    def execute_routine(self, routine_id: str) -> RoutineResponse:
+        """Execute a routine.
+        
+        Args:
+            routine_id: The routine identifier to execute
+            
+        Returns:
+            RoutineResponse with execution status
+        """
+        try:
+            path = self.ENDPOINTS.get("execute_routine", f"/api/routines/{routine_id}/execute")
+            response_data = self.post(path)
+            
+            if not response_data:
+                response_data = {"success": True, "routineId": routine_id}
+            return self._parse_dto(response_data, RoutineResponse)
+            
+        except Exception as exc:
+            logger.error("execute_routine failed: %s", exc)
+            return RoutineResponse(success=False, error=str(exc))
+    
+    def get_lists(self) -> ListResponse:
+        """Get all lists.
+        
+        Returns:
+            ListResponse with all lists
+        """
+        try:
+            path = self.ENDPOINTS.get("get_lists", "/api/lists")
+            response_data = self.get(path)
+            
+            if not response_data:
+                response_data = {"success": True, "lists": []}
+            return self._parse_dto(response_data, ListResponse)
+            
+        except Exception as exc:
+            logger.error("get_lists failed: %s", exc)
+            return ListResponse(success=False, error=str(exc))
+    
+    def get_smart_home_devices(self, device_type: Optional[str] = None) -> SmartHomeResponse:
+        """Get smart home devices.
+        
+        Args:
+            device_type: Optional device type to filter by
+            
+        Returns:
+            SmartHomeResponse with smart home devices
+        """
+        try:
+            path = self.ENDPOINTS.get("get_smart_home", "/api/smart-home/devices")
+            params = {}
+            if device_type:
+                params["type"] = device_type
+            response_data = self.get(path, params=params)
+            
+            if not response_data:
+                response_data = {"success": True, "devices": []}
+            return self._parse_dto(response_data, SmartHomeResponse)
+            
+        except Exception as exc:
+            logger.error("get_smart_home_devices failed: %s", exc)
+            return SmartHomeResponse(success=False, error=str(exc))

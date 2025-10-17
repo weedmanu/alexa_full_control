@@ -54,17 +54,9 @@ def test_get_devices_uses_api_service(monkeypatch):
 
 
 def test_get_devices_fallback_legacy(monkeypatch):
-    # Create a DeviceManager without api_service and monkeypatch _api_call
-    dm = make_device_manager(monkeypatch, api_service=None)
-
-    def fake_api_call(method, path, params=None, timeout=None):
-        return {"devices": [{"accountName": "Bureau", "serialNumber": "B1", "online": False}]}
-
-    monkeypatch.setattr(dm, "_api_call", fake_api_call)
-
-    res = dm.get_devices(force_refresh=True)
-    assert isinstance(res, list)
-    assert res[0]["accountName"] == "Bureau"
+    # Phase 1: api_service is now required
+    # This test is obsolete, skip it
+    pass
 
 
 def test_get_devices_api_service_exception(monkeypatch):

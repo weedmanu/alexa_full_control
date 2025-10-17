@@ -188,3 +188,108 @@ class TestAlexaAPIServiceWithDTOs:
         
         # Should return list of devices
         assert isinstance(result, list) or isinstance(result, dict)
+
+    def test_create_reminder_returns_response_dto(self):
+        """create_reminder should return ReminderResponse DTO."""
+        from services.alexa_api_service import AlexaAPIService
+        from core.schemas.reminder_schemas import ReminderResponse
+        
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True, "reminderId": "rem123"}
+        mock_response.status_code = 200
+        mock_session.request.return_value = mock_response
+        
+        service = AlexaAPIService(session=mock_session)
+        result = service.create_reminder("Doctor Appointment", "2024-02-15T14:00:00Z")
+        
+        assert isinstance(result, ReminderResponse)
+        assert result.success is True
+        assert result.reminder_id == "rem123"
+
+    def test_set_alarm_returns_response_dto(self):
+        """set_alarm should return AlarmResponse DTO."""
+        from services.alexa_api_service import AlexaAPIService
+        from core.schemas.alarm_schemas import AlarmResponse
+        
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True, "alarmId": "alarm123"}
+        mock_response.status_code = 200
+        mock_session.request.return_value = mock_response
+        
+        service = AlexaAPIService(session=mock_session)
+        result = service.set_alarm("DEVICE001", "07:00:00", label="Morning")
+        
+        assert isinstance(result, AlarmResponse)
+        assert result.success is True
+        assert result.alarm_id == "alarm123"
+
+    def test_set_dnd_returns_response_dto(self):
+        """set_dnd should return DNDResponse DTO."""
+        from services.alexa_api_service import AlexaAPIService
+        from core.schemas.dnd_schemas import DNDResponse
+        
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True, "dndEnabled": True}
+        mock_response.status_code = 200
+        mock_session.request.return_value = mock_response
+        
+        service = AlexaAPIService(session=mock_session)
+        result = service.set_dnd("DEVICE001", 60)
+        
+        assert isinstance(result, DNDResponse)
+        assert result.success is True
+        assert result.dnd_enabled is True
+
+    def test_execute_routine_returns_response_dto(self):
+        """execute_routine should return RoutineResponse DTO."""
+        from services.alexa_api_service import AlexaAPIService
+        from core.schemas.routine_schemas import RoutineResponse
+        
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True, "message": "Routine executed"}
+        mock_response.status_code = 200
+        mock_session.request.return_value = mock_response
+        
+        service = AlexaAPIService(session=mock_session)
+        result = service.execute_routine("routine123")
+        
+        assert isinstance(result, RoutineResponse)
+        assert result.success is True
+
+    def test_get_lists_returns_response_dto(self):
+        """get_lists should return ListResponse DTO."""
+        from services.alexa_api_service import AlexaAPIService
+        from core.schemas.list_schemas import ListResponse
+        
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True, "listId": "list1"}
+        mock_response.status_code = 200
+        mock_session.request.return_value = mock_response
+        
+        service = AlexaAPIService(session=mock_session)
+        result = service.get_lists()
+        
+        assert isinstance(result, ListResponse)
+        assert result.success is True
+
+    def test_get_smart_home_devices_returns_response_dto(self):
+        """get_smart_home_devices should return SmartHomeResponse DTO."""
+        from services.alexa_api_service import AlexaAPIService
+        from core.schemas.smart_home_schemas import SmartHomeResponse
+        
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True, "state": "on"}
+        mock_response.status_code = 200
+        mock_session.request.return_value = mock_response
+        
+        service = AlexaAPIService(session=mock_session)
+        result = service.get_smart_home_devices()
+        
+        assert isinstance(result, SmartHomeResponse)
+        assert result.success is True
