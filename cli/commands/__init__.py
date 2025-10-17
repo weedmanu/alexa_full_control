@@ -28,7 +28,6 @@ Date: 7 octobre 2025
 
 from cli.commands.activity import ActivityCommand
 from cli.commands.alarm import AlarmCommand
-from cli.commands.announcement import AnnouncementCommand
 from cli.commands.auth import AuthCommand
 from cli.commands.cache import CacheCommand
 from cli.commands.calendar import CalendarCommand
@@ -51,7 +50,6 @@ __all__ = [
     "DNDCommand",
     "ListsCommand",
     "MusicCommand",
-    "AnnouncementCommand",
     "ReminderCommand",
     "RoutineCommand",
     "SmartHomeCommand",

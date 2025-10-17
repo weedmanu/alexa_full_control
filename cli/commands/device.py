@@ -142,6 +142,35 @@ class DeviceCommand(BaseCommand):
             help="Niveau de volume (0-100)",
         )
 
+        # Action: send (message/announcement)
+        send_parser = subparsers.add_parser(
+            "send",
+            help="Envoyer un message à un appareil",
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
+        send_parser.add_argument(
+            "-d",
+            "--device",
+            type=str,
+            required=True,
+            metavar="DEVICE_NAME",
+            help="Nom de l'appareil destinataire",
+        )
+        send_parser.add_argument(
+            "--message",
+            type=str,
+            required=True,
+            metavar="TEXT",
+            help="Message à envoyer",
+        )
+        send_parser.add_argument(
+            "--title",
+            type=str,
+            metavar="TITLE",
+            help="Titre du message (optionnel)",
+        )
+
     def execute(self, args: argparse.Namespace) -> bool:
         """
         Exécute la commande d'appareil.
@@ -163,6 +192,8 @@ class DeviceCommand(BaseCommand):
             return self._device_info(args)
         elif args.action == "volume":
             return self._manage_volume(args)
+        elif args.action == "send":
+            return self._send_message(args)
         else:
             self.error(f"Action '{args.action}' non reconnue")
             return False
@@ -439,5 +470,43 @@ class DeviceCommand(BaseCommand):
 
         except Exception as e:
             self.logger.exception("Erreur lors de la définition du volume")
+            self.error(f"Erreur: {e}")
+            return False
+
+    def _send_message(self, args: argparse.Namespace) -> bool:
+        """
+        Envoie un message (annonce) à un appareil.
+
+        Args:
+            args: Arguments (device, message, title)
+
+        Returns:
+            True si succès
+        """
+        try:
+            # Récupérer le serial de l'appareil
+            serial = self.get_device_serial(args.device)
+            if not serial:
+                return False
+
+            title = getattr(args, "title", None) or "Message"
+
+            self.info(f"📬 Envoi message à '{args.device}'...")
+
+            ctx = self.require_context()
+            if not ctx.notification_mgr:
+                self.error("Gestionnaire de notifications non disponible")
+                return False
+
+            result = self.call_with_breaker(ctx.notification_mgr.send_notification, serial, args.message, title)
+
+            if result:
+                self.success(f"✅ Message envoyé à '{args.device}'")
+                return True
+
+            return False
+
+        except Exception as e:
+            self.logger.exception("Erreur lors de l'envoi du message")
             self.error(f"Erreur: {e}")
             return False

@@ -54,7 +54,6 @@ from loguru import logger
 from cli import create_context, create_parser
 from cli.commands import (
     ActivityCommand,
-    AnnouncementCommand,
     AuthCommand,
     CacheCommand,
     CalendarCommand,
@@ -119,9 +118,7 @@ def register_all_commands(parser: Any) -> None:
     parser.register_command("smarthome", SmartHomeCommand)
 
     # Phase 4 - Sprint 4 ✅
-    parser.register_command("announcement", AnnouncementCommand)
     parser.register_command("dnd", DNDCommand)
-    # announcement: SUPPRIMÉ - Drop-in bloqué par Amazon (privacy)
 
     # Phase 5 - Sprint 5 ✅
     parser.register_command("activity", ActivityCommand)
