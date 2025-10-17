@@ -13,7 +13,10 @@ from core.state_machine import AlexaStateMachine
 class TuneInManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire thread-safe pour TuneIn (radio)."""
 
-    def __init__(self, auth_or_http: Any, config: Any, state_machine: Any = None) -> None:
+    def __init__(self, auth_or_http: Any, config: Any, state_machine: Any = None, api_service: Any = None) -> None:
+        if api_service is None:
+            raise ValueError("api_service is mandatory in Phase 2")
+        
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth_or_http)
 
@@ -28,7 +31,8 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
 
         # Keep auth reference for backward compatibility
         self.auth = getattr(auth_or_http, "auth", auth_or_http)
-        logger.info("TuneInManager initialisé (hérité de BaseManager)")
+        self._api_service: Any = api_service  # Mandatory AlexaAPIService
+        logger.info("TuneInManager initialisé avec AlexaAPIService obligatoire")
 
     def search_stations(self, query: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Recherche des stations radio."""
@@ -36,11 +40,9 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
             if not self.state_machine.can_execute_commands:
                 return []
             try:
-                data = self._api_call(
-                    "get",
+                data = self._api_service.get(
                     "/api/tunein/search",
                     params={"query": query, "mediaOwnerCustomerId": getattr(self.auth, "customer_id", None)},
-                    timeout=10,
                 )
                 if isinstance(data, dict):
                     results = data.get("results", [])
@@ -62,11 +64,9 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
                     "guideId": station_id,
                     "contentType": "station",
                 }
-                _ = self._api_call(
-                    "post",
+                self._api_service.post(
                     "/api/tunein/queue-and-play",
-                    json=payload,
-                    timeout=10,
+                    payload=payload,
                 )
                 logger.success(f"Station {station_id} en lecture")
                 return True
@@ -80,11 +80,7 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
             if not self.state_machine.can_execute_commands:
                 return []
             try:
-                data = self._api_call(
-                    "get",
-                    "/api/tunein/favorites",
-                    timeout=10,
-                )
+                data = self._api_service.get("/api/tunein/favorites")
                 if isinstance(data, dict):
                     return cast(list[dict[str, Any]], data.get("favorites", []))
                 return []
@@ -98,11 +94,9 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
             if not self.state_machine.can_execute_commands:
                 return False
             try:
-                _ = self._api_call(
-                    "post",
+                self._api_service.post(
                     "/api/tunein/favorites",
-                    json={"guideId": station_id},
-                    timeout=10,
+                    payload={"guideId": station_id},
                 )
                 logger.success(f"Station {station_id} ajoutée aux favoris")
                 return True
