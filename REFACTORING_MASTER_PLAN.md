@@ -16,28 +16,42 @@ Migrate from legacy HTTP architecture to centralized `AlexaAPIService` with opti
 
 ---
 
-## 📖 PHASE 1: FOUNDATION (COMPLETE ✅)
+## 📖 PHASE 1: FOUNDATION (✅ INTEGRATION COMPLETE)
 
 **Branch**: `pr/refacto-phase1-di-wiring`  
-**Status**: ✅ Ready for merge  
-**Completion**: October 17, 2025
+**Status**: ✅ CLI integrated & ready for merge  
+**Completion**: October 17, 2025  
+**Last Commit**: `f741d36` - Integration fixes
 
 ### What Was Done
 
 1. ✅ **AlexaAPIService** created (central HTTP abstraction)
+
    - Dual constructor (legacy + new style)
    - Circuit breaker (simple counter, 2-failure rule)
    - Cache fallback on NetworkError
    - Exception hierarchy (4 types)
+
 2. ✅ **Device Manager** refactored (POC)
+
    - Now requires mandatory `api_service` parameter
    - Removed fallback to `_api_call`
    - Direct calls via `_api_service.get_devices()`
-3. ✅ **Tests Written & Passing**
+
+3. ✅ **CLI Integration** (Post-Phase 1 fixes)
+
+   - Fixed `DeviceManagerCommand.__init__(name, di_container)` signature
+   - Updated `device_mgr` lazy-loader in `context.py` to inject `AlexaAPIService`
+   - Integrated DI Container initialization in `alexa.py` main()
+   - All 13 TDD tests still passing after integration
+
+4. ✅ **Tests Written & Passing**
+
    - 10 AlexaAPIService TDD tests ✅
    - 3 Device Manager integration tests ✅
-   - **Total: 13/13 tests passing**
-4. ✅ **Documentation Complete**
+   - **Total: 13/13 tests passing** (verified post-integration)
+
+5. ✅ **Documentation Complete**
    - `design_alexa_api_service.md` - Specification
    - `PHASE1_STATUS.md` - Living status
    - `PHASE1_COMPLETION_REPORT.md` - Comprehensive report
@@ -46,19 +60,26 @@ Migrate from legacy HTTP architecture to centralized `AlexaAPIService` with opti
 
 ### Key Files
 
-- **New**: `services/alexa_api_service.py` (240 lines)
-- **Modified**: `core/device_manager.py` (now mandatory injection)
-- **Tests**: `Dev/pytests/services/test_alexa_api_service.py` (10 tests)
-- **Tests**: `Dev/pytests/core/test_device_manager_phase1.py` (3 tests)
+- **New**: `services/alexa_api_service.py` (240 lines) - Central HTTP abstraction
+- **Modified**:
+  - `core/device_manager.py` - Mandatory `api_service` injection
+  - `cli/context.py` - device_mgr creates & injects AlexaAPIService
+  - `alexa.py` - DI Container initialization in main()
+  - `cli/commands/device_manager.py` - Fixed constructor signature
+- **Tests**:
+  - `Dev/pytests/services/test_alexa_api_service.py` (10 tests) ✅ PASS
+  - `Dev/pytests/core/test_device_manager_phase1.py` (3 tests) ✅ PASS
 
 ### Success Metrics
 
-- ✅ 13/13 tests passing
-- ✅ 4 clean commits
-- ✅ No breaking changes to other modules
-- ✅ Circuit breaker implemented
-- ✅ Cache fallback working
-- ✅ Documentation complete
+- ✅ 13/13 tests passing (verified Oct 17)
+- ✅ 10 commits on branch (9 original + 1 integration fix)
+- ✅ AlexaAPIService fully integrated with Device Manager
+- ✅ DI Container accessible from CLI
+- ✅ DeviceManagerCommand properly wired with mandatory api_service
+- ✅ Circuit breaker implemented & tested
+- ✅ Cache fallback working & tested
+- ✅ Documentation complete & comprehensive
 
 **Read More**: 📄 `Dev/docs/PHASE1_COMPLETION_REPORT.md`
 
