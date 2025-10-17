@@ -247,3 +247,13 @@ ehthumbs.db
 Thumbs.db
 
 # Outils d'analyse de code (rapports générés)
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.prof
+*.lprof
+
+# Dossier Dev (tests et développement)
+Dev/

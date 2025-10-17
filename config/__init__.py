@@ -8,16 +8,16 @@ Ce module centralise TOUTES les configurations de l'application :
 
 Usage:
     from config import AmazonRegions, AlexaAPI, AppPaths, get_settings
-    
+
     # Obtenir la configuration
     settings = get_settings()
-    
+
     # Obtenir l'URL de base Alexa
     base_url = AlexaAPI.get_base_url(settings.region)
-    
+
     # Obtenir un endpoint complet
     devices_url = AlexaAPI.get_full_url("DEVICES_LIST", settings.region)
-    
+
     # Obtenir un chemin
     config_dir = AppPaths.get_config_dir()
 """

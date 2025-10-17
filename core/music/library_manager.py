@@ -14,7 +14,7 @@ from core.state_machine import AlexaStateMachine
 
 # Phase 3.7: Import DTO for typed return
 try:
-    from core.schemas.music_schemas import MusicLibraryResponse, MusicSearchResponse
+    from core.schemas.music_schemas import MusicLibraryResponse, MusicSearchResponse  # noqa: F401
 
     HAS_MUSIC_LIBRARY_DTO = True
 except ImportError:

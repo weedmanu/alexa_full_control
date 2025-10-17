@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from core.notification_manager import NotificationManager
     from core.reminders import ReminderManager
     from core.routines import RoutineManager
+    from core.scenario.scenario_manager import ScenarioManager
     from core.settings import DeviceSettingsManager
     from core.smart_home import LightController, SmartDeviceController, ThermostatController
     from core.timers import TimerManager

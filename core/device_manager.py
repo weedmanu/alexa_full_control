@@ -25,7 +25,7 @@ from services.cache_service import CacheService
 
 # Phase 3.7: Import DTO for type-safe responses
 try:
-    from core.schemas.device_schemas import Device, GetDevicesResponse
+    from core.schemas.device_schemas import Device, GetDevicesResponse  # noqa: F401
 
     HAS_DEVICE_DTO = True
 except ImportError:
@@ -174,7 +174,7 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         """
         if not HAS_DEVICE_DTO:
             logger.warning("GetDevicesResponse DTO not available, falling back to legacy get_devices()")
-            devices = self.get_devices(force_refresh=force_refresh)
+            self.get_devices(force_refresh=force_refresh)
             return None  # Graceful fallback
 
         try:

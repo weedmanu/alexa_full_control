@@ -184,7 +184,7 @@ class AlarmAddCommand(ManagerCommand):
             if not (0 <= hour < 24 and 0 <= minute < 60):
                 raise ValueError()
         except (ValueError, AttributeError):
-            raise ValidationError("Invalid time format. Use HH:MM (e.g., 07:30)")
+            raise ValidationError("Invalid time format. Use HH:MM (e.g., 07:30)") from None
 
         # Validate recurring pattern if provided
         if "recurring" in params:

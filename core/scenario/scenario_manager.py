@@ -15,7 +15,7 @@ from core.base_persistence_manager import BasePersistenceManager
 
 # Phase 3.7: Import DTO for typed return
 try:
-    from core.schemas.base import ResponseDTO
+    from core.schemas.base import ResponseDTO  # noqa: F401
 
     HAS_SCENARIO_DTO = True
 except ImportError:
@@ -77,11 +77,7 @@ class ScenarioManager(BasePersistenceManager):
         if not isinstance(actions, list):
             return False
 
-        for action in actions:
-            if not self._validate_action(action):
-                return False
-
-        return True
+        return all(self._validate_action(action) for action in actions)
 
     def _create_item(self, name: str, **kwargs: Any) -> Dict[str, Any]:
         """

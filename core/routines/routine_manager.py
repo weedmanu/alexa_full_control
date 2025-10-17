@@ -343,9 +343,9 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 "status": "executed" if result else "failed",
             }
         except TimeoutError:
-            raise TimeoutError(f"Execution timeout for routine {routine_id}")
+            raise TimeoutError(f"Execution timeout for routine {routine_id}") from None
         except Exception as e:
-            raise ValueError(f"Failed to execute routine: {str(e)}")
+            raise ValueError(f"Failed to execute routine: {str(e)}") from None
 
     def get_routine_info(self, automation_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -483,7 +483,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
 
         except Exception as e:
             logger.error(f"❌ Erreur suppression routine: {e}")
-            raise KeyError(f"Failed to delete routine: {str(e)}")
+            raise KeyError(f"Failed to delete routine: {str(e)}") from None
 
     def update_routine(
         self,

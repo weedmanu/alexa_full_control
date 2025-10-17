@@ -301,11 +301,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 self.info(f"Volume temporaire: {volume}%")
 
             # Préparer le message
-            if is_ssml:
-                # SSML supporté
-                announcement = message
-            else:
-                announcement = message
+            announcement = message
 
             # Envoyer l'annonce
             result = self.call_with_breaker(self.voice_svc.speak_as_voice, device, announcement)

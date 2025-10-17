@@ -22,7 +22,7 @@ from loguru import logger
 
 # Phase 3.7: Import DTO for typed return
 try:
-    from core.schemas.base import ResponseDTO
+    from core.schemas.base import ResponseDTO  # noqa: F401
 
     HAS_CALENDAR_DTO = True
 except ImportError:

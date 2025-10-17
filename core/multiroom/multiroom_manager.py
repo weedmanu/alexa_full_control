@@ -36,10 +36,7 @@ class MultiRoomManager(BasePersistenceManager):
             return False
 
         devices = item.get("devices", [])
-        if not isinstance(devices, list) or len(devices) < 2:
-            return False
-
-        return True
+        return not (not isinstance(devices, list) or len(devices) < 2)
 
     def _create_item(self, name: str, **kwargs: Any) -> Dict[str, Any]:
         """

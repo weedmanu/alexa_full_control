@@ -66,9 +66,9 @@ class VoiceCommandService:
                 self.state_machine = None
 
             try:
-                from core.circuit_breaker import CircuitBreaker as CB
+                from core.circuit_breaker import CircuitBreaker
 
-                self.breaker = CB(failure_threshold=3, timeout=30)
+                self.breaker = CircuitBreaker(failure_threshold=3, timeout=30)
             except Exception:
                 self.breaker = None
 

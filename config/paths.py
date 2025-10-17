@@ -90,10 +90,7 @@ class AppPaths:
         import platform
         import tempfile
 
-        if platform.system() == "Windows":
-            temp_base = Path(tempfile.gettempdir())
-        else:
-            temp_base = Path("/tmp")
+        temp_base = Path(tempfile.gettempdir()) if platform.system() == "Windows" else Path("/tmp")
 
         temp_dir = temp_base / ".alexa"
         temp_dir.mkdir(parents=True, exist_ok=True)

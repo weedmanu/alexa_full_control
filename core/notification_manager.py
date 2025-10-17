@@ -11,7 +11,7 @@ from .state_machine import AlexaStateMachine
 
 # Phase 3.7: Import DTO for typed return
 try:
-    from core.schemas.base import ResponseDTO
+    from core.schemas.base import ResponseDTO  # noqa: F401
 
     HAS_NOTIFICATION_DTO = True
 except ImportError:

@@ -152,7 +152,7 @@ class InputValidator:
                 return alarm_time
 
             except ValueError as e:
-                raise ValidationError(f"alarm_time HH:MM invalid: {e}")
+                raise ValidationError(f"alarm_time HH:MM invalid: {e}") from None
 
         # Try ISO 8601 format
         try:
@@ -160,7 +160,7 @@ class InputValidator:
             logger.debug(f"Valid alarm_time ISO: {alarm_time}")
             return alarm_time
         except ValueError:
-            raise ValidationError(f"alarm_time format invalid (expected HH:MM or ISO 8601): {alarm_time}")
+            raise ValidationError(f"alarm_time format invalid (expected HH:MM or ISO 8601): {alarm_time}") from None
 
     # === Text Sanitization ===
 

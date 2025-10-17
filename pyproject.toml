@@ -17,6 +17,8 @@ exclude = '''
   | dist
   | __pycache__
   | alexa_auth/nodejs
+  | node_modules
+  | Dev
   | scripts
   | \.git
   | __pycache__
@@ -50,6 +52,8 @@ skip = [
     "__pycache__",
     "venv",
     "alexa_auth/nodejs",
+    "node_modules",
+    "Dev",
     "scripts",
     ".git",
     "__pycache__",
@@ -84,7 +88,9 @@ ignore-paths = [
     "build",
     "dist",
     ".tox",
-    ".eggs"
+    ".eggs",
+    "node_modules",
+    "Dev"
 ]
 
 [tool.pylint.messages_control]
@@ -127,7 +133,9 @@ exclude = [
     ".tox",
     ".eggs",
     "*.egg",
-    "alexa_auth/nodejs"
+    "alexa_auth/nodejs",
+    "node_modules",
+    "Dev"
 ]
 
 [tool.ruff.lint]
@@ -165,6 +173,8 @@ exclude = [
     "venv",
     ".venv",
     "alexa_auth/nodejs",
+    "node_modules",
+    "Dev",
     "build",
     "dist",
 ]
@@ -215,3 +225,73 @@ include = [
 
 [tool.setuptools]
 py-modules = ["alexa"]
+
+# ============================================================================
+# MYPY - Vérification des types
+# ============================================================================
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+ignore_missing_imports = true
+exclude = [
+    "scripts",
+    ".git",
+    "__pycache__",
+    "venv",
+    ".venv",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    ".tox",
+    ".eggs",
+    "*.egg",
+    "alexa_auth/nodejs",
+    "node_modules",
+    "Dev"
+]
+
+# ============================================================================
+# BANDIT - Analyse de sécurité
+# ============================================================================
+[tool.bandit]
+exclude_dirs = [
+    "scripts",
+    ".git",
+    "__pycache__",
+    "venv",
+    ".venv",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    ".tox",
+    ".eggs",
+    "*.egg",
+    "alexa_auth/nodejs",
+    "node_modules",
+    "Dev"
+]
+skips = ["B101", "B601"]
+
+# ============================================================================
+# PYDOCSTYLE - Style des docstrings
+# ============================================================================
+[tool.pydocstyle]
+convention = "google"
+add-ignore = ["D100", "D104", "D105", "D107"]
+match-dir = "^(?!(\\.git|__pycache__|venv|\\.venv|\\.mypy_cache|\\.pytest_cache|\\.ruff_cache|build|dist|\\.tox|\\.eggs|alexa_auth/nodejs|node_modules|Dev)).*"

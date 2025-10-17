@@ -23,7 +23,7 @@ from core.state_machine import AlexaStateMachine
 
 # Phase 3.7: Import DTO for typed return
 try:
-    from core.schemas.music_schemas import MusicStatusResponse, QueueResponse
+    from core.schemas.music_schemas import MusicStatusResponse, QueueResponse  # noqa: F401
 
     HAS_MUSIC_PLAYBACK_DTO = True
 except ImportError:

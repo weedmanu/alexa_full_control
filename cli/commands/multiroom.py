@@ -297,7 +297,7 @@ class MultiroomCommand(BaseCommand):
 
         # groups est un dictionnaire {normalized_name: group_data}
         if isinstance(groups, dict):
-            for key, group in groups.items():
+            for _key, group in groups.items():
                 group_name = group.get("name", "N/A")
                 devices = group.get("devices", [])
                 primary = group.get("primary_device", "N/A")

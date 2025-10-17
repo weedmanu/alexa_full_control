@@ -1,0 +1,19 @@
+[MASTER]
+py-version = 3.8
+jobs = 0
+fail-under = 10.0
+ignore-paths = scripts,.git,__pycache__,venv,.venv,.mypy_cache,.pytest_cache,.ruff_cache,build,dist,.tox,.eggs,node_modules,Dev
+
+[MESSAGES CONTROL]
+disable = duplicate-code,fixme,too-few-public-methods,import-outside-toplevel,broad-exception-caught
+
+[FORMAT]
+max-line-length = 120
+max-module-lines = 1000
+
+[DESIGN]
+max-args = 8
+max-attributes = 15
+max-branches = 15
+max-locals = 20
+max-statements = 60

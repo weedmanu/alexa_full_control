@@ -23,12 +23,12 @@ Module Organization:
 
 Example:
     Creating a simple DTO:
-    
+
     >>> from pydantic import Field
     >>> class Device(ResponseDTO):
     ...     serial_number: str = Field(..., alias='serialNumber')
     ...     online: bool
-    >>> 
+    >>>
     >>> api_data = {'serialNumber': 'ABC123', 'online': True}
     >>> device = Device(**api_data)
     >>> print(device.serial_number)

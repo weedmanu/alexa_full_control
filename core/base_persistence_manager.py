@@ -8,7 +8,7 @@ Fournit:
 - Pattern cohérent pour load/save
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 from threading import RLock
 from typing import Any, Dict, Optional
@@ -76,6 +76,7 @@ class BasePersistenceManager(ABC):
         """
         return isinstance(item, dict)
 
+    @abstractmethod
     def _create_item(self, name: str, **kwargs: Any) -> Dict[str, Any]:
         """
         Crée un nouvel élément avec structure standard.

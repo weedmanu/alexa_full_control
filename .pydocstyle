@@ -1,0 +1,4 @@
+[pydocstyle]
+convention = google
+add-ignore = D100,D104,D105,D107
+match-dir = ^(?!(\.git|__pycache__|venv|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|build|dist|\.tox|\.eggs|alexa_auth/nodejs|node_modules|Dev)).*

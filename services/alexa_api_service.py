@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import ValidationError
 
@@ -13,7 +13,7 @@ try:
     from core.schemas.alarm_schemas import AlarmResponse
     from core.schemas.base import ResponseDTO
     from core.schemas.communication_schemas import AnnounceCommandRequest, CommunicationResponse, SpeakCommandRequest
-    from core.schemas.device_schemas import Device, GetDevicesResponse
+    from core.schemas.device_schemas import Device, GetDevicesResponse  # noqa: F401
     from core.schemas.dnd_schemas import DNDResponse
     from core.schemas.list_schemas import ListResponse
     from core.schemas.music_schemas import MusicStatusResponse, PlayMusicResponse
@@ -46,17 +46,17 @@ class NetworkError(AlexaAPIError):
     pass
 
 
-class CircuitOpen(AlexaAPIError):
+class CircuitOpenError(AlexaAPIError):
     pass
 
 
 class AlexaAPIService:
-    ENDPOINTS: Dict[str, str] = {"get_devices": "/api/devices-v2/device", "speak": "/api/speak"}
+    ENDPOINTS: dict[str, str] = {"get_devices": "/api/devices-v2/device", "speak": "/api/speak"}
 
     def __init__(
         self, *args: Any, session: Any = None, cache_service: Any = None, breaker_registry: Any = None, **kwargs: Any
     ) -> None:
-        self._breaker_failures: Dict[str, int] = {}
+        self._breaker_failures: dict[str, int] = {}
         if args:
             auth = args[0] if len(args) > 0 else None
             cache = args[1] if len(args) > 1 else None
@@ -96,7 +96,7 @@ class AlexaAPIService:
 
     def _check_breaker(self, endpoint: str) -> None:
         if self._breaker_failures.get(endpoint, 0) >= 2:
-            raise CircuitOpen(f"Circuit open for {endpoint}")
+            raise CircuitOpenError(f"Circuit open for {endpoint}")
 
     def _record_failure(self, endpoint: str) -> None:
         self._breaker_failures[endpoint] = self._breaker_failures.get(endpoint, 0) + 1
@@ -113,7 +113,7 @@ class AlexaAPIService:
         except Exception as exc:
             logger.exception("Network error for %s %s", method, url)
             self._record_failure(endpoint)
-            raise NetworkError(exc)
+            raise NetworkError(exc) from None
         status = getattr(resp, "status_code", None)
         try:
             body = resp.json() if hasattr(resp, "json") else None
@@ -124,7 +124,7 @@ class AlexaAPIService:
             raise ApiError(status, body=body, endpoint=endpoint)
         return body
 
-    def get(self, path: str, cache_key: Optional[str] = None, **kwargs: Any) -> Any:
+    def get(self, path: str, cache_key: str | None = None, **kwargs: Any) -> Any:
         """Perform GET request with optional cache fallback."""
         try:
             return self._request("GET", path, **kwargs)
@@ -144,7 +144,7 @@ class AlexaAPIService:
         return self._request("POST", path, json=json, **kwargs)
 
     # Phase 3.6: DTO parsing helper methods
-    def _parse_dto(self, data: Dict[str, Any], dto_class: Type[T]) -> T:
+    def _parse_dto(self, data: dict[str, Any], dto_class: type[T]) -> T:
         """Parse response data into a typed DTO.
 
         Args:
@@ -169,7 +169,7 @@ class AlexaAPIService:
                 status=400, body={"error": str(e), "errorCode": "VALIDATION_ERROR"}, endpoint="parse_response"
             ) from e
 
-    def get_devices(self, use_cache_fallback: bool = True) -> List[Dict[str, Any]]:
+    def get_devices(self, use_cache_fallback: bool = True) -> list[dict[str, Any]]:
         """Get list of devices from Alexa API.
 
         Args:
@@ -250,7 +250,7 @@ class AlexaAPIService:
             return CommunicationResponse(success=False, status="failed", error_message=str(exc))
 
     def send_announce_command(
-        self, device_serial: str, message: str, title: Optional[str] = None
+        self, device_serial: str, message: str, title: str | None = None
     ) -> CommunicationResponse:
         """Send announce command to device.
 
@@ -308,7 +308,7 @@ class AlexaAPIService:
             # Return default status (stopped)
             return MusicStatusResponse(is_playing=False, volume=0)
 
-    def play_music(self, track_id: str, device_serial: Optional[str] = None) -> PlayMusicResponse:
+    def play_music(self, track_id: str, device_serial: str | None = None) -> PlayMusicResponse:
         """Play music track.
 
         Args:
@@ -360,7 +360,7 @@ class AlexaAPIService:
             logger.error("create_reminder failed: %s", exc)
             return ReminderResponse(success=False, error=str(exc))
 
-    def set_alarm(self, device_serial: str, time: str, label: Optional[str] = None) -> AlarmResponse:
+    def set_alarm(self, device_serial: str, time: str, label: str | None = None) -> AlarmResponse:
         """Set an alarm on device.
 
         Args:
@@ -449,7 +449,7 @@ class AlexaAPIService:
             logger.error("get_lists failed: %s", exc)
             return ListResponse(success=False, error=str(exc))
 
-    def get_smart_home_devices(self, device_type: Optional[str] = None) -> SmartHomeResponse:
+    def get_smart_home_devices(self, device_type: str | None = None) -> SmartHomeResponse:
         """Get smart home devices.
 
         Args:

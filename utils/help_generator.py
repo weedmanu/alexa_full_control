@@ -91,12 +91,12 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
             {
                 "name": "playlist",
                 "description": "Lire une playlist",
-                "options": "-d/--device DEVICE, --id PLAYLIST_ID, --type library/prime-asin/prime-station/prime-queue, --shuffle",
+                "options": "-d/--device DEVICE, --id PLAYLIST_ID, --type TYPE, --shuffle",
             },
             {
                 "name": "library",
                 "description": "Bibliothèque musicale",
-                "options": "--playlists, --purchases, --imported, --prime-playlists, --prime-stations, -d/--device DEVICE, --json",
+                "options": "--playlists, --purchases, --imported, --prime, -d/--device DEVICE, --json",
             },
             {
                 "name": "radio",
@@ -117,7 +117,7 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
             {
                 "name": "update",
                 "description": "Modifier une alarme",
-                "options": "-d/--device DEVICE, --id ALARM_ID, --time HH:MM, --label LABEL, --repeat PATTERN, --sound SOUND_ID",
+                "options": "-d DEVICE, --id ALARM_ID, --time HH:MM, --label LABEL, --repeat PATTERN, --sound SOUND_ID",
             },
             {"name": "enable", "description": "Activer une alarme", "options": "-d/--device DEVICE, --id ALARM_ID"},
             {"name": "disable", "description": "Désactiver une alarme", "options": "-d/--device DEVICE, --id ALARM_ID"},
@@ -126,7 +126,7 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
             {
                 "name": "countdown",
                 "description": "Gérer les minuteurs",
-                "options": "create/list/cancel/pause/resume -d/--device DEVICE",
+                "options": "create/list/cancel -d DEVICE",
             },
             {
                 "name": "create",
@@ -155,7 +155,7 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
             {
                 "name": "create",
                 "description": "Créer un rappel",
-                "options": "--label TEXT, --datetime YYYY-MM-DD HH:MM ou --recurrence daily/weekly/monthly --time HH:MM",
+                "options": "--label TEXT, --datetime YYYY-MM-DD HH:MM ou --recurrence PATTERN --time HH:MM",
             },
             {"name": "delete", "description": "Supprimer un rappel", "options": "--id REMINDER_ID, --force"},
             {"name": "complete", "description": "Marquer un rappel comme complété", "options": "--id REMINDER_ID"},
@@ -165,7 +165,7 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
             {
                 "name": "info",
                 "description": "Détails d'une routine",
-                "options": "--name ROUTINE_NAME, -d/--device DEVICE",
+                "options": "--name ROUTINE_NAME, -d DEVICE",
             },
             {
                 "name": "execute",
@@ -187,7 +187,7 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
             {
                 "name": "add",
                 "description": "Ajouter un élément",
-                "options": "TEXT, --list shopping/todo, -d/--device DEVICE, --priority low/medium/high, --due-date YYYY-MM-DD",
+                "options": "TEXT, --list shopping/todo, -d DEVICE, --priority PRIORITY, --due-date DATE",
             },
             {
                 "name": "remove",
@@ -281,7 +281,7 @@ def get_category_actions(category: str) -> List[Dict[str, str]]:
             {
                 "name": "show",
                 "description": "Afficher contenu JSON",
-                "options": "--category devices/smart_home/alarms_and_reminders/routines/sync_stats",
+                "options": "--category CATEGORY",
             },
         ],
         "auth": [
