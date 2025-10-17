@@ -15,7 +15,6 @@ from ..state_machine import AlexaStateMachine
 
 
 class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
-
     """Gestionnaire thread-safe des paramètres d'appareils.
 
     Utilise `http_client` (wrapper créé automatiquement à partir de `auth`
@@ -23,7 +22,13 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
     progressive vers `BaseManager`-style HTTP client.
     """
 
-    def __init__(self, auth_or_http: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        auth_or_http: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        api_service: Optional[Any] = None,
+    ) -> None:
         # auth_or_http peut être soit l'ancien AuthClient, soit un http_client
         # compatible (ayant get/post/put/delete et attribut csrf)
         self.config = config
@@ -59,9 +64,13 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
         try:
             headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
             if self._api_service is not None:
-                response = self._api_service.get(f"/api/device-preferences/{device_serial}", headers=headers, timeout=10)
+                response = self._api_service.get(
+                    f"/api/device-preferences/{device_serial}", headers=headers, timeout=10
+                )
             else:
-                response = self._api_call("get", r"/api/device-preferences/{device_serial}", headers=headers, timeout=10)
+                response = self._api_call(
+                    "get", r"/api/device-preferences/{device_serial}", headers=headers, timeout=10
+                )
             return cast(Optional[Dict[Any, Any]], response)
         except Exception as e:
             logger.error(f"Erreur récupération paramètres: {e}")
@@ -234,9 +243,13 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
         try:
             headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
             if self._api_service is not None:
-                response = self._api_service.get(r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes", headers=headers, timeout=10)
+                response = self._api_service.get(
+                    r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes", headers=headers, timeout=10
+                )
             else:
-                response = self._api_call("get", r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes", headers=headers, timeout=10)
+                response = self._api_call(
+                    "get", r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes", headers=headers, timeout=10
+                )
             data = response
 
             # Chercher le volume pour le device serial spécifié

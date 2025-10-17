@@ -310,12 +310,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 logger.error(f"Erreur exécution routine {automation_id}: {e}")
                 return False
 
-    def execute(
-        self,
-        routine_id: str,
-        device: Optional[str] = None,
-        **kwargs: Any
-    ) -> Dict[str, Any]:
+    def execute(self, routine_id: str, device: Optional[str] = None, **kwargs: Any) -> Dict[str, Any]:
         """
         Exécute une routine (API alternative).
 
@@ -390,7 +385,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
         name: str,
         actions: Optional[List[Dict[str, Any]]] = None,
         description: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Crée une nouvelle routine.
@@ -495,7 +490,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
         name: Optional[str] = None,
         actions: Optional[List[Dict[str, Any]]] = None,
         enabled: Optional[bool] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Met à jour une routine.
@@ -598,10 +593,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
         return self.update_routine(routine_id, enabled=enabled)
 
     def search(
-        self,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        **kwargs: Any
+        self, name: Optional[str] = None, description: Optional[str] = None, **kwargs: Any
     ) -> List[Dict[str, Any]]:
         """
         Recherche des routines par critères.
@@ -627,11 +619,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
         return results
 
     def schedule(
-        self,
-        routine_id: str,
-        time_str: str,
-        recurring: Optional[str] = None,
-        **kwargs: Any
+        self, routine_id: str, time_str: str, recurring: Optional[str] = None, **kwargs: Any
     ) -> Dict[str, Any]:
         """
         Planifie une routine.

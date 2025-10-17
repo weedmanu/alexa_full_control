@@ -10,15 +10,13 @@ import pytest
 # AUTH FIXTURES
 # ==============================================================================
 
+
 @pytest.fixture
 def mock_auth():
     """Mock Alexa authentication object."""
     auth = MagicMock()
     auth.get_csrf_token = MagicMock(return_value="mock_csrf_token_12345")
-    auth.get_headers = MagicMock(return_value={
-        "User-Agent": "AmazonAlexa/2.0",
-        "Authorization": "Bearer mock_token"
-    })
+    auth.get_headers = MagicMock(return_value={"User-Agent": "AmazonAlexa/2.0", "Authorization": "Bearer mock_token"})
     auth.is_authenticated = MagicMock(return_value=True)
     auth.refresh_token = MagicMock(return_value=True)
     return auth
@@ -27,6 +25,7 @@ def mock_auth():
 # ==============================================================================
 # HTTP CLIENT FIXTURES
 # ==============================================================================
+
 
 @pytest.fixture
 def mock_http_client():
@@ -40,10 +39,7 @@ def mock_http_client():
     client.delete = MagicMock(return_value={"status": "ok"})
 
     # Headers always present
-    client.headers = {
-        "User-Agent": "AmazonAlexa/2.0",
-        "X-Csrf-Token": "mock_csrf_token_12345"
-    }
+    client.headers = {"User-Agent": "AmazonAlexa/2.0", "X-Csrf-Token": "mock_csrf_token_12345"}
 
     # Session management
     client.session = MagicMock()
@@ -56,6 +52,7 @@ def mock_http_client():
 # CONFIG FIXTURES
 # ==============================================================================
 
+
 @pytest.fixture
 def mock_config():
     """Mock application configuration."""
@@ -64,11 +61,7 @@ def mock_config():
     config.cache_ttl = 300
     config.timeout = 30
     config.max_retries = 3
-    config.circuit_breaker = {
-        "failure_threshold": 3,
-        "timeout": 30,
-        "recovery_timeout": 60
-    }
+    config.circuit_breaker = {"failure_threshold": 3, "timeout": 30, "recovery_timeout": 60}
     return config
 
 
@@ -76,18 +69,14 @@ def mock_config():
 # STATE MACHINE FIXTURES
 # ==============================================================================
 
+
 @pytest.fixture
 def mock_state_machine():
     """Mock Alexa state machine."""
     machine = MagicMock()
-    machine.get_state = MagicMock(return_value={
-        "devices": [],
-        "routines": [],
-        "alarms": [],
-        "timers": [],
-        "reminders": [],
-        "notifications": []
-    })
+    machine.get_state = MagicMock(
+        return_value={"devices": [], "routines": [], "alarms": [], "timers": [], "reminders": [], "notifications": []}
+    )
     machine.update_state = MagicMock(return_value=True)
     machine.lock = threading.RLock()
     return machine
@@ -96,6 +85,7 @@ def mock_state_machine():
 # ==============================================================================
 # CACHE SERVICE FIXTURES
 # ==============================================================================
+
 
 @pytest.fixture
 def mock_cache_service() -> MagicMock:
@@ -126,6 +116,7 @@ def mock_cache_service() -> MagicMock:
 # CIRCUIT BREAKER FIXTURES
 # ==============================================================================
 
+
 @pytest.fixture
 def mock_circuit_breaker():
     """Mock circuit breaker."""
@@ -142,20 +133,24 @@ def mock_circuit_breaker():
 # MANAGER FIXTURES (BASE STRUCTURES)
 # ==============================================================================
 
+
 @pytest.fixture
-def manager_init_params(mock_auth: MagicMock, mock_config: MagicMock, mock_state_machine: MagicMock, mock_cache_service: MagicMock) -> Dict[str, Any]:
+def manager_init_params(
+    mock_auth: MagicMock, mock_config: MagicMock, mock_state_machine: MagicMock, mock_cache_service: MagicMock
+) -> Dict[str, Any]:
     """Common parameters for manager initialization."""
     return {
         "auth": mock_auth,
         "config": mock_config,
         "state_machine": mock_state_machine,
-        "cache_service": mock_cache_service
+        "cache_service": mock_cache_service,
     }
 
 
 # ==============================================================================
 # TEST DATA FIXTURES
 # ==============================================================================
+
 
 @pytest.fixture
 def sample_devices() -> list[dict[str, Any]]:
@@ -165,14 +160,14 @@ def sample_devices() -> list[dict[str, Any]]:
             "serialNumber": "DEVICE-1-ABC123",
             "deviceName": "Living Room Echo",
             "deviceType": "ALEXA_GUARD_DISPLAY_ECHO_SHOW_5",
-            "online": True
+            "online": True,
         },
         {
             "serialNumber": "DEVICE-2-DEF456",
             "deviceName": "Kitchen Echo",
             "deviceType": "ALEXA_GUARD_ECHO_DOT_3RD",
-            "online": True
-        }
+            "online": True,
+        },
     ]
 
 
@@ -185,14 +180,9 @@ def sample_alarms() -> list[dict[str, Any]]:
             "label": "Morning Alarm",
             "time": "08:00",
             "recurring": True,
-            "daysOfWeek": ["MON", "TUE", "WED", "THU", "FRI"]
+            "daysOfWeek": ["MON", "TUE", "WED", "THU", "FRI"],
         },
-        {
-            "id": "alarm-2",
-            "label": "Meeting Reminder",
-            "time": "14:30",
-            "recurring": False
-        }
+        {"id": "alarm-2", "label": "Meeting Reminder", "time": "14:30", "recurring": False},
     ]
 
 
@@ -206,15 +196,15 @@ def sample_routines() -> list[dict[str, Any]]:
             "triggers": [{"type": "TimeOfDay", "time": "07:00"}],
             "actions": [
                 {"type": "ExecuteDeviceAction", "deviceId": "device-1"},
-                {"type": "PlayMusicAction", "musicProvider": "AMAZON_MUSIC"}
-            ]
+                {"type": "PlayMusicAction", "musicProvider": "AMAZON_MUSIC"},
+            ],
         },
         {
             "id": "routine-2",
             "name": "Goodnight",
             "triggers": [{"type": "VoiceCommand", "phrase": "goodnight"}],
-            "actions": [{"type": "ExecuteDeviceAction", "deviceId": "device-1"}]
-        }
+            "actions": [{"type": "ExecuteDeviceAction", "deviceId": "device-1"}],
+        },
     ]
 
 
@@ -222,10 +212,12 @@ def sample_routines() -> list[dict[str, Any]]:
 # UTILITY FIXTURES
 # ==============================================================================
 
+
 @pytest.fixture
 def reset_circuit_breaker_registry():
     """Reset circuit breaker registry between tests."""
     from core.breaker_registry import CircuitBreakerRegistry
+
     yield
     CircuitBreakerRegistry.reset()
 
@@ -240,6 +232,7 @@ def cleanup_cache():
 # ==============================================================================
 # MARKERS FOR TEST ORGANIZATION
 # ==============================================================================
+
 
 def pytest_configure(config: Any) -> None:  # type: ignore
     """Register custom pytest markers."""

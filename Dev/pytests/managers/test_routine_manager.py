@@ -27,7 +27,7 @@ class TestRoutineManagerGetRoutines:
         manager = Mock()
         manager.get_routines.return_value = [
             {"routine_id": "r1", "name": "Good Morning"},
-            {"routine_id": "r2", "name": "Good Night"}
+            {"routine_id": "r2", "name": "Good Night"},
         ]
 
         routines = manager.get_routines()
@@ -37,13 +37,15 @@ class TestRoutineManagerGetRoutines:
     def test_get_routines_contains_required_fields(self) -> None:
         """Test routine objects contain required fields."""
         manager = Mock()
-        manager.get_routines.return_value = [{
-            "routine_id": "r1",
-            "name": "Morning Routine",
-            "description": "Starts the day",
-            "enabled": True,
-            "actions": []
-        }]
+        manager.get_routines.return_value = [
+            {
+                "routine_id": "r1",
+                "name": "Morning Routine",
+                "description": "Starts the day",
+                "enabled": True,
+                "actions": [],
+            }
+        ]
 
         routines = manager.get_routines()
         routine = routines[0]
@@ -66,7 +68,7 @@ class TestRoutineManagerGetRoutines:
         all_routines = [
             {"routine_id": "r1", "name": "Morning", "enabled": True},
             {"routine_id": "r2", "name": "Night", "enabled": False},
-            {"routine_id": "r3", "name": "Work", "enabled": True}
+            {"routine_id": "r3", "name": "Work", "enabled": True},
         ]
 
         manager.get_routines.return_value = all_routines
@@ -107,11 +109,7 @@ class TestRoutineManagerExecute:
     def test_execute_routine_returns_status(self) -> None:
         """Test execute returns execution status."""
         manager = Mock()
-        manager.execute.return_value = {
-            "routine_id": "r1",
-            "status": "running",
-            "progress": 25
-        }
+        manager.execute.return_value = {"routine_id": "r1", "status": "running", "progress": 25}
 
         result = manager.execute("r1")
         assert "status" in result
@@ -143,11 +141,7 @@ class TestRoutineManagerCreateRoutine:
     def test_create_routine_basic(self) -> None:
         """Test creating a basic routine."""
         manager = Mock()
-        manager.create_routine.return_value = {
-            "routine_id": "new_r1",
-            "name": "New Routine",
-            "created": True
-        }
+        manager.create_routine.return_value = {"routine_id": "new_r1", "name": "New Routine", "created": True}
 
         result = manager.create_routine("New Routine")
         assert result["created"] is True
@@ -156,15 +150,9 @@ class TestRoutineManagerCreateRoutine:
     def test_create_routine_with_actions(self) -> None:
         """Test creating routine with actions."""
         manager = Mock()
-        actions = [
-            {"type": "music", "action": "play"},
-            {"type": "light", "action": "on"}
-        ]
+        actions = [{"type": "music", "action": "play"}, {"type": "light", "action": "on"}]
 
-        manager.create_routine.return_value = {
-            "routine_id": "r_new",
-            "actions": actions
-        }
+        manager.create_routine.return_value = {"routine_id": "r_new", "actions": actions}
 
         result = manager.create_routine("Morning", actions=actions)
         assert len(result["actions"]) == 2
@@ -221,10 +209,7 @@ class TestRoutineManagerUpdateRoutine:
     def test_update_routine_name(self) -> None:
         """Test updating routine name."""
         manager = Mock()
-        manager.update_routine.return_value = {
-            "routine_id": "r1",
-            "name": "Updated Name"
-        }
+        manager.update_routine.return_value = {"routine_id": "r1", "name": "Updated Name"}
 
         result = manager.update_routine("r1", name="Updated Name")
         assert result["name"] == "Updated Name"
@@ -234,10 +219,7 @@ class TestRoutineManagerUpdateRoutine:
         manager = Mock()
         new_actions = [{"type": "music", "action": "stop"}]
 
-        manager.update_routine.return_value = {
-            "routine_id": "r1",
-            "actions": new_actions
-        }
+        manager.update_routine.return_value = {"routine_id": "r1", "actions": new_actions}
 
         result = manager.update_routine("r1", actions=new_actions)
         assert len(result["actions"]) == 1
@@ -245,10 +227,7 @@ class TestRoutineManagerUpdateRoutine:
     def test_update_routine_enabled_status(self) -> None:
         """Test updating routine enabled status."""
         manager = Mock()
-        manager.update_routine.return_value = {
-            "routine_id": "r1",
-            "enabled": False
-        }
+        manager.update_routine.return_value = {"routine_id": "r1", "enabled": False}
 
         result = manager.update_routine("r1", enabled=False)
         assert result["enabled"] is False
@@ -263,7 +242,7 @@ class TestRoutineManagerListActions:
         manager.list_actions.return_value = [
             {"type": "music", "name": "Play Music"},
             {"type": "light", "name": "Turn on Light"},
-            {"type": "device", "name": "Control Device"}
+            {"type": "device", "name": "Control Device"},
         ]
 
         actions = manager.list_actions()
@@ -272,12 +251,9 @@ class TestRoutineManagerListActions:
     def test_action_has_required_fields(self) -> None:
         """Test action objects have required fields."""
         manager = Mock()
-        manager.list_actions.return_value = [{
-            "type": "music",
-            "name": "Play Music",
-            "description": "Start playing music",
-            "parameters": []
-        }]
+        manager.list_actions.return_value = [
+            {"type": "music", "name": "Play Music", "description": "Start playing music", "parameters": []}
+        ]
 
         actions = manager.list_actions()
         action = actions[0]
@@ -299,7 +275,7 @@ class TestRoutineManagerListActions:
         manager.list_actions.return_value = [
             {"type": "music", "name": "Play"},
             {"type": "music", "name": "Pause"},
-            {"type": "light", "name": "On"}
+            {"type": "light", "name": "On"},
         ]
 
         actions = manager.list_actions()
@@ -355,7 +331,7 @@ class TestRoutineManagerGetDetails:
             "enabled": True,
             "actions": [],
             "created_at": "2025-10-16",
-            "updated_at": "2025-10-16"
+            "updated_at": "2025-10-16",
         }
 
         routine = manager.get_routine("r1")
@@ -368,10 +344,7 @@ class TestRoutineManagerGetDetails:
         manager.get_routine.return_value = {
             "routine_id": "r1",
             "name": "Test",
-            "actions": [
-                {"action_id": "a1", "type": "music"},
-                {"action_id": "a2", "type": "light"}
-            ]
+            "actions": [{"action_id": "a1", "type": "music"}, {"action_id": "a2", "type": "light"}],
         }
 
         routine = manager.get_routine("r1")
@@ -392,9 +365,7 @@ class TestRoutineManagerSearch:
     def test_search_by_name(self) -> None:
         """Test searching routines by name."""
         manager = Mock()
-        manager.search.return_value = [
-            {"routine_id": "r1", "name": "Morning Routine"}
-        ]
+        manager.search.return_value = [{"routine_id": "r1", "name": "Morning Routine"}]
 
         results = manager.search(name="Morning")
         assert len(results) == 1
@@ -403,9 +374,7 @@ class TestRoutineManagerSearch:
     def test_search_by_description(self) -> None:
         """Test searching by description."""
         manager = Mock()
-        manager.search.return_value = [
-            {"routine_id": "r2", "description": "Daily routine"}
-        ]
+        manager.search.return_value = [{"routine_id": "r2", "description": "Daily routine"}]
 
         results = manager.search(description="Daily")
         assert len(results) == 1
@@ -425,11 +394,7 @@ class TestRoutineManagerScheduling:
     def test_schedule_routine(self) -> None:
         """Test scheduling routine for specific time."""
         manager = Mock()
-        manager.schedule.return_value = {
-            "routine_id": "r1",
-            "scheduled_time": "07:00",
-            "scheduled": True
-        }
+        manager.schedule.return_value = {"routine_id": "r1", "scheduled_time": "07:00", "scheduled": True}
 
         result = manager.schedule("r1", "07:00")
         assert result["scheduled"] is True
@@ -437,11 +402,7 @@ class TestRoutineManagerScheduling:
     def test_schedule_recurring_routine(self) -> None:
         """Test scheduling recurring routine."""
         manager = Mock()
-        manager.schedule.return_value = {
-            "routine_id": "r1",
-            "recurring": "daily",
-            "scheduled": True
-        }
+        manager.schedule.return_value = {"routine_id": "r1", "recurring": "daily", "scheduled": True}
 
         result = manager.schedule("r1", "07:00", recurring="daily")
         assert result["recurring"] == "daily"
@@ -491,10 +452,7 @@ class TestRoutineManagerIntegration:
         manager = Mock()
 
         # Create
-        manager.create_routine.return_value = {
-            "routine_id": "new_r",
-            "name": "Test Routine"
-        }
+        manager.create_routine.return_value = {"routine_id": "new_r", "name": "Test Routine"}
         created = manager.create_routine("Test Routine")
 
         # Execute
@@ -512,17 +470,12 @@ class TestRoutineManagerIntegration:
         manager = Mock()
 
         # List
-        manager.get_routines.return_value = [
-            {"routine_id": "r1", "name": "Morning"}
-        ]
+        manager.get_routines.return_value = [{"routine_id": "r1", "name": "Morning"}]
         routines = manager.get_routines()
 
         # Modify
         routine_id = routines[0]["routine_id"]
-        manager.update_routine.return_value = {
-            "routine_id": routine_id,
-            "name": "Updated Morning"
-        }
+        manager.update_routine.return_value = {"routine_id": routine_id, "name": "Updated Morning"}
         updated = manager.update_routine(routine_id, name="Updated Morning")
 
         # Execute

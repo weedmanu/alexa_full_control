@@ -33,7 +33,9 @@ class TimersManagerCommand(ManagerCommand):
                 return {"success": False, "error": "Timer manager not available"}
 
             # Delegate actions to manager in thread
-            result = await asyncio.to_thread(lambda: getattr(mgr, action)(**{k: v for k, v in params.items() if k != "action"}))
+            result = await asyncio.to_thread(
+                lambda: getattr(mgr, action)(**{k: v for k, v in params.items() if k != "action"})
+            )
             return {"success": True, "data": result}
         except Exception as e:
             return {"success": False, "error": str(e)}

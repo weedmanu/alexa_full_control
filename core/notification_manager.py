@@ -13,7 +13,13 @@ from .state_machine import AlexaStateMachine
 class NotificationManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire thread-safe des notifications Alexa."""
 
-    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        auth: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        api_service: Optional[Any] = None,
+    ) -> None:
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth)
 
@@ -75,9 +81,13 @@ class NotificationManager(BaseManager[Dict[str, Any]]):
             return False
         try:
             if self._api_service is not None:
-                result = self._api_service.put(f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10)
+                result = self._api_service.put(
+                    f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10
+                )
             else:
-                result = self._api_call("put", f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10)
+                result = self._api_call(
+                    "put", f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10
+                )
             return result is not None
         except Exception as e:
             self.logger.error(f"Erreur marquage notification: {e}")

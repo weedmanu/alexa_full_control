@@ -87,7 +87,9 @@ class VoiceCommandService:
 
         logger.info(f"{SharedIcons.GEAR} VoiceCommandService initialisé")
 
-    def speak(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:  # pylint: disable=unused-argument
+    def speak(
+        self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
+    ) -> bool:  # pylint: disable=unused-argument
         """
         Fait parler Alexa et exécute la commande vocale.
 
@@ -218,7 +220,9 @@ class VoiceCommandService:
                 logger.error(f"❌ Erreur commande vocale: {e}")
                 return False
 
-    def speak_as_voice(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:  # pylint: disable=unused-argument
+    def speak_as_voice(
+        self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
+    ) -> bool:  # pylint: disable=unused-argument
         """
         Simule une commande vocale avec Alexa.Speak (comme si on parlait au micro).
 
@@ -812,4 +816,3 @@ class VoiceCommandService:
             except Exception as e:
                 logger.exception(f"❌ Erreur lors de l'exécution du textcommand: {e}")
                 return False
-

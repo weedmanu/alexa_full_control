@@ -246,8 +246,7 @@ class ManagerFactory:
         missing_deps = set(config.dependencies.values()) - set(dependencies.keys())
         if missing_deps:
             raise ValueError(
-                f"Missing dependencies for '{name}': {missing_deps}. "
-                f"Provided: {list(dependencies.keys())}"
+                f"Missing dependencies for '{name}': {missing_deps}. " f"Provided: {list(dependencies.keys())}"
             )
 
         # Build kwargs for manager initialization

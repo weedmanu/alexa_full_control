@@ -29,14 +29,13 @@ def test_all_actions():
     print("\n1️⃣  Creating scenarios...")
 
     args = argparse.Namespace(
-        name='Ambiance Salon',
-        actions='[{"device": "Salon Echo", "action": "volume", "params": {"level": 50}}]'
+        name="Ambiance Salon", actions='[{"device": "Salon Echo", "action": "volume", "params": {"level": 50}}]'
     )
     cmd._create_scenario(args)
 
     args = argparse.Namespace(
-        name='Morning Routine',
-        actions='[{"device": "Cuisine", "action": "play", "params": {"song": "Despacito"}, "delay": 1}, {"device": "Salon Echo", "action": "volume", "params": {"level": 30}, "delay": 2}]'
+        name="Morning Routine",
+        actions='[{"device": "Cuisine", "action": "play", "params": {"song": "Despacito"}, "delay": 1}, {"device": "Salon Echo", "action": "volume", "params": {"level": 30}, "delay": 2}]',
     )
     cmd._create_scenario(args)
 
@@ -47,12 +46,12 @@ def test_all_actions():
 
     # Test 3: Show scenario details
     print("\n3️⃣  Showing scenario details...")
-    args = argparse.Namespace(name='Morning Routine')
+    args = argparse.Namespace(name="Morning Routine")
     cmd._show_scenario_info(args)
 
     # Test 4: Delete scenario
     print("\n4️⃣  Deleting scenario 'Ambiance Salon'...")
-    args = argparse.Namespace(name='Ambiance Salon', force=True)
+    args = argparse.Namespace(name="Ambiance Salon", force=True)
     cmd._delete_scenario(args)
 
     # Test 5: List after deletion
@@ -63,14 +62,14 @@ def test_all_actions():
     # Test 6: Edit scenario
     print("\n6️⃣  Editing 'Morning Routine'...")
     args = argparse.Namespace(
-        name='Morning Routine',
-        actions='[{"device": "Cuisine", "action": "volume", "params": {"level": 60}}, {"device": "Salon Echo", "action": "play", "params": {"song": "Bohemian Rhapsody"}}]'
+        name="Morning Routine",
+        actions='[{"device": "Cuisine", "action": "volume", "params": {"level": 60}}, {"device": "Salon Echo", "action": "play", "params": {"song": "Bohemian Rhapsody"}}]',
     )
     cmd._edit_scenario(args)
 
     # Test 7: Show updated scenario
     print("\n7️⃣  Showing updated scenario...")
-    args = argparse.Namespace(name='Morning Routine')
+    args = argparse.Namespace(name="Morning Routine")
     cmd._show_scenario_info(args)
 
     print("\n" + "=" * 70)
@@ -80,5 +79,5 @@ def test_all_actions():
     ctx.cleanup()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_all_actions()

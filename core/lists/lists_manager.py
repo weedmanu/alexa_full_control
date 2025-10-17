@@ -72,7 +72,11 @@ class ListsManager(BaseManager[Dict[str, Any]]):
                 logger.debug(f"🔍 Test endpoint: {endpoint}")
                 # Prefer injected AlexaAPIService when available
                 if self._api_service is not None:
-                    response = self._api_service.get(endpoint, headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}, timeout=10)
+                    response = self._api_service.get(
+                        endpoint,
+                        headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
+                        timeout=10,
+                    )
                 else:
                     response = self._api_call(
                         "get",

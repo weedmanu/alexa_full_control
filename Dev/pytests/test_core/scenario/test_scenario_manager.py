@@ -43,9 +43,7 @@ class TestScenarioCreation:
         with tempfile.TemporaryDirectory() as tmpdir:
             mgr = ScenarioManager(storage_path=tmpdir)
 
-            actions = [
-                {"device": "Salon Echo", "action": "play", "params": {"song": "Despacito"}}
-            ]
+            actions = [{"device": "Salon Echo", "action": "play", "params": {"song": "Despacito"}}]
 
             result = mgr.create_scenario("Music Salon", actions)
             assert result is True
@@ -503,7 +501,7 @@ class TestScenarioExportImport:
                 "name": "Imported",
                 "actions": [{"device": "Device1", "action": "test", "params": {}}],
                 "created": "2025-10-17T00:00:00",
-                "modified": "2025-10-17T00:00:00"
+                "modified": "2025-10-17T00:00:00",
             }
 
             result = mgr.import_scenario(scenario_dict)

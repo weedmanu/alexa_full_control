@@ -78,7 +78,7 @@ class CommandAdapter:
         self,
         command_class: Type[ManagerCommand],
         command_name: Optional[str] = None,
-        args: Optional[Dict[str, Any]] = None
+        args: Optional[Dict[str, Any]] = None,
     ) -> ManagerCommand:
         """
         Create and initialize a ManagerCommand instance.
@@ -99,11 +99,7 @@ class CommandAdapter:
             self.logger.error(f"Failed to create command {command_class.__name__}: {e}")
             raise
 
-    def execute_command(
-        self,
-        command: Any,
-        args: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    def execute_command(self, command: Any, args: Optional[Dict[str, Any]] = None) -> Any:
         """
         Execute command with error handling and logging.
 
@@ -210,11 +206,7 @@ class CommandFactory:
         self.adapter = CommandAdapter()
         self.logger = logger
 
-    def create_base_command(
-        self,
-        command_class: Type[Any],
-        context: Optional[CommandContext] = None
-    ) -> Any:
+    def create_base_command(self, command_class: Type[Any], context: Optional[CommandContext] = None) -> Any:
         """
         Create BaseCommand instance with context.
 
@@ -236,10 +228,7 @@ class CommandFactory:
             self.logger.error(f"Failed to create command {command_class.__name__}: {e}")
             raise
 
-    def create_manager_command(
-        self,
-        command_class: Type[ManagerCommand]
-    ) -> ManagerCommand:
+    def create_manager_command(self, command_class: Type[ManagerCommand]) -> ManagerCommand:
         """
         Create ManagerCommand instance with DI container.
 
@@ -251,11 +240,7 @@ class CommandFactory:
         """
         return self.adapter.create_manager_command(command_class)
 
-    def create_command(
-        self,
-        command_class: Type[Any],
-        context: Optional[CommandContext] = None
-    ) -> Any:
+    def create_command(self, command_class: Type[Any], context: Optional[CommandContext] = None) -> Any:
         """
         Create command (auto-detects type).
 

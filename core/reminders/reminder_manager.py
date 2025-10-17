@@ -139,7 +139,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 )
 
                 # If an api_service is injected, prefer it (non-invasive)
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         result = self._api_service.post("/api/notifications", payload=payload)
                     except Exception:
@@ -206,7 +206,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 )
 
                 # Prefer api_service if available
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         result = self._api_service.post("/api/notifications", payload=payload)
                     except Exception:
@@ -291,7 +291,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
             )
 
             # Prefer api_service if injected
-            if getattr(self, '_api_service', None) is not None:
+            if getattr(self, "_api_service", None) is not None:
                 try:
                     data = self._api_service.get("/api/notifications")
                 except Exception:
@@ -347,7 +347,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 )
 
                 # Use api_service if available
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         self._api_service.delete(f"/api/notifications/{reminder_id}")
                     except Exception:
@@ -393,7 +393,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 )
 
                 # Prefer api_service
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         self._api_service.put(f"/api/notifications/{reminder_id}", payload=payload)
                     except Exception:

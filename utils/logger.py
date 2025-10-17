@@ -431,6 +431,7 @@ class InstallLogger:
             logger.opt(depth=1).info(f"{emoji} {msg}")
         else:
             from importlib import import_module
+
             fallback_logger = import_module("scripts.install").Logger
 
             fallback_logger.step(msg, emoji)
@@ -440,6 +441,7 @@ class InstallLogger:
             logger.opt(depth=1).info(f"⏳ {msg}...")
         else:
             from importlib import import_module
+
             fallback_logger = import_module("scripts.install").Logger
 
             fallback_logger.progress(msg)
@@ -449,6 +451,7 @@ class InstallLogger:
             logger.opt(depth=1).success(f"{msg}")
         else:
             from importlib import import_module
+
             fallback_logger = import_module("scripts.install").Logger
 
             fallback_logger.success(msg, emoji)
@@ -458,6 +461,7 @@ class InstallLogger:
             logger.opt(depth=1).error(f"{msg}")
         else:
             from importlib import import_module
+
             fallback_logger = import_module("scripts.install").Logger
 
             fallback_logger.error(msg, emoji)
@@ -467,6 +471,7 @@ class InstallLogger:
             logger.opt(depth=1).warning(f"{msg}")
         else:
             from importlib import import_module
+
             fallback_logger = import_module("scripts.install").Logger
 
             fallback_logger.warning(msg, emoji)
@@ -476,6 +481,7 @@ class InstallLogger:
             logger.opt(depth=1).info(f"{msg}")
         else:
             from importlib import import_module
+
             fallback_logger = import_module("scripts.install").Logger
 
             fallback_logger.info(msg, emoji)

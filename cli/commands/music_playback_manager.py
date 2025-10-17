@@ -38,9 +38,13 @@ class MusicPlaybackManagerCommand(ManagerCommand):
                 res = await asyncio.to_thread(mgr.stop, params.get("device"))
             elif action == "control":
                 # action_type contains the control
-                res = await asyncio.to_thread(mgr.play if params.get("action_type") == "play" else mgr.pause, params.get("device"))
+                res = await asyncio.to_thread(
+                    mgr.play if params.get("action_type") == "play" else mgr.pause, params.get("device")
+                )
             elif action == "shuffle":
-                res = await asyncio.to_thread(mgr.set_shuffle, params.get("device"), params.get("mode") in ("on", "enable"))
+                res = await asyncio.to_thread(
+                    mgr.set_shuffle, params.get("device"), params.get("mode") in ("on", "enable")
+                )
             elif action == "repeat":
                 res = await asyncio.to_thread(mgr.set_repeat, params.get("device"), params.get("mode"))
             else:

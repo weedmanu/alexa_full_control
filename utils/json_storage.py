@@ -18,6 +18,7 @@ from typing import Any, Dict, Optional
 
 try:
     import portalocker  # Inter-process locking
+
     portalocker_available = True
 except ImportError:
     portalocker = None  # type: ignore
@@ -73,13 +74,14 @@ class JsonStorage:
                 return default
 
             try:
-                with open(file_path, encoding='utf-8') as f:
+                with open(file_path, encoding="utf-8") as f:
                     if portalocker_available and portalocker is not None:
                         portalocker.lock(f, portalocker.LOCK_SH)  # Shared lock
                     data = json.load(f)
                 return data
             except (json.JSONDecodeError, OSError) as e:
                 from loguru import logger
+
                 logger.error(f"Erreur lecture JSON {filename}: {e}")
                 return default
 
@@ -101,9 +103,10 @@ class JsonStorage:
 
             # Backup de l'ancien fichier
             if backup and file_path.exists():
-                backup_path = file_path.with_suffix('.json.bak')
+                backup_path = file_path.with_suffix(".json.bak")
                 try:
                     import shutil
+
                     shutil.copy2(file_path, backup_path)
                 except OSError:
                     pass  # Best effort
@@ -114,12 +117,8 @@ class JsonStorage:
                 # Ensure base dir exists (race conditions or tests may remove it)
                 file_path.parent.mkdir(parents=True, exist_ok=True)
 
-                tmp_fd, tmp_path = tempfile.mkstemp(
-                    dir=self.base_dir,
-                    prefix=f"{filename}.",
-                    suffix=".tmp"
-                )
-                with os.fdopen(tmp_fd, 'w', encoding='utf-8') as f:
+                tmp_fd, tmp_path = tempfile.mkstemp(dir=self.base_dir, prefix=f"{filename}.", suffix=".tmp")
+                with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
                     if portalocker_available and portalocker is not None:
                         portalocker.lock(f, portalocker.LOCK_EX)  # Exclusive lock
                     json.dump(data, f, indent=2, ensure_ascii=False)
@@ -132,6 +131,7 @@ class JsonStorage:
 
             except (OSError, TypeError) as e:
                 from loguru import logger
+
                 logger.error(f"Erreur sauvegarde JSON {filename}: {e}")
                 # Nettoyer fichier temporaire (best-effort)
                 if tmp_path and os.path.exists(tmp_path):
@@ -172,6 +172,7 @@ class JsonStorage:
                 return True
             except OSError as e:
                 from loguru import logger
+
                 logger.error(f"Erreur suppression {filename}: {e}")
                 return False
 
@@ -186,6 +187,7 @@ class JsonStorage:
             Liste des noms de fichiers
         """
         import glob
+
         pattern_path = self.base_dir / pattern
         files = glob.glob(str(pattern_path))
         return [Path(f).name for f in files]

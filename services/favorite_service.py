@@ -58,12 +58,12 @@ class FavoriteService:
         params: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """Ajoute un nouveau favori.
-        
+
         Args:
             name: Nom du favori
             favorite_type: Type (music.tunein, scene, etc)
             params: Paramètres (dict)
-            
+
         Returns:
             True si succès, False sinon
         """
@@ -98,10 +98,10 @@ class FavoriteService:
 
     def delete_favorite(self, name: str) -> bool:
         """Supprime un favori.
-        
+
         Args:
             name: Nom du favori
-            
+
         Returns:
             True si succès, False sinon
         """
@@ -118,10 +118,10 @@ class FavoriteService:
 
     def get_favorite(self, name: str) -> Optional[Dict[str, Any]]:
         """Récupère un favori par son nom.
-        
+
         Args:
             name: Nom du favori
-            
+
         Returns:
             Dict du favori ou None
         """
@@ -130,7 +130,7 @@ class FavoriteService:
 
     def get_favorites(self) -> Dict[str, Dict[str, Any]]:
         """Récupère tous les favoris.
-        
+
         Returns:
             Dict de tous les favoris
         """
@@ -138,24 +138,21 @@ class FavoriteService:
 
     def get_favorites_by_type(self, favorite_type: str) -> List[Dict[str, Any]]:
         """Récupère les favoris d'un type particulier.
-        
+
         Args:
             favorite_type: Type de favori
-            
+
         Returns:
             Liste des favoris du type
         """
-        return [
-            fav for fav in self._favorites.values()
-            if fav["type"] == favorite_type
-        ]
+        return [fav for fav in self._favorites.values() if fav["type"] == favorite_type]
 
     def search_favorites(self, query: str) -> List[Dict[str, Any]]:
         """Cherche des favoris par texte.
-        
+
         Args:
             query: Texte à chercher
-            
+
         Returns:
             Liste des favoris matchant
         """
@@ -163,8 +160,7 @@ class FavoriteService:
         results = []
 
         for fav in self._favorites.values():
-            if (query_lower in fav["name"].lower() or
-                query_lower in fav["type"].lower()):
+            if query_lower in fav["name"].lower() or query_lower in fav["type"].lower():
                 results.append(fav)
 
         return results
@@ -176,12 +172,12 @@ class FavoriteService:
         favorite_type: Optional[str] = None,
     ) -> bool:
         """Met à jour un favori.
-        
+
         Args:
             name: Nom du favori
             params: Nouveaux paramètres
             favorite_type: Nouveau type (optionnel)
-            
+
         Returns:
             True si succès, False sinon
         """
@@ -205,10 +201,10 @@ class FavoriteService:
 
     def mark_as_used(self, name: str) -> bool:
         """Marque un favori comme utilisé récemment.
-        
+
         Args:
             name: Nom du favori
-            
+
         Returns:
             True si succès, False sinon
         """
@@ -223,7 +219,7 @@ class FavoriteService:
 
     def export_to_json(self) -> str:
         """Exporte tous les favoris en JSON.
-        
+
         Returns:
             String JSON
         """
@@ -231,10 +227,10 @@ class FavoriteService:
 
     def import_from_json(self, json_data: str) -> bool:
         """Importe des favoris depuis JSON.
-        
+
         Args:
             json_data: String JSON
-            
+
         Returns:
             True si succès, False sinon
         """
@@ -262,16 +258,13 @@ class FavoriteService:
 
     def get_favorites_sorted_by_usage(self) -> List[Dict[str, Any]]:
         """Retourne les favoris triés par utilisation récente.
-        
+
         Returns:
             Liste des favoris triés
         """
         favorites = list(self._favorites.values())
 
         # Trier par last_used (les plus récents d'abord)
-        favorites.sort(
-            key=lambda x: x.get("last_used") or "",
-            reverse=True
-        )
+        favorites.sort(key=lambda x: x.get("last_used") or "", reverse=True)
 
         return favorites

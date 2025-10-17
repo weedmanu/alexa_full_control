@@ -14,7 +14,6 @@ from ..state_machine import AlexaStateMachine
 
 
 class EqualizerManager(BaseManager[Dict[str, Any]]):
-
     """Gestionnaire thread-safe de l'égaliseur."""
 
     def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
@@ -36,7 +35,9 @@ class EqualizerManager(BaseManager[Dict[str, Any]]):
         if not self.state_machine.can_execute_commands:
             return None
         try:
-            response = self._api_call("get", r"/api/equalizer/{device_serial}/{device_type}",
+            response = self._api_call(
+                "get",
+                r"/api/equalizer/{device_serial}/{device_type}",
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )
@@ -58,7 +59,9 @@ class EqualizerManager(BaseManager[Dict[str, Any]]):
 
         try:
             payload = {"bass": bass, "midrange": midrange, "treble": treble}
-            self._api_call("post", r"/api/equalizer/{device_serial}/{device_type}",
+            self._api_call(
+                "post",
+                r"/api/equalizer/{device_serial}/{device_type}",
                 json=payload,
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,

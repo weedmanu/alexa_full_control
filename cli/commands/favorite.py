@@ -74,9 +74,9 @@ class FavoriteCommand(BaseCommand):
 
             # Si l'adapter n'a pas fourni le service, tenter le fallback via le context (compatibilité)
             if not self.favorite_service:
-                if hasattr(self, 'context') and self.context:
+                if hasattr(self, "context") and self.context:
                     # context peut exposer favorite_service directement
-                    self.favorite_service = getattr(self.context, 'favorite_service', None)
+                    self.favorite_service = getattr(self.context, "favorite_service", None)
 
             if not self.favorite_service:
                 self.error("Service Favorite non disponible")

@@ -173,7 +173,7 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
             logger.debug("🌐 Récupération de la liste des appareils depuis l'API")
 
             # If an AlexaAPIService is injected, use it (preferred)
-            if getattr(self, '_api_service', None) is not None:
+            if getattr(self, "_api_service", None) is not None:
                 try:
                     devices = self._api_service.get_devices()
                 except Exception:

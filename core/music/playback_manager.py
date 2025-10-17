@@ -29,16 +29,18 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
     Pas de fallback VoiceCommand - plus rapide mais moins tolérant aux erreurs.
     """
 
-    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        auth: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        api_service: Optional[Any] = None,
+    ) -> None:
         http_client = create_http_client_from_auth(auth)
         if state_machine is None:
             state_machine = AlexaStateMachine()
         super().__init__(
-            http_client=http_client,
-            config=config,
-            state_machine=state_machine,
-            cache_service=None,
-            cache_ttl=300
+            http_client=http_client, config=config, state_machine=state_machine, cache_service=None, cache_ttl=300
         )
         self.auth = auth  # Keep for backward compatibility
         # Optional AlexaAPIService for future centralized API calls
@@ -55,7 +57,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
         try:
             with self._lock:
                 # Prefer centralized AlexaAPIService if injected
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         self._api_service.post(
                             "/api/np/command",
@@ -184,7 +186,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
                     "deviceType": device_type,
                     "mediaPosition": position_ms,
                 }
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         self._api_service.post("/api/np/command", payload=payload)
                     except Exception:
@@ -213,7 +215,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
             if not self.state_machine.can_execute_commands:
                 return []
             try:
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         response = self._api_service.get("/api/media/history", params={"size": limit})
                     except Exception:
@@ -285,7 +287,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
 
                 # 1. État du player (comme show_queue() du shell)
                 logger.debug(f"Récupération état player pour {device_serial}")
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         player_data = self._api_service.get("/api/np/player", params=params)
                     except Exception:
@@ -306,7 +308,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
                 # 2. État média
                 logger.debug(f"Récupération état média pour {device_serial}")
                 media_params: Dict[str, Any] = {"deviceSerialNumber": device_serial, "deviceType": device_type}
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         media_data = self._api_service.get("/api/media/state", params=media_params)
                     except Exception:
@@ -326,7 +328,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
 
                 # 3. Queue complète
                 logger.debug(f"Récupération queue pour {device_serial}")
-                if getattr(self, '_api_service', None) is not None:
+                if getattr(self, "_api_service", None) is not None:
                     try:
                         queue_data = self._api_service.get("/api/np/queue", params=media_params)
                     except Exception:

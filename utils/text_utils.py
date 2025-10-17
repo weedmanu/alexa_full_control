@@ -47,7 +47,8 @@ def normalize_name(name: str, max_length: Optional[int] = None) -> str:
 
     # Remove punctuation (but keep underscores)
     import re
-    normalized = re.sub(r'[^\w_]', '', normalized)
+
+    normalized = re.sub(r"[^\w_]", "", normalized)
 
     # Apply length limit if specified
     if max_length and len(normalized) > max_length:
@@ -79,7 +80,8 @@ def clean_text(text: str, remove_punctuation: bool = True) -> str:
     if remove_punctuation:
         # Remove punctuation but keep spaces and basic characters
         import re
-        cleaned = re.sub(r'[^\w\s]', '', cleaned)
+
+        cleaned = re.sub(r"[^\w\s]", "", cleaned)
 
     return cleaned
 
@@ -111,9 +113,10 @@ def slugify(text: str) -> str:
 
     # Remove multiple consecutive hyphens
     import re
-    slug = re.sub(r'-+', '-', slug)
+
+    slug = re.sub(r"-+", "-", slug)
 
     # Strip leading/trailing hyphens
-    slug = slug.strip('-')
+    slug = slug.strip("-")
 
     return slug

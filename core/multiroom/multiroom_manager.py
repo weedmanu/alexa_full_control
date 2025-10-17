@@ -133,9 +133,7 @@ class MultiRoomManager(BasePersistenceManager):
 
         # Vérifier que l'appareil n'est pas déjà dans le groupe
         if device_serial in group["devices"]:
-            logger.warning(
-                f"Appareil '{device_serial}' est déjà dans le groupe '{group_name}'"
-            )
+            logger.warning(f"Appareil '{device_serial}' est déjà dans le groupe '{group_name}'")
             return False
 
         # Ajouter l'appareil
@@ -161,9 +159,7 @@ class MultiRoomManager(BasePersistenceManager):
 
         # Vérifier que l'appareil est dans le groupe
         if device_serial not in group["devices"]:
-            logger.warning(
-                f"Appareil '{device_serial}' n'est pas dans le groupe '{group_name}'"
-            )
+            logger.warning(f"Appareil '{device_serial}' n'est pas dans le groupe '{group_name}'")
             return False
 
         # Retirer l'appareil

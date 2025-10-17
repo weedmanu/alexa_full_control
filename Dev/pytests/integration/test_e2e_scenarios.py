@@ -24,9 +24,7 @@ class TestMorningRoutineScenario:
         playback_manager = Mock()
 
         # Step 1: Alarm fires
-        alarm_manager.get_triggered_alarms.return_value = [
-            {"alarm_id": "morning", "time": "07:00"}
-        ]
+        alarm_manager.get_triggered_alarms.return_value = [{"alarm_id": "morning", "time": "07:00"}]
         alarms = alarm_manager.get_triggered_alarms()
         assert len(alarms) > 0
 
@@ -150,7 +148,7 @@ class TestOfficeWorkScenario:
         # Check calendar
         calendar_manager.get_events.return_value = [
             {"title": "Team meeting", "time": "09:00"},
-            {"title": "Project review", "time": "14:00"}
+            {"title": "Project review", "time": "14:00"},
         ]
         events = calendar_manager.get_events()
         assert len(events) > 0
@@ -248,14 +246,12 @@ class TestFamilyCoordinationScenario:
         device_manager.get_devices.return_value = [
             {"serial": "dev1", "name": "Living Room"},
             {"serial": "dev2", "name": "Kitchen"},
-            {"serial": "dev3", "name": "Bedroom"}
+            {"serial": "dev3", "name": "Bedroom"},
         ]
         devices = device_manager.get_devices()
 
         # Send announcement
-        announcement_manager.announce.return_value = {
-            "devices_notified": len(devices)
-        }
+        announcement_manager.announce.return_value = {"devices_notified": len(devices)}
         result = announcement_manager.announce("Dinner is ready!", devices)
         assert result["devices_notified"] == 3
 
@@ -263,10 +259,7 @@ class TestFamilyCoordinationScenario:
         """Test scenario: Set shared family reminder."""
         reminder_manager = Mock()
 
-        reminder_manager.add_reminder.return_value = {
-            "reminder_id": "shared123",
-            "recipients": ["family"]
-        }
+        reminder_manager.add_reminder.return_value = {"reminder_id": "shared123", "recipients": ["family"]}
 
         result = reminder_manager.add_reminder("Pick up kids at 3pm", recipients=["family"])
         assert result["reminder_id"] is not None
@@ -302,12 +295,7 @@ class TestErrorScenarios:
 
     def test_partial_command_failure(self) -> None:
         """Test scenario: Command partially succeeds."""
-        result = {
-            "partial_success": True,
-            "succeeded": 2,
-            "failed": 1,
-            "message": "2 of 3 devices completed"
-        }
+        result = {"partial_success": True, "succeeded": 2, "failed": 1, "message": "2 of 3 devices completed"}
 
         assert result["partial_success"] is True
         assert result["succeeded"] > 0

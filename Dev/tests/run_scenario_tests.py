@@ -54,7 +54,7 @@ def run_all_tests():
             instance = test_class()
 
             # Get all test methods
-            test_methods = [m for m in dir(instance) if m.startswith('test_')]
+            test_methods = [m for m in dir(instance) if m.startswith("test_")]
 
             class_passed = 0
             class_failed = 0
@@ -75,7 +75,7 @@ def run_all_tests():
             print(f"  Result: {class_passed}/{class_passed + class_failed} passed")
         except Exception as e:
             print(f"  ❌ Setup error: {e}")
-            total_failed += len([m for m in dir(test_class) if m.startswith('test_')])
+            total_failed += len([m for m in dir(test_class) if m.startswith("test_")])
 
     print("\n" + "=" * 70)
     print(f"📊 FINAL RESULTS: {total_passed}/{total_tests} tests passed")
@@ -87,6 +87,7 @@ def run_all_tests():
 
     return total_failed == 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

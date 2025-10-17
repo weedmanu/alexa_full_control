@@ -28,8 +28,7 @@ def test_create():
     # Test create
     print("\n1️⃣  Testing scenario creation...")
     args = argparse.Namespace(
-        name='Ambiance Salon',
-        actions='[{"device": "Salon Echo", "action": "volume", "params": {"level": 50}}]'
+        name="Ambiance Salon", actions='[{"device": "Salon Echo", "action": "volume", "params": {"level": 50}}]'
     )
     success = cmd._create_scenario(args)
     print(f"   Create result: {'✅ SUCCESS' if success else '❌ FAILED'}")
@@ -41,7 +40,7 @@ def test_create():
 
     # Test show
     print("\n3️⃣  Testing scenario details...")
-    args = argparse.Namespace(name='Ambiance Salon')
+    args = argparse.Namespace(name="Ambiance Salon")
     cmd._show_scenario_info(args)
 
     print("\n" + "=" * 60)
@@ -50,5 +49,6 @@ def test_create():
 
     ctx.cleanup()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_create()

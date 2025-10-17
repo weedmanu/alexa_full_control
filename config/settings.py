@@ -83,30 +83,21 @@ class AppSettings:
             csrf_token=os.getenv("ALEXA_CSRF_TOKEN"),
             # Réseau
             timeout=int(os.getenv("ALEXA_TIMEOUT", str(AppConstants.DEFAULT_TIMEOUT))),
-            max_retries=int(
-                os.getenv("ALEXA_MAX_RETRIES", str(AppConstants.MAX_RETRIES))
-            ),
+            max_retries=int(os.getenv("ALEXA_MAX_RETRIES", str(AppConstants.MAX_RETRIES))),
             verify_ssl=os.getenv("ALEXA_VERIFY_SSL", "true").lower() == "true",
             # Cache
             cache_enabled=os.getenv("ALEXA_CACHE_ENABLED", "true").lower() == "true",
-            cache_ttl=int(
-                os.getenv("ALEXA_CACHE_TTL", str(AppConstants.DEVICES_CACHE_TTL))
-            ),
+            cache_ttl=int(os.getenv("ALEXA_CACHE_TTL", str(AppConstants.DEVICES_CACHE_TTL))),
             # Logging
             log_level=os.getenv("ALEXA_LOG_LEVEL", "INFO").upper(),
             log_to_file=os.getenv("ALEXA_LOG_TO_FILE", "true").lower() == "true",
-            log_to_console=os.getenv("ALEXA_LOG_TO_CONSOLE", "true").lower()
-            == "true",
+            log_to_console=os.getenv("ALEXA_LOG_TO_CONSOLE", "true").lower() == "true",
             # Debug
             debug_mode=os.getenv("ALEXA_DEBUG", "false").lower() == "true",
             verbose=os.getenv("ALEXA_VERBOSE", "false").lower() == "true",
             # Chemins personnalisés
-            config_dir=Path(config_dir_str)
-            if (config_dir_str := os.getenv("ALEXA_CONFIG_DIR"))
-            else None,
-            token_file=Path(token_file_str)
-            if (token_file_str := os.getenv("ALEXA_TOKEN_FILE"))
-            else None,
+            config_dir=Path(config_dir_str) if (config_dir_str := os.getenv("ALEXA_CONFIG_DIR")) else None,
+            token_file=Path(token_file_str) if (token_file_str := os.getenv("ALEXA_TOKEN_FILE")) else None,
         )
 
     def validate(self) -> None:
@@ -119,10 +110,7 @@ class AppSettings:
         # Valider la région
         if not AmazonRegions.is_valid(self.region):
             valid_regions = ", ".join(AmazonRegions.get_all())
-            raise ValueError(
-                f"Région invalide: '{self.region}'. "
-                f"Régions valides: {valid_regions}"
-            )
+            raise ValueError(f"Région invalide: '{self.region}'. " f"Régions valides: {valid_regions}")
 
         # Valider le timeout
         if self.timeout <= 0:
@@ -130,9 +118,7 @@ class AppSettings:
 
         # Valider les retries
         if self.max_retries < 0:
-            raise ValueError(
-                f"max_retries doit être >= 0, reçu: {self.max_retries}"
-            )
+            raise ValueError(f"max_retries doit être >= 0, reçu: {self.max_retries}")
 
         # Valider le cache TTL
         if self.cache_ttl < 0:
@@ -141,10 +127,7 @@ class AppSettings:
         # Valider le log level
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if self.log_level not in valid_levels:
-            raise ValueError(
-                f"log_level invalide: '{self.log_level}'. "
-                f"Niveaux valides: {', '.join(valid_levels)}"
-            )
+            raise ValueError(f"log_level invalide: '{self.log_level}'. " f"Niveaux valides: {', '.join(valid_levels)}")
 
     def to_dict(self) -> dict[str, str | int | bool | None]:
         """

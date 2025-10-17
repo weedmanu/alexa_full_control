@@ -19,6 +19,7 @@ from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
 class CommunicationEffects:
     """Sons disponibles pour device.sound"""
+
     SOUNDS = {
         "airhorn": "amzn1.ask.skillId.airhorn",
         "knock": "amzn1.ask.skillId.knock",
@@ -247,9 +248,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 return False
 
             # Envoyer le message via VoiceCommandService
-            result = self.call_with_breaker(
-                self.voice_svc.speak_as_voice, device, message
-            )
+            result = self.call_with_breaker(self.voice_svc.speak_as_voice, device, message)
 
             if result:
                 self.success(f"✅ Message envoyé à '{device}'")
@@ -309,9 +308,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 announcement = message
 
             # Envoyer l'annonce
-            result = self.call_with_breaker(
-                self.voice_svc.speak_as_voice, device, announcement
-            )
+            result = self.call_with_breaker(self.voice_svc.speak_as_voice, device, announcement)
 
             # Restaurer volume si changé
             if old_volume is not None:
@@ -378,9 +375,7 @@ class DeviceCommunicateCommand(BaseCommand):
 
             # Jouer le son
             sound_id = CommunicationEffects.SOUNDS[effect]
-            result = self.call_with_breaker(
-                self.voice_svc.play_sound, device, sound_id
-            )
+            result = self.call_with_breaker(self.voice_svc.play_sound, device, sound_id)
 
             # Restaurer volume si changé
             if old_volume is not None:
@@ -424,9 +419,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 return False
 
             # Exécuter la commande texte
-            result = self.call_with_breaker(
-                self.voice_svc.execute_text_command, device, text
-            )
+            result = self.call_with_breaker(self.voice_svc.execute_text_command, device, text)
 
             if result:
                 self.success(f"✅ Commande exécutée sur '{device}'")

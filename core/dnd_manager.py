@@ -13,7 +13,13 @@ from .state_machine import AlexaStateMachine
 class DNDManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire thread-safe du mode Ne Pas Déranger."""
 
-    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        auth: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        api_service: Optional[Any] = None,
+    ) -> None:
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth)
 
@@ -37,7 +43,7 @@ class DNDManager(BaseManager[Dict[str, Any]]):
             return None
         try:
             # Prefer api_service if injected
-            if getattr(self, '_api_service', None) is not None:
+            if getattr(self, "_api_service", None) is not None:
                 try:
                     data = self._api_service.get("/api/dnd/status")
                 except Exception:
@@ -75,7 +81,7 @@ class DNDManager(BaseManager[Dict[str, Any]]):
                 "enabled": enabled,
             }
             # Prefer api_service
-            if getattr(self, '_api_service', None) is not None:
+            if getattr(self, "_api_service", None) is not None:
                 try:
                     result = self._api_service.put("/api/dnd/status", payload=payload)
                 except Exception:
@@ -115,7 +121,7 @@ class DNDManager(BaseManager[Dict[str, Any]]):
                 ],
             }
             # Prefer api_service
-            if getattr(self, '_api_service', None) is not None:
+            if getattr(self, "_api_service", None) is not None:
                 try:
                     result = self._api_service.put("/api/dnd/device-status-list", payload=schedule)
                 except Exception:

@@ -62,20 +62,14 @@ class TestManagerCommandTemplate:
 
     def test_manager_command_execute_success(self) -> None:
         """Test successful command execution."""
-        result = {
-            "success": True,
-            "data": {"message": "Command executed"}
-        }
+        result = {"success": True, "data": {"message": "Command executed"}}
 
         assert result["success"] is True
         assert "data" in result
 
     def test_manager_command_execute_failure(self) -> None:
         """Test command execution failure."""
-        result = {
-            "success": False,
-            "error": "Failed to execute"
-        }
+        result = {"success": False, "error": "Failed to execute"}
 
         assert result["success"] is False
         assert "error" in result
@@ -86,7 +80,7 @@ class TestManagerCommandTemplate:
             "name": "playback",
             "description": "Control playback",
             "usage": "playback <action>",
-            "actions": ["play", "pause"]
+            "actions": ["play", "pause"],
         }
 
         assert help_info["name"] == "playback"
@@ -162,22 +156,14 @@ class TestCommandValidation:
 
     def test_validate_parameters_combination(self) -> None:
         """Test validation of parameter combinations."""
-        params = {
-            "device": "ABCD",
-            "action": "play",
-            "repeat": "all"
-        }
+        params = {"device": "ABCD", "action": "play", "repeat": "all"}
 
         # All parameters valid
         assert all(v for v in params.values())
 
     def test_validation_failure_returns_error(self) -> None:
         """Test validation failure returns error."""
-        result = {
-            "success": False,
-            "error": "Invalid device serial",
-            "field": "device"
-        }
+        result = {"success": False, "error": "Invalid device serial", "field": "device"}
 
         assert result["success"] is False
         assert result["field"] == "device"
@@ -214,10 +200,7 @@ class TestCommandManagerIntegration:
         """Test command transforms manager result."""
         manager_result = {"status": "playing", "current_track": "Song"}
 
-        transformed = {
-            "success": True,
-            "data": manager_result
-        }
+        transformed = {"success": True, "data": manager_result}
 
         assert transformed["success"] is True
 
@@ -252,10 +235,7 @@ class TestCommandManagerIntegration:
     def test_command_manager_retry_logic(self) -> None:
         """Test command retry logic on transient failure."""
         manager = Mock()
-        manager.play.side_effect = [
-            Exception("Temporary error"),
-            {"status": "playing"}
-        ]
+        manager.play.side_effect = [Exception("Temporary error"), {"status": "playing"}]
 
         # Should retry and succeed
         with pytest.raises(Exception):
@@ -290,10 +270,7 @@ class TestCommandCaching:
 
     def test_command_respects_cache_ttl(self) -> None:
         """Test command respects cache TTL."""
-        cache_entry = {
-            "value": {"state": "playing"},
-            "ttl": 300  # 5 minutes
-        }
+        cache_entry = {"value": {"state": "playing"}, "ttl": 300}  # 5 minutes
 
         assert cache_entry["ttl"] > 0
 
@@ -311,6 +288,7 @@ class TestCommandAsyncSupport:
 
     def test_async_command_execution(self) -> None:
         """Test async command can be executed."""
+
         async def async_execute():
             return {"success": True}
 
@@ -337,10 +315,7 @@ class TestCommandFormatting:
 
     def test_format_list_output(self) -> None:
         """Test formatting list output."""
-        data = [
-            {"name": "Device1", "serial": "ABCD"},
-            {"name": "Device2", "serial": "EFGH"}
-        ]
+        data = [{"name": "Device1", "serial": "ABCD"}, {"name": "Device2", "serial": "EFGH"}]
 
         formatted = f"Found {len(data)} devices"
         assert "2" in formatted
@@ -353,6 +328,7 @@ class TestCommandFormatting:
     def test_format_json_output(self) -> None:
         """Test formatting JSON output."""
         import json
+
         data = {"status": "playing"}
         json_str = json.dumps(data)
 
@@ -384,20 +360,13 @@ class TestCommandDocumentation:
 
     def test_command_has_parameters_doc(self) -> None:
         """Test command documents parameters."""
-        params_doc = {
-            "device": "Device serial",
-            "action": "Action to perform"
-        }
+        params_doc = {"device": "Device serial", "action": "Action to perform"}
 
         assert len(params_doc) > 0
 
     def test_command_has_examples(self) -> None:
         """Test command has usage examples."""
-        examples = [
-            "playback play",
-            "playback pause",
-            "playback next"
-        ]
+        examples = ["playback play", "playback pause", "playback next"]
 
         assert len(examples) > 0
 
@@ -405,7 +374,7 @@ class TestCommandDocumentation:
         """Test command documents error cases."""
         errors = {
             "Device not found": "Check device serial with 'device list'",
-            "Invalid action": "Use 'playback help' for valid actions"
+            "Invalid action": "Use 'playback help' for valid actions",
         }
 
         assert len(errors) > 0

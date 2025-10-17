@@ -22,7 +22,7 @@ class TestPlaybackWorkflow:
         device_manager = Mock()
         device_manager.get_devices.return_value = [
             {"serial": "dev1", "name": "Living Room"},
-            {"serial": "dev2", "name": "Bedroom"}
+            {"serial": "dev2", "name": "Bedroom"},
         ]
 
         playback_manager = Mock()
@@ -58,11 +58,7 @@ class TestPlaybackWorkflow:
     def test_workflow_change_track_sequence(self) -> None:
         """Test workflow: play → next → next → previous."""
         manager = Mock()
-        tracks = [
-            {"title": "Song 1"},
-            {"title": "Song 2"},
-            {"title": "Song 3"}
-        ]
+        tracks = [{"title": "Song 1"}, {"title": "Song 2"}, {"title": "Song 3"}]
         current_index = 0
 
         # Play
@@ -130,9 +126,7 @@ class TestDeviceWorkflow:
         assert manager.discover()
 
         # List
-        manager.get_devices.return_value = [
-            {"serial": "dev1", "name": "Room1"}
-        ]
+        manager.get_devices.return_value = [{"serial": "dev1", "name": "Room1"}]
         devices = manager.get_devices()
         assert len(devices) > 0
 
@@ -144,7 +138,7 @@ class TestDeviceWorkflow:
             "name": "Living Room",
             "device_type": "ECHO_DOT",
             "firmware": "1.2.3",
-            "volume": 50
+            "volume": 50,
         }
 
         info = manager.get_device_info("ABCD1234")
@@ -155,10 +149,7 @@ class TestDeviceWorkflow:
         """Test workflow: select device → rename."""
         manager = Mock()
 
-        manager.rename_device.return_value = {
-            "serial": "ABCD1234",
-            "new_name": "New Room Name"
-        }
+        manager.rename_device.return_value = {"serial": "ABCD1234", "new_name": "New Room Name"}
 
         result = manager.rename_device("ABCD1234", "New Room Name")
         assert result["new_name"] == "New Room Name"
@@ -192,11 +183,7 @@ class TestAlarmWorkflow:
     def test_workflow_create_alarm(self) -> None:
         """Test workflow: create new alarm."""
         manager = Mock()
-        manager.add_alarm.return_value = {
-            "alarm_id": "alarm123",
-            "time": "07:30",
-            "enabled": True
-        }
+        manager.add_alarm.return_value = {"alarm_id": "alarm123", "time": "07:30", "enabled": True}
 
         result = manager.add_alarm("07:30")
         assert result["alarm_id"] is not None
@@ -209,7 +196,7 @@ class TestAlarmWorkflow:
             "alarm_id": "alarm124",
             "time": "07:30",
             "recurring": "weekdays",
-            "enabled": True
+            "enabled": True,
         }
 
         result = manager.add_alarm("07:30", recurring="weekdays")
@@ -218,10 +205,7 @@ class TestAlarmWorkflow:
     def test_workflow_list_alarms(self) -> None:
         """Test workflow: list all alarms."""
         manager = Mock()
-        manager.get_alarms.return_value = [
-            {"alarm_id": "a1", "time": "07:30"},
-            {"alarm_id": "a2", "time": "22:00"}
-        ]
+        manager.get_alarms.return_value = [{"alarm_id": "a1", "time": "07:30"}, {"alarm_id": "a2", "time": "22:00"}]
 
         alarms = manager.get_alarms()
         assert len(alarms) == 2
@@ -256,10 +240,7 @@ class TestMusicSearchWorkflow:
         """Test workflow: search for artist."""
         manager = Mock()
         manager.search.return_value = {
-            "results": [
-                {"title": "Artist 1", "type": "artist"},
-                {"title": "Artist 2", "type": "artist"}
-            ]
+            "results": [{"title": "Artist 1", "type": "artist"}, {"title": "Artist 2", "type": "artist"}]
         }
 
         results = manager.search("The Beatles", search_type="artist")
@@ -268,11 +249,7 @@ class TestMusicSearchWorkflow:
     def test_workflow_search_album(self) -> None:
         """Test workflow: search for album."""
         manager = Mock()
-        manager.search.return_value = {
-            "results": [
-                {"title": "Abbey Road", "type": "album"}
-            ]
-        }
+        manager.search.return_value = {"results": [{"title": "Abbey Road", "type": "album"}]}
 
         results = manager.search("Abbey Road", search_type="album")
         assert results["results"][0]["type"] == "album"
@@ -283,9 +260,7 @@ class TestMusicSearchWorkflow:
         playback_manager = Mock()
 
         # Search
-        search_manager.search.return_value = {
-            "results": [{"id": "track123", "title": "Song"}]
-        }
+        search_manager.search.return_value = {"results": [{"id": "track123", "title": "Song"}]}
         results = search_manager.search("Song")
 
         # Play
@@ -296,10 +271,7 @@ class TestMusicSearchWorkflow:
     def test_workflow_create_playlist(self) -> None:
         """Test workflow: create playlist with search results."""
         manager = Mock()
-        manager.create_playlist.return_value = {
-            "playlist_id": "pl123",
-            "name": "My Playlist"
-        }
+        manager.create_playlist.return_value = {"playlist_id": "pl123", "name": "My Playlist"}
 
         result = manager.create_playlist("My Playlist")
         assert result["playlist_id"] is not None
@@ -307,10 +279,7 @@ class TestMusicSearchWorkflow:
     def test_workflow_add_to_playlist(self) -> None:
         """Test workflow: add songs to playlist."""
         manager = Mock()
-        manager.add_to_playlist.return_value = {
-            "playlist_id": "pl123",
-            "song_count": 5
-        }
+        manager.add_to_playlist.return_value = {"playlist_id": "pl123", "song_count": 5}
 
         result = manager.add_to_playlist("pl123", "track123")
         assert result["song_count"] == 5
@@ -322,11 +291,7 @@ class TestListsWorkflow:
     def test_workflow_create_list(self) -> None:
         """Test workflow: create shopping list."""
         manager = Mock()
-        manager.create_list.return_value = {
-            "list_id": "list123",
-            "name": "Shopping",
-            "items": []
-        }
+        manager.create_list.return_value = {"list_id": "list123", "name": "Shopping", "items": []}
 
         result = manager.create_list("Shopping")
         assert result["list_id"] is not None
@@ -335,10 +300,7 @@ class TestListsWorkflow:
         """Test workflow: add items to list."""
         manager = Mock()
 
-        manager.add_item.return_value = {
-            "list_id": "list123",
-            "items": ["milk", "bread", "eggs"]
-        }
+        manager.add_item.return_value = {"list_id": "list123", "items": ["milk", "bread", "eggs"]}
 
         # Add multiple items
         for item in ["milk", "bread", "eggs"]:
@@ -369,11 +331,7 @@ class TestReminderWorkflow:
     def test_workflow_set_reminder(self) -> None:
         """Test workflow: set reminder for specific time."""
         manager = Mock()
-        manager.add_reminder.return_value = {
-            "reminder_id": "rem123",
-            "text": "Take medication",
-            "time": "09:00"
-        }
+        manager.add_reminder.return_value = {"reminder_id": "rem123", "text": "Take medication", "time": "09:00"}
 
         result = manager.add_reminder("09:00", "Take medication")
         assert result["reminder_id"] is not None
@@ -381,11 +339,7 @@ class TestReminderWorkflow:
     def test_workflow_set_recurring_reminder(self) -> None:
         """Test workflow: set recurring reminder."""
         manager = Mock()
-        manager.add_reminder.return_value = {
-            "reminder_id": "rem124",
-            "text": "Weekly meeting",
-            "recurring": "weekly"
-        }
+        manager.add_reminder.return_value = {"reminder_id": "rem124", "text": "Weekly meeting", "recurring": "weekly"}
 
         result = manager.add_reminder("10:00", "Weekly meeting", recurring="weekly")
         assert result["recurring"] == "weekly"
@@ -395,7 +349,7 @@ class TestReminderWorkflow:
         manager = Mock()
         manager.get_reminders.return_value = [
             {"reminder_id": "rem1", "text": "Task 1"},
-            {"reminder_id": "rem2", "text": "Task 2"}
+            {"reminder_id": "rem2", "text": "Task 2"},
         ]
 
         reminders = manager.get_reminders()
@@ -418,7 +372,7 @@ class TestRoutineWorkflow:
         manager = Mock()
         manager.get_routines.return_value = [
             {"routine_id": "r1", "name": "Good Morning"},
-            {"routine_id": "r2", "name": "Good Night"}
+            {"routine_id": "r2", "name": "Good Night"},
         ]
 
         routines = manager.get_routines()
@@ -435,11 +389,7 @@ class TestRoutineWorkflow:
     def test_workflow_check_routine_status(self) -> None:
         """Test workflow: check routine execution status."""
         manager = Mock()
-        manager.get_status.return_value = {
-            "routine_id": "r1",
-            "status": "executing",
-            "progress": 50
-        }
+        manager.get_status.return_value = {"routine_id": "r1", "status": "executing", "progress": 50}
 
         status = manager.get_status("r1")
         assert status["status"] == "executing"
@@ -454,18 +404,12 @@ class TestMultiDeviceWorkflow:
         device_manager = Mock()
 
         # Get all devices
-        device_manager.get_devices.return_value = [
-            {"serial": "dev1"},
-            {"serial": "dev2"},
-            {"serial": "dev3"}
-        ]
+        device_manager.get_devices.return_value = [{"serial": "dev1"}, {"serial": "dev2"}, {"serial": "dev3"}]
 
         devices = device_manager.get_devices()
 
         # Play on all
-        playback_manager.play_on_devices.return_value = {
-            "devices_played": len(devices)
-        }
+        playback_manager.play_on_devices.return_value = {"devices_played": len(devices)}
 
         result = playback_manager.play_on_devices([d["serial"] for d in devices])
         assert result["devices_played"] == 3
@@ -473,10 +417,7 @@ class TestMultiDeviceWorkflow:
     def test_workflow_group_devices(self) -> None:
         """Test workflow: group devices for multi-room."""
         manager = Mock()
-        manager.create_group.return_value = {
-            "group_id": "group1",
-            "devices": ["dev1", "dev2"]
-        }
+        manager.create_group.return_value = {"group_id": "group1", "devices": ["dev1", "dev2"]}
 
         result = manager.create_group("group1", ["dev1", "dev2"])
         assert len(result["devices"]) == 2
@@ -484,10 +425,7 @@ class TestMultiDeviceWorkflow:
     def test_workflow_play_on_group(self) -> None:
         """Test workflow: play music on device group."""
         manager = Mock()
-        manager.play_on_group.return_value = {
-            "group_id": "group1",
-            "status": "playing"
-        }
+        manager.play_on_group.return_value = {"group_id": "group1", "status": "playing"}
 
         result = manager.play_on_group("group1")
         assert result["status"] == "playing"
@@ -509,10 +447,7 @@ class TestErrorRecoveryWorkflow:
         manager = Mock()
         attempts = 0
 
-        manager.play.side_effect = [
-            Exception("Network error"),
-            {"status": "playing"}
-        ]
+        manager.play.side_effect = [Exception("Network error"), {"status": "playing"}]
 
         # Try first time - fails
         with pytest.raises(Exception):
@@ -533,11 +468,6 @@ class TestErrorRecoveryWorkflow:
 
     def test_workflow_graceful_degradation(self) -> None:
         """Test workflow: graceful degradation on partial failure."""
-        result = {
-            "partial": True,
-            "success_count": 2,
-            "failure_count": 1,
-            "message": "Completed with partial success"
-        }
+        result = {"partial": True, "success_count": 2, "failure_count": 1, "message": "Completed with partial success"}
 
         assert result["partial"] is True

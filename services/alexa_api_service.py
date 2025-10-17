@@ -8,6 +8,7 @@ Comportement minimal :
 
 Ce fichier est volontairement simple pour permettre TDD initial.
 """
+
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -15,6 +16,7 @@ try:
     from loguru import logger
 except Exception:
     import logging
+
     logger = logging.getLogger("alexa_api_service")
 
 try:
@@ -28,8 +30,10 @@ except Exception:
         def call(self, fn, *args, **kwargs):
             return fn(*args, **kwargs)
 
-from core.exceptions import APIError
+
 import contextlib
+
+from core.exceptions import APIError
 
 
 class AlexaAPIService:
@@ -54,7 +58,9 @@ class AlexaAPIService:
     ) -> None:
         self._auth = auth
         self._cache = cache
-        self._circuit_breaker = CircuitBreaker(fail_max=circuit_breaker_threshold, reset_timeout=circuit_breaker_timeout)
+        self._circuit_breaker = CircuitBreaker(
+            fail_max=circuit_breaker_threshold, reset_timeout=circuit_breaker_timeout
+        )
         # correlation id per instance/request
         self._current_correlation_id: Optional[str] = None
 
@@ -82,11 +88,13 @@ class AlexaAPIService:
             self._get_correlation_id()
             # Best-effort logging; don't fail on logging errors
             with contextlib.suppress(Exception):
-                logger.info("get_devices success", extra={"count": len(devices), "correlation_id": self._current_correlation_id})
+                logger.info(
+                    "get_devices success", extra={"count": len(devices), "correlation_id": self._current_correlation_id}
+                )
             return devices
         except Exception as e:
             # fallback
-            if use_cache_fallback and hasattr(self._cache, 'get'):
+            if use_cache_fallback and hasattr(self._cache, "get"):
                 cached = self._cache.get(cache_key, ignore_ttl=True)
                 if cached:
                     return cached.get("devices", [])
