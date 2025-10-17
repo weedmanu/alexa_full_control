@@ -711,7 +711,7 @@ class VoiceCommandService:
 
                 logger.debug(f"🔊 Device trouvé: {device_name} (serial={device_serial})")
 
-                return self.speak_as_voice.__wrapped__(self, f"Sound: {sound_id}", device_serial, device_type)
+                return self.speak_as_voice(f"Sound: {sound_id}", device_serial, device_type)
 
             except Exception as e:
                 logger.exception(f"❌ Erreur lors de la lecture du son: {e}")

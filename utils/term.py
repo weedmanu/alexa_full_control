@@ -16,7 +16,7 @@ if importlib.util.find_spec("colorama") is not None:
     # dynamic import to keep static analyzers happy only when present
     import importlib
 
-    colorama = importlib.import_module("colorama")  # type: ignore
+    colorama = importlib.import_module("colorama")
     _has_colorama_available = True
 else:
     # colorama is optional; absence simply means no ANSI emulation on Windows
@@ -85,7 +85,7 @@ class Colors:
 
             # Call init and assume success; if it raises an unexpected
             # exception it's fine to let it surface as it's an unusual state.
-            init_fn()  # type: ignore
+            init_fn()
             return True
 
         # On other OSes, assume a TTY supports colours

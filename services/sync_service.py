@@ -16,6 +16,8 @@ Auteur: M@nu
 Date: 7 octobre 2025
 """
 
+# mypy: warn-unused-ignores = false
+
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
@@ -179,7 +181,7 @@ class SyncService:
             # Récupérer depuis le cache
             cached = self.cache_service.get("smart_home_all")
             if cached and "devices" in cached:
-                return cached["devices"]
+                return cast(List[Dict[str, Any]], cached["devices"])
 
         # Charger depuis l'API
         try:
@@ -204,7 +206,7 @@ class SyncService:
         if not force and self._lazy_loaded["alarms_and_reminders"]:
             cached = self.cache_service.get("alarms_and_reminders")
             if cached and "notifications" in cached:
-                return cached["notifications"]
+                return cast(List[Dict[str, Any]], cached["notifications"])
 
         try:
             notifications = self._sync_notifications()
@@ -228,7 +230,7 @@ class SyncService:
         if not force and self._lazy_loaded["lists"]:
             cached = self.cache_service.get("lists")
             if cached and "lists" in cached:
-                return cached["lists"]
+                return cast(List[Dict[str, Any]], cached["lists"])
 
         try:
             lists = self._sync_lists()
@@ -252,7 +254,7 @@ class SyncService:
         if not force and self._lazy_loaded["routines"]:
             cached = self.cache_service.get("routines")
             if cached and "routines" in cached:
-                return cached["routines"]
+                return cast(List[Dict[str, Any]], cached["routines"])
 
         try:
             routines = self._sync_routines()
@@ -277,7 +279,7 @@ class SyncService:
         if not force and self._lazy_loaded["activities"]:
             cached = self.cache_service.get("activities")
             if cached and "activities" in cached:
-                return cached["activities"]
+                return cast(List[Dict[str, Any]], cached["activities"])
 
         try:
             activities = self._sync_activities(limit)
@@ -331,14 +333,8 @@ class SyncService:
         for category, getter in categories:
             try:
                 data: List[Dict[str, Any]]
-                if callable(getter):
-                    # getter peut être une méthode bound, on force le typage local
-                    data = getter(force=force)  # type: ignore[assignment]
-                    if data is None:
-                        data = []
-                else:
-                    logger.warning(f"Getter for {category} is not callable, skipping")
-                    data = []
+                # getter est défini comme Callable, donc toujours callable
+                data = getter(force=force)
 
                 # Mise à jour des préchargés avec types explicites
                 preloaded_raw = stats.get("preloaded", {})
@@ -373,7 +369,8 @@ class SyncService:
             )
             response.raise_for_status()
             data = response.json()
-            devices = data.get("devices", [])
+            # data est Any ; caster explicitement la liste d'appareils pour mypy
+            devices = cast(List[Dict[str, Any]], data.get("devices", []))
 
             # Sauvegarder dans cache
             self.cache_service.set("devices", {"devices": devices}, ttl_seconds=3600)  # 1h
@@ -397,7 +394,8 @@ class SyncService:
                 timeout=10,
             )
             response.raise_for_status()
-            devices = response.json()
+            # response.json() renvoie Any — caster explicitement pour mypy
+            devices = cast(List[Dict[str, Any]], response.json())
 
             # Sauvegarder UNIQUEMENT le fichier global
             # Le tri par catégorie se fera à la demande par les controllers
@@ -423,7 +421,7 @@ class SyncService:
             # Sauvegarder dans cache
             self.cache_service.set("alarms_and_reminders", {"notifications": notifications}, ttl_seconds=600)  # 10min
 
-            return notifications
+            return cast(List[Dict[str, Any]], notifications)
         except Exception as e:
             logger.error(f"Erreur récupération alarmes et rappels: {e}")
             return []
@@ -460,7 +458,7 @@ class SyncService:
             # Sauvegarder dans cache
             self.cache_service.set("routines", {"routines": routines}, ttl_seconds=3600)  # 1h
 
-            return routines
+            return cast(List[Dict[str, Any]], routines)
         except Exception as e:
             logger.error(f"Erreur récupération routines: {e}")
             return []

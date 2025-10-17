@@ -132,10 +132,9 @@ class ReminderManager:
             reminders_list = self.list_reminders()
 
             # Convert to ReminderDTO objects
-            reminder_dtos = []
+            reminder_dtos: list[ReminderDTO] = []
             for r in reminders_list:
                 try:
-                    # Map dict to ReminderDTO with camelCase aliases
                     reminder_dict = {
                         "reminderId": r.get("id") or r.get("reminderId", f"reminder_{len(reminder_dtos)}"),
                         "label": r.get("label", "Reminder"),

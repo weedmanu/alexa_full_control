@@ -206,10 +206,9 @@ class AlarmManager:
             alarms_list = self.list_alarms()
 
             # Convert to AlarmDTO objects
-            alarm_dtos = []
+            alarm_dtos: list[AlarmDTO] = []
             for a in alarms_list:
                 try:
-                    # Map dict to AlarmDTO with camelCase aliases
                     alarm_dict = {
                         "alarmId": a.get("id") or a.get("alarmId", f"alarm_{len(alarm_dtos)}"),
                         "label": a.get("label", "Alarm"),

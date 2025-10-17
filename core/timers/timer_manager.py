@@ -245,10 +245,9 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             timers_list = self.list_timers(force_refresh=force_refresh)
 
             # Convert to TimerDTO objects
-            timer_dtos = []
+            timer_dtos: list[TimerDTO] = []
             for t in timers_list:
                 try:
-                    # Map dict to TimerDTO with camelCase aliases
                     timer_dict = {
                         "timerId": t.get("id") or t.get("timerId", f"timer_{len(timer_dtos)}"),
                         "label": t.get("timerLabel", t.get("label", "Timer")),

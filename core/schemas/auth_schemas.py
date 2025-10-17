@@ -159,7 +159,7 @@ class TokenDTO(ResponseDTO):
 
     def get_expiration(self) -> Optional[datetime]:
         """Calculate absolute expiration time."""
-        if self.expires_in is None:
+        if self.expires_in is None or self.created_at is None:
             return None
         # created_at is from ResponseDTO base class
         return self.created_at + timedelta(seconds=self.expires_in)

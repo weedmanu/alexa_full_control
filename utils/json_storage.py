@@ -21,7 +21,7 @@ try:
 
     portalocker_available = True
 except ImportError:
-    portalocker = None  # type: ignore
+    portalocker = None
     portalocker_available = False
 
 

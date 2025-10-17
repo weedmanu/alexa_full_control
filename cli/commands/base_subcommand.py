@@ -82,7 +82,8 @@ class BaseSubCommand:
         devices = ctx.device_mgr.get_devices()
         for device in devices:
             if device.get("accountName") == device_name:
-                return device.get("serialNumber")
+                serial = device.get("serialNumber")
+                return str(serial) if serial is not None else None
 
         return None
 
@@ -103,7 +104,8 @@ class BaseSubCommand:
         devices = ctx.device_mgr.get_devices()
         for device in devices:
             if device.get("accountName") == device_name:
-                return device.get("deviceType", "ECHO")
+                device_type = device.get("deviceType", "ECHO")
+                return str(device_type) if device_type is not None else "ECHO"
 
         return "ECHO"
 

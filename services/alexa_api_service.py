@@ -13,7 +13,7 @@ try:
     from core.schemas.alarm_schemas import AlarmResponse
     from core.schemas.base import ResponseDTO
     from core.schemas.communication_schemas import AnnounceCommandRequest, CommunicationResponse, SpeakCommandRequest
-    from core.schemas.device_schemas import Device, GetDevicesResponse  # noqa: F401
+    from core.schemas.device_schemas import GetDevicesResponse  # noqa: F401
     from core.schemas.dnd_schemas import DNDResponse
     from core.schemas.list_schemas import ListResponse
     from core.schemas.music_schemas import MusicStatusResponse, PlayMusicResponse
@@ -155,11 +155,14 @@ class AlexaAPIService:
             Parsed DTO instance
 
         Raises:
-            ApiError: If validation fails
+            ApiError: If validation fails or schemas not available
         """
         if not HAS_SCHEMAS:
-            logger.warning("DTOs not available, returning raw data")
-            return data
+            raise ApiError(
+                status=500,
+                body={"error": "DTO schemas not available", "errorCode": "SCHEMAS_UNAVAILABLE"},
+                endpoint="parse_response",
+            )
 
         try:
             return dto_class(**data)
@@ -169,20 +172,21 @@ class AlexaAPIService:
                 status=400, body={"error": str(e), "errorCode": "VALIDATION_ERROR"}, endpoint="parse_response"
             ) from e
 
-    def get_devices(self, use_cache_fallback: bool = True) -> list[dict[str, Any]]:
+    def get_devices(self, use_cache_fallback: bool = True) -> Any:
         """Get list of devices from Alexa API.
 
         Args:
             use_cache_fallback: Whether to fall back to cache on network error
 
         Returns:
-            List of device dicts or GetDevicesResponse DTO if schemas available
+            List of device dicts or Device DTOs if schemas available
         """
         if not hasattr(self, "_auth") or self._auth is None:
             res = self.get("devices")
             if isinstance(res, dict):
-                return res.get("devices", [])
-            return res
+                devices = res.get("devices", [])
+                return devices if isinstance(devices, list) else []
+            return res if isinstance(res, list) else []
 
         cache_key = "devices_list"
         try:
@@ -247,7 +251,13 @@ class AlexaAPIService:
         except Exception as exc:
             logger.error("speak_command failed: %s", exc)
             # Return error response DTO
-            return CommunicationResponse(success=False, status="failed", error_message=str(exc))
+            if HAS_SCHEMAS:
+                return CommunicationResponse(
+                    success=False, status="failed", requestId=None, deviceSerialNumber=None, errorMessage=str(exc)
+                )
+            else:
+                # Fallback when schemas not available
+                return {"success": False, "status": "failed", "errorMessage": str(exc)}  # type: ignore
 
     def send_announce_command(
         self, device_serial: str, message: str, title: str | None = None
@@ -264,7 +274,7 @@ class AlexaAPIService:
         """
         try:
             # Create request DTO
-            request = AnnounceCommandRequest(device_serial=device_serial, message=message, title=title)
+            request = AnnounceCommandRequest(deviceSerialNumber=device_serial, message=message, title=title)
 
             # Make API call
             if not hasattr(self, "_auth") or self._auth is None:
@@ -285,7 +295,9 @@ class AlexaAPIService:
         except Exception as exc:
             logger.error("announce_command failed: %s", exc)
             # Return error response DTO
-            return CommunicationResponse(success=False, status="failed", error_message=str(exc))
+            return CommunicationResponse(
+                success=False, status="failed", requestId=None, deviceSerialNumber=None, errorMessage=str(exc)
+            )
 
     def get_music_status(self) -> MusicStatusResponse:
         """Get current music playback status.
@@ -306,7 +318,15 @@ class AlexaAPIService:
         except Exception as exc:
             logger.error("get_music_status failed: %s", exc)
             # Return default status (stopped)
-            return MusicStatusResponse(is_playing=False, volume=0)
+            return MusicStatusResponse(
+                isPlaying=False,
+                volume=0,
+                currentTrack=None,
+                progress=0,
+                duration=None,
+                queueLength=None,
+                queueIndex=None,
+            )
 
     def play_music(self, track_id: str, device_serial: str | None = None) -> PlayMusicResponse:
         """Play music track.
@@ -335,7 +355,7 @@ class AlexaAPIService:
         except Exception as exc:
             logger.error("play_music failed: %s", exc)
             # Return error response DTO
-            return PlayMusicResponse(success=False, error=str(exc))
+            return PlayMusicResponse(success=False, isPlaying=False, error=str(exc))
 
     def create_reminder(self, label: str, trigger_time: str) -> ReminderResponse:
         """Create a reminder.
@@ -358,7 +378,7 @@ class AlexaAPIService:
 
         except Exception as exc:
             logger.error("create_reminder failed: %s", exc)
-            return ReminderResponse(success=False, error=str(exc))
+            return ReminderResponse(success=False, reminderId=None, error=str(exc), errorCode=None)
 
     def set_alarm(self, device_serial: str, time: str, label: str | None = None) -> AlarmResponse:
         """Set an alarm on device.
@@ -385,7 +405,7 @@ class AlexaAPIService:
 
         except Exception as exc:
             logger.error("set_alarm failed: %s", exc)
-            return AlarmResponse(success=False, error=str(exc))
+            return AlarmResponse(success=False, alarmId=None, error=str(exc), errorCode=None)
 
     def set_dnd(self, device_serial: str, duration_minutes: int) -> DNDResponse:
         """Set Do Not Disturb on device.
@@ -408,7 +428,7 @@ class AlexaAPIService:
 
         except Exception as exc:
             logger.error("set_dnd failed: %s", exc)
-            return DNDResponse(success=False, error=str(exc))
+            return DNDResponse(success=False, dndEnabled=None, error=str(exc), errorCode=None)
 
     def execute_routine(self, routine_id: str) -> RoutineResponse:
         """Execute a routine.
@@ -429,7 +449,7 @@ class AlexaAPIService:
 
         except Exception as exc:
             logger.error("execute_routine failed: %s", exc)
-            return RoutineResponse(success=False, error=str(exc))
+            return RoutineResponse(success=False, message=None, error=str(exc), errorCode=None)
 
     def get_lists(self) -> ListResponse:
         """Get all lists.
@@ -447,7 +467,7 @@ class AlexaAPIService:
 
         except Exception as exc:
             logger.error("get_lists failed: %s", exc)
-            return ListResponse(success=False, error=str(exc))
+            return ListResponse(success=False, listId=None, error=str(exc), errorCode=None)
 
     def get_smart_home_devices(self, device_type: str | None = None) -> SmartHomeResponse:
         """Get smart home devices.
@@ -471,4 +491,4 @@ class AlexaAPIService:
 
         except Exception as exc:
             logger.error("get_smart_home_devices failed: %s", exc)
-            return SmartHomeResponse(success=False, error=str(exc))
+            return SmartHomeResponse(success=False, state=None, error=str(exc), errorCode=None)

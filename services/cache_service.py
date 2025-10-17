@@ -21,7 +21,7 @@ from utils.logger import SharedIcons
 
 # Optional inter-process locking: use portalocker when available
 try:
-    import portalocker as _portalocker  # type: ignore
+    import portalocker as _portalocker
 except Exception:
     _portalocker = None
 
