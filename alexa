@@ -287,6 +287,29 @@ def main() -> int:
                 result = adapter.execute_command(command, vars(args))
                 # result is dict from ManagerCommand.validate_and_execute
                 success = bool(result and result.get("success", False))
+                
+                # Display result if successful
+                if success:
+                    if result.get("formatted"):
+                        print(result.get("formatted"))
+                    if result.get("data"):
+                        # If JSON output requested
+                        if getattr(args, "json", False):
+                            import json
+                            print(json.dumps(result.get("data"), indent=2, ensure_ascii=False))
+                        else:
+                            # Display structured data (device list, etc)
+                            data = result.get("data")
+                            if isinstance(data, list):
+                                for item in data:
+                                    if isinstance(item, dict):
+                                        print(f"  - {item.get('accountName', 'Unknown')}")
+                            else:
+                                print(data)
+                else:
+                    # Display error message
+                    if result.get("error"):
+                        print(f"❌ Erreur: {result.get('error')}", file=sys.stderr)
             else:
                 # Legacy path
                 command = command_class(context)

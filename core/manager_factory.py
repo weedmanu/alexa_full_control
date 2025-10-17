@@ -91,7 +91,7 @@ class ManagerFactory:
                 ManagerConfig(
                     name="device_manager",
                     manager_class=DeviceManager,
-                    dependencies={"auth": "auth", "config": "config"},
+                    dependencies={"auth": "auth", "state_machine": "state_machine"},
                     optional_params={"api_service": "alexa_api_service"},
                     cache_ttl=600,
                 )
