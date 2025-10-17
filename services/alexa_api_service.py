@@ -191,24 +191,96 @@ class AlexaAPIService:
             from core.exceptions import APIError as CoreAPIError
             raise CoreAPIError(f"Failed: {exc}") from exc
     
-    def send_speak_command(self, device_serial: str, text: str) -> None:
+    def send_speak_command(self, device_serial: str, text: str) -> CommunicationResponse:
         """Send speak command to device.
         
         Args:
             device_serial: Device serial number
             text: Text to speak
+            
+        Returns:
+            CommunicationResponse with command status
         """
-        if not hasattr(self, "_auth") or self._auth is None:
-            path = self.ENDPOINTS.get("speak", "/speak")
-            self.post(path, json={"deviceSerialNumber": device_serial, "textToSpeak": text}, timeout=10)
-            return
-        
         try:
-            path = self.ENDPOINTS.get("speak", "/speak")
-            domain = getattr(self._auth, "amazon_domain", "amazon.fr")
-            url = f"https://alexa.{domain}{path}"
-            payload = {"deviceSerialNumber": device_serial, "textToSpeak": text}
-            self._auth.post(url, data=payload, timeout=10)
+            # Create request DTO
+            request = SpeakCommandRequest(
+                device_serial=device_serial,
+                text_to_speak=text
+            )
+            
+            # Make API call
+            if not hasattr(self, "_auth") or self._auth is None:
+                path = self.ENDPOINTS.get("speak", "/speak")
+                response_data = self.post(
+                    path,
+                    json=request.model_dump(by_alias=True),
+                    timeout=10
+                )
+            else:
+                path = self.ENDPOINTS.get("speak", "/speak")
+                domain = getattr(self._auth, "amazon_domain", "amazon.fr")
+                url = f"https://alexa.{domain}{path}"
+                resp = self._auth.post(url, data=request.model_dump(by_alias=True), timeout=10)
+                response_data = resp.json() if hasattr(resp, "json") else {"success": True}
+            
+            # Parse response DTO
+            if not response_data:
+                response_data = {"success": True}
+            return self._parse_dto(response_data, CommunicationResponse)
+            
         except Exception as exc:
-            from core.exceptions import APIError as CoreAPIError
-            raise CoreAPIError(f"Failed: {exc}") from exc
+            logger.error("speak_command failed: %s", exc)
+            # Return error response DTO
+            return CommunicationResponse(
+                success=False,
+                status="failed",
+                error_message=str(exc)
+            )
+    
+    def send_announce_command(self, device_serial: str, message: str, title: Optional[str] = None) -> CommunicationResponse:
+        """Send announce command to device.
+        
+        Args:
+            device_serial: Device serial number
+            message: Message to announce
+            title: Optional announcement title
+            
+        Returns:
+            CommunicationResponse with command status
+        """
+        try:
+            # Create request DTO
+            request = AnnounceCommandRequest(
+                device_serial=device_serial,
+                message=message,
+                title=title
+            )
+            
+            # Make API call
+            if not hasattr(self, "_auth") or self._auth is None:
+                path = self.ENDPOINTS.get("announce", "/announce")
+                response_data = self.post(
+                    path,
+                    json=request.model_dump(by_alias=True),
+                    timeout=10
+                )
+            else:
+                path = self.ENDPOINTS.get("announce", "/announce")
+                domain = getattr(self._auth, "amazon_domain", "amazon.fr")
+                url = f"https://alexa.{domain}{path}"
+                resp = self._auth.post(url, data=request.model_dump(by_alias=True), timeout=10)
+                response_data = resp.json() if hasattr(resp, "json") else {"success": True}
+            
+            # Parse response DTO
+            if not response_data:
+                response_data = {"success": True}
+            return self._parse_dto(response_data, CommunicationResponse)
+            
+        except Exception as exc:
+            logger.error("announce_command failed: %s", exc)
+            # Return error response DTO
+            return CommunicationResponse(
+                success=False,
+                status="failed",
+                error_message=str(exc)
+            )

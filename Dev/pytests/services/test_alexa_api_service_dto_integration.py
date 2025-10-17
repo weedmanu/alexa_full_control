@@ -45,6 +45,7 @@ class TestAlexaAPIServiceWithDTOs:
     def test_speak_command_returns_response_dto(self):
         """send_speak_command should return ResponseDTO."""
         from services.alexa_api_service import AlexaAPIService
+        from core.schemas.communication_schemas import CommunicationResponse
         
         mock_session = Mock()
         mock_response = Mock()
@@ -53,10 +54,31 @@ class TestAlexaAPIServiceWithDTOs:
         mock_session.request.return_value = mock_response
         
         service = AlexaAPIService(session=mock_session)
-        service.send_speak_command("DEVICE001", "Hello World")
+        result = service.send_speak_command("DEVICE001", "Hello World")
         
-        # Verify the request was made
+        # Verify the request was made and result is typed DTO
         assert mock_session.request.called
+        assert isinstance(result, CommunicationResponse)
+        assert result.success is True
+
+    def test_announce_command_returns_response_dto(self):
+        """send_announce_command should return ResponseDTO."""
+        from services.alexa_api_service import AlexaAPIService
+        from core.schemas.communication_schemas import CommunicationResponse
+        
+        mock_session = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {"success": True}
+        mock_response.status_code = 200
+        mock_session.request.return_value = mock_response
+        
+        service = AlexaAPIService(session=mock_session)
+        result = service.send_announce_command("DEVICE001", "Important update", title="Alert")
+        
+        # Verify the request was made and result is typed DTO
+        assert mock_session.request.called
+        assert isinstance(result, CommunicationResponse)
+        assert result.success is True
 
     def test_api_error_includes_error_code(self):
         """API errors should include error_code for better debugging."""
