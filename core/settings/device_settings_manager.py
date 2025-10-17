@@ -23,7 +23,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
     progressive vers `BaseManager`-style HTTP client.
     """
 
-    def __init__(self, auth_or_http: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
+    def __init__(self, auth_or_http: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
         # auth_or_http peut être soit l'ancien AuthClient, soit un http_client
         # compatible (ayant get/post/put/delete et attribut csrf)
         self.config = config
@@ -44,6 +44,8 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
 
         # Exposer également auth pour compatibilité code existant
         self.auth = getattr(auth_or_http, "auth", auth_or_http)
+        # Optional centralized AlexaAPIService
+        self._api_service: Optional[Any] = api_service
 
         # Appeler le constructeur parent pour initialiser les attributs de base
         super().__init__(http_client, config, state_machine)
@@ -55,10 +57,11 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
         if not self.state_machine.can_execute_commands:
             return None
         try:
-            response = self._api_call("get", r"/api/device-preferences/{device_serial}",
-                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
+            headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
+            if self._api_service is not None:
+                response = self._api_service.get(f"/api/device-preferences/{device_serial}", headers=headers, timeout=10)
+            else:
+                response = self._api_call("get", r"/api/device-preferences/{device_serial}", headers=headers, timeout=10)
             return cast(Optional[Dict[Any, Any]], response)
         except Exception as e:
             logger.error(f"Erreur récupération paramètres: {e}")
@@ -81,13 +84,23 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "wakeWord": wake_word,
             }
-            self.breaker.call(
-                self.http_client.put,
-                f"https://{self.config.alexa_domain}/api/wake-word",
-                json=payload,
-                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
+            headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
+            if self._api_service is not None:
+                self.breaker.call(
+                    self._api_service.put,
+                    "/api/wake-word",
+                    json=payload,
+                    headers=headers,
+                    timeout=10,
+                )
+            else:
+                self.breaker.call(
+                    self.http_client.put,
+                    f"https://{self.config.alexa_domain}/api/wake-word",
+                    json=payload,
+                    headers=headers,
+                    timeout=10,
+                )
             logger.success(f"Mot d'activation: {wake_word}")
             return True
         except Exception as e:
@@ -104,13 +117,23 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "timeZoneId": timezone,
             }
-            self.breaker.call(
-                self.http_client.put,
-                f"https://{self.config.alexa_domain}/api/device-preferences/time-zone",
-                json=payload,
-                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
+            headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
+            if self._api_service is not None:
+                self.breaker.call(
+                    self._api_service.put,
+                    "/api/device-preferences/time-zone",
+                    json=payload,
+                    headers=headers,
+                    timeout=10,
+                )
+            else:
+                self.breaker.call(
+                    self.http_client.put,
+                    f"https://{self.config.alexa_domain}/api/device-preferences/time-zone",
+                    json=payload,
+                    headers=headers,
+                    timeout=10,
+                )
             logger.success(f"Fuseau horaire: {timezone}")
             return True
         except Exception as e:
@@ -127,13 +150,23 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "locale": locale,
             }
-            self.breaker.call(
-                self.http_client.put,
-                f"https://{self.config.alexa_domain}/api/device-preferences/locale",
-                json=payload,
-                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
+            headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
+            if self._api_service is not None:
+                self.breaker.call(
+                    self._api_service.put,
+                    "/api/device-preferences/locale",
+                    json=payload,
+                    headers=headers,
+                    timeout=10,
+                )
+            else:
+                self.breaker.call(
+                    self.http_client.put,
+                    f"https://{self.config.alexa_domain}/api/device-preferences/locale",
+                    json=payload,
+                    headers=headers,
+                    timeout=10,
+                )
             logger.success(f"Langue: {locale}")
             return True
         except Exception as e:
@@ -182,11 +215,11 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 "status": "ENABLED",
             }
 
-            self._api_call("post", r"/api/behaviors/preview",
-                json=payload,
-                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
+            headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
+            if self._api_service is not None:
+                self._api_service.post(r"/api/behaviors/preview", json=payload, headers=headers, timeout=10)
+            else:
+                self._api_call("post", r"/api/behaviors/preview", json=payload, headers=headers, timeout=10)
             logger.success(f"Volume: {volume}%")
             return True
         except Exception as e:
@@ -199,10 +232,11 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
             return None
 
         try:
-            response = self._api_call("get", r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes",
-                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
+            headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
+            if self._api_service is not None:
+                response = self._api_service.get(r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes", headers=headers, timeout=10)
+            else:
+                response = self._api_call("get", r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes", headers=headers, timeout=10)
             data = response
 
             # Chercher le volume pour le device serial spécifié
@@ -225,10 +259,11 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
         Customer ID ou None si erreur
         """
         try:
-            response = self._api_call("get", r"/api/bootstrap?version=0",
-                headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                timeout=10,
-            )
+            headers = {"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}
+            if self._api_service is not None:
+                response = self._api_service.get(r"/api/bootstrap?version=0", headers=headers, timeout=10)
+            else:
+                response = self._api_call("get", r"/api/bootstrap?version=0", headers=headers, timeout=10)
             data = response
 
             customer_id = data.get("authentication", {}).get("customerId") if data else None

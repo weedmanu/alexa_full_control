@@ -105,9 +105,33 @@ class CommandParser:
         # Stocker la classe de commande
         self.commands[name] = command_class
 
-        # Créer une instance temporaire pour configurer le parser
-        temp_instance = command_class(context=None)
-        temp_instance.setup_parser(category_parser)
+        # Configurer le parser pour la commande:
+        # - Si la classe expose une méthode de classe `setup_parser`, l'utiliser
+        #   (cela permet d'éviter d'instancier la commande pour l'enregistrement)
+        # - Sinon, retomber sur l'instance temporaire (comportement historique)
+        setup_done = False
+        try:
+            setup = getattr(command_class, "setup_parser", None)
+            if setup and callable(setup):
+                # Si c'est une function définie sur la classe, appeler comme
+                # method de classe. Certains BaseCommand implementent
+                # setup_parser en tant que méthode d'instance; cela permettra
+                # au fallback de marcher.
+                try:
+                    # Appel en tant que méthode de classe
+                    command_class.setup_parser(category_parser)
+                    setup_done = True
+                except TypeError:
+                    # La signature n'est pas compatible en tant que classmethod
+                    setup = None
+
+        except Exception:
+            setup = None
+
+        if not setup_done:
+            # Fallback historique: instancier et appeler setup_parser
+            temp_instance = command_class(context=None)
+            temp_instance.setup_parser(category_parser)
 
         logger.debug(f"Commande '{name}' enregistrée")
 

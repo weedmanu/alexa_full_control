@@ -36,7 +36,14 @@ class DNDManager(BaseManager[Dict[str, Any]]):
         if not self._check_connection():
             return None
         try:
-            data = self._api_call("get", "/api/dnd/status", timeout=10)
+            # Prefer api_service if injected
+            if getattr(self, '_api_service', None) is not None:
+                try:
+                    data = self._api_service.get("/api/dnd/status")
+                except Exception:
+                    data = self._api_call("get", "/api/dnd/status", timeout=10)
+            else:
+                data = self._api_call("get", "/api/dnd/status", timeout=10)
             if data is None:
                 return None
 
@@ -67,7 +74,14 @@ class DNDManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "enabled": enabled,
             }
-            result = self._api_call("put", "/api/dnd/status", json=payload, timeout=10)
+            # Prefer api_service
+            if getattr(self, '_api_service', None) is not None:
+                try:
+                    result = self._api_service.put("/api/dnd/status", payload=payload)
+                except Exception:
+                    result = self._api_call("put", "/api/dnd/status", json=payload, timeout=10)
+            else:
+                result = self._api_call("put", "/api/dnd/status", json=payload, timeout=10)
             if result is not None:
                 action = "activé" if enabled else "désactivé"
                 self.logger.success(f"DND {action} pour {device_serial}")
@@ -100,7 +114,14 @@ class DNDManager(BaseManager[Dict[str, Any]]):
                     }
                 ],
             }
-            result = self._api_call("put", "/api/dnd/device-status-list", json=schedule, timeout=10)
+            # Prefer api_service
+            if getattr(self, '_api_service', None) is not None:
+                try:
+                    result = self._api_service.put("/api/dnd/device-status-list", payload=schedule)
+                except Exception:
+                    result = self._api_call("put", "/api/dnd/device-status-list", json=schedule, timeout=10)
+            else:
+                result = self._api_call("put", "/api/dnd/device-status-list", json=schedule, timeout=10)
             if result is not None:
                 self.logger.success(f"Horaire DND configuré pour {device_serial}")
                 return True

@@ -138,6 +138,19 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                     timeout=10,
                 )
 
+                # If an api_service is injected, prefer it (non-invasive)
+                if getattr(self, '_api_service', None) is not None:
+                    try:
+                        result = self._api_service.post("/api/notifications", payload=payload)
+                    except Exception:
+                        # fallback to legacy
+                        result = self._api_call(
+                            "POST",
+                            f"https://{self.config.alexa_domain}/api/notifications",
+                            json=payload,
+                            timeout=10,
+                        )
+
                 logger.success(f"Rappel créé pour {device_serial}")
 
                 # Invalider le cache
@@ -191,6 +204,18 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                     json=payload,
                     timeout=10,
                 )
+
+                # Prefer api_service if available
+                if getattr(self, '_api_service', None) is not None:
+                    try:
+                        result = self._api_service.post("/api/notifications", payload=payload)
+                    except Exception:
+                        result = self._api_call(
+                            "POST",
+                            f"https://{self.config.alexa_domain}/api/notifications",
+                            json=payload,
+                            timeout=10,
+                        )
 
                 logger.success(f"Rappel récurrent créé pour {device_serial}")
 
@@ -265,6 +290,17 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                 timeout=10,
             )
 
+            # Prefer api_service if injected
+            if getattr(self, '_api_service', None) is not None:
+                try:
+                    data = self._api_service.get("/api/notifications")
+                except Exception:
+                    data = self._api_call(
+                        "GET",
+                        f"https://{self.config.alexa_domain}/api/notifications",
+                        timeout=10,
+                    )
+
             if data is None:
                 logger.info("Aucun rappel trouvé (réponse vide)")
                 reminders = []
@@ -310,6 +346,17 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                     timeout=10,
                 )
 
+                # Use api_service if available
+                if getattr(self, '_api_service', None) is not None:
+                    try:
+                        self._api_service.delete(f"/api/notifications/{reminder_id}")
+                    except Exception:
+                        self._api_call(
+                            "DELETE",
+                            f"https://{self.config.alexa_domain}/api/notifications/{reminder_id}",
+                            timeout=10,
+                        )
+
                 logger.success(f"Rappel {reminder_id} supprimé")
 
                 # Invalider le cache
@@ -344,6 +391,18 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
                     json=payload,
                     timeout=10,
                 )
+
+                # Prefer api_service
+                if getattr(self, '_api_service', None) is not None:
+                    try:
+                        self._api_service.put(f"/api/notifications/{reminder_id}", payload=payload)
+                    except Exception:
+                        self._api_call(
+                            "PUT",
+                            f"https://{self.config.alexa_domain}/api/notifications/{reminder_id}",
+                            json=payload,
+                            timeout=10,
+                        )
 
                 logger.success(f"Rappel {reminder_id} marqué comme complété")
 

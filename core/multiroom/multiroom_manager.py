@@ -227,3 +227,11 @@ class MultiRoomManager(BasePersistenceManager):
         groups = list(self.get_all_items().values())
         groups.sort(key=lambda x: x.get("created", ""), reverse=True)
         return groups
+
+    def save_groups(self) -> bool:
+        """Sauvegarde explicitement les groupes sur le stockage JSON.
+
+        Cette méthode expose l'opération de sauvegarde pour les cas de test
+        ou d'utilisation où l'on souhaite forcer l'écriture immédiatement.
+        """
+        return self._save_data()

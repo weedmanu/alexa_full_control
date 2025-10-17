@@ -36,7 +36,12 @@ class NotificationManager(BaseManager[Dict[str, Any]]):
         if not self._check_connection():
             return []
         try:
-            data = self._api_call("get", "/api/notifications", params={"size": limit}, timeout=10)
+            # Prefer centralized AlexaAPIService if injected
+            if self._api_service is not None:
+                data = self._api_service.get("/api/notifications", params={"size": limit}, timeout=10)
+            else:
+                data = self._api_call("get", "/api/notifications", params={"size": limit}, timeout=10)
+
             if data is None:
                 return []
 
@@ -51,7 +56,11 @@ class NotificationManager(BaseManager[Dict[str, Any]]):
         if not self._check_connection():
             return False
         try:
-            result = self._api_call("delete", f"/api/notifications/{notification_id}", timeout=10)
+            if self._api_service is not None:
+                result = self._api_service.delete(f"/api/notifications/{notification_id}", timeout=10)
+            else:
+                result = self._api_call("delete", f"/api/notifications/{notification_id}", timeout=10)
+
             if result is not None:
                 self.logger.success(f"Notification {notification_id} supprimée")
                 return True
@@ -65,7 +74,10 @@ class NotificationManager(BaseManager[Dict[str, Any]]):
         if not self._check_connection():
             return False
         try:
-            result = self._api_call("put", f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10)
+            if self._api_service is not None:
+                result = self._api_service.put(f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10)
+            else:
+                result = self._api_call("put", f"/api/notifications/{notification_id}", json={"status": "READ"}, timeout=10)
             return result is not None
         except Exception as e:
             self.logger.error(f"Erreur marquage notification: {e}")
@@ -93,7 +105,11 @@ class NotificationManager(BaseManager[Dict[str, Any]]):
             if title:
                 payload["title"] = title
 
-            result = self._api_call("put", "/api/notifications/createReminder", json=payload, timeout=10)
+            if self._api_service is not None:
+                result = self._api_service.put("/api/notifications/createReminder", json=payload, timeout=10)
+            else:
+                result = self._api_call("put", "/api/notifications/createReminder", json=payload, timeout=10)
+
             if result is not None:
                 self.logger.success(f"Notification envoyée à {device_serial}")
                 return True

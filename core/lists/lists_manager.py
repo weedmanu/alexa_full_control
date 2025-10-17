@@ -20,6 +20,7 @@ class ListsManager(BaseManager[Dict[str, Any]]):
         config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         voice_service: Optional[Any] = None,
+        api_service: Optional[Any] = None,
     ) -> None:
         http_client = create_http_client_from_auth(auth)
         if state_machine is None:
@@ -31,6 +32,9 @@ class ListsManager(BaseManager[Dict[str, Any]]):
         )
         self.auth = auth
         self._voice_service = voice_service
+        # Optional centralized AlexaAPIService
+        self._api_service: Optional[Any] = api_service
+
         logger.info("ListManager initialisé (mode commandes vocales)")
 
     @property
@@ -66,12 +70,16 @@ class ListsManager(BaseManager[Dict[str, Any]]):
         for endpoint, key in endpoints:
             try:
                 logger.debug(f"🔍 Test endpoint: {endpoint}")
-                response = self._api_call(
-                    "get",
-                    endpoint,
-                    headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
-                    timeout=10,
-                )
+                # Prefer injected AlexaAPIService when available
+                if self._api_service is not None:
+                    response = self._api_service.get(endpoint, headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))}, timeout=10)
+                else:
+                    response = self._api_call(
+                        "get",
+                        endpoint,
+                        headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
+                        timeout=10,
+                    )
                 from typing import cast
 
                 data = cast(Dict[str, Any], response)

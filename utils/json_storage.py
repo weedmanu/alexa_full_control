@@ -197,17 +197,27 @@ _json_storage: Optional[JsonStorage] = None
 
 def get_json_storage(base_dir: Optional[Path] = None) -> JsonStorage:
     """
-    Factory singleton pour JsonStorage.
+    Factory pour JsonStorage.
 
-    Retourne toujours la même instance (première initialisation gagne).
+    Comportement:
+    - Si aucune instance n'existe, crée-en une pour `base_dir` (ou le défaut).
+    - Si une instance existe et `base_dir` est fourni et diffère de celle en cache,
+      réinitialise une nouvelle instance pour éviter la fuite de données entre
+      contextes (utile pour les tests qui utilisent des répertoires temporaires).
 
     Args:
-        base_dir: Répertoire de base (ignoré si déjà initialisé)
+        base_dir: Répertoire de base (optionnel)
 
     Returns:
-        Instance unique de JsonStorage
+        Instance de JsonStorage pour le répertoire demandé
     """
     global _json_storage
     if _json_storage is None:
         _json_storage = JsonStorage(base_dir)
+        return _json_storage
+
+    # Si un base_dir différent est demandé, créer une nouvelle instance.
+    if base_dir is not None and Path(base_dir) != _json_storage.base_dir:
+        _json_storage = JsonStorage(base_dir)
+
     return _json_storage

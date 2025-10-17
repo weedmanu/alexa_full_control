@@ -56,6 +56,18 @@ class ManagerCommand(ABC):
         self.di_container = di_container
         self.logger = logging.getLogger(f"{__name__}.{command_name}")
 
+    @classmethod
+    def setup_parser(cls, parser: Any) -> None:
+        """
+        Optional classmethod to configure argparse parser for this command
+
+        Default implementation does nothing. Subclasses may implement as a
+        @classmethod to allow the command to be registered without
+        instantiating it (useful during CLI parser setup).
+        """
+        # By default, nothing to configure at class level
+        return
+
     @abstractmethod
     def validate(self, params: Dict[str, Any]) -> bool:
         """

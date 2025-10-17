@@ -68,7 +68,8 @@ class CommandAdapter:
             # Attach DI container to context if available
             if command.context is None:
                 command.context = type("Context", (), {})()
-            command.context.di_container = self.di_container
+            # Use setattr to avoid static typing issues on Context
+            setattr(command.context, "di_container", self.di_container)
         else:
             # Direct injection as attribute
             command.di_container = self.di_container
@@ -119,9 +120,31 @@ class CommandAdapter:
 
             # Execute
             if isinstance(command, ManagerCommand):
-                return command.execute(args or {})
+                # ManagerCommand defines an async execute() and provides a
+                # synchronous helper validate_and_execute() which runs the
+                # coroutine in an event loop. Use that wrapper to remain
+                # compatible with sync callers.
+                try:
+                    return command.validate_and_execute(args or {})
+                except AttributeError:
+                    # Fallback: if the ManagerCommand implementation does not
+                    # provide validate_and_execute for some reason, try to
+                    # run the coroutine safely.
+                    import asyncio
+
+                    coro = command.execute(args or {})
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        loop = None
+
+                    if loop and loop.is_running():
+                        # Running event loop (rare in CLI). Schedule and wait.
+                        return asyncio.run(coro)
+                    else:
+                        return asyncio.get_event_loop().run_until_complete(coro)
             else:
-                # Old BaseCommand pattern
+                # Old BaseCommand pattern (synchronous execute)
                 return command.execute(args or {})
 
         except Exception as e:

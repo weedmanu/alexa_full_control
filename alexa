@@ -55,12 +55,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 from loguru import logger
 
 from cli import create_context, create_parser
+from cli.command_adapter import get_command_adapter
 from cli.commands import (
     ActivityCommand,
     AuthCommand,
     CacheCommand,
     CalendarCommand,
     DeviceCommand,
+    DeviceManagerCommand,
     DeviceCommunicateCommand,
     DNDCommand,
     FavoriteCommand,
@@ -71,6 +73,7 @@ from cli.commands import (
     ScenarioCommand,
     SmartHomeCommand,
     TimerCommand,
+    TimersManagerCommand,
 )
 from utils.logger import setup_loguru_logger
 
@@ -114,7 +117,7 @@ def register_all_commands(parser: Any) -> None:
     """
     # Phase 1 - Sprint 1 ✅
     parser.register_command("auth", AuthCommand)
-    parser.register_command("device", DeviceCommand)
+    parser.register_command("device", DeviceManagerCommand)
 
     # Phase 1.5 - Communication ✅ NEW
     parser.register_command("device communicate", DeviceCommunicateCommand)
@@ -130,7 +133,7 @@ def register_all_commands(parser: Any) -> None:
 
     # Phase 2 - Sprint 2 ✅
     parser.register_command("music", MusicCommand)
-    parser.register_command("timers", TimerCommand)
+    parser.register_command("timers", TimersManagerCommand)
     # alarm et reminder sont maintenant des sous-catégories de timers
 
     # Phase 3 - Sprint 3 ✅
@@ -263,11 +266,26 @@ def main() -> int:
                 print(f"❌ Erreur: Catégorie '{args.category}' non reconnue", file=sys.stderr)
             return 1
 
-        # Créer l'instance de commande avec le contexte
-        command = command_class(context)
+        # Créer / exécuter la commande
+        adapter = get_command_adapter()
 
-        # Exécuter la commande
-        success = command.execute(args)
+        # If it's a ManagerCommand, use the adapter factory to create and execute
+        try:
+            from cli.command_template import ManagerCommand
+
+            if issubclass(command_class, ManagerCommand):
+                command = adapter.create_manager_command(command_class)
+                result = adapter.execute_command(command, vars(args))
+                # result is dict from ManagerCommand.validate_and_execute
+                success = bool(result and result.get("success", False))
+            else:
+                # Legacy path
+                command = command_class(context)
+                success = command.execute(args)
+        except Exception:
+            # Fallback to legacy behavior
+            command = command_class(context)
+            success = command.execute(args)
 
         # Nettoyer le contexte
         context.cleanup()

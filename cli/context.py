@@ -45,6 +45,7 @@ from core.config import Config
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 from services.favorite_service import FavoriteService
+from core.di_container import get_di_container
 
 if TYPE_CHECKING:
     from core.multiroom.multiroom_manager import MultiRoomManager
@@ -113,6 +114,12 @@ class Context:
 
         # Services centraux
         self.cache_service = CacheService()
+
+        # DI container exposure for gradual migration
+        try:
+            self.di_container = get_di_container()
+        except Exception:
+            self.di_container = None
 
         # Auth et device manager (initialisés à None, créés au login)
         self.auth: Optional[AlexaAuth] = None

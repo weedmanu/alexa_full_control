@@ -69,6 +69,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
         config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
+        api_service: Optional[Any] = None,
     ) -> None:
         """
         Initialise le gestionnaire de routines.
@@ -93,6 +94,9 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
 
         # Attributs spécifiques à RoutineManager
         self.auth = auth
+        # Optional centralized AlexaAPIService
+        self._api_service: Optional[Any] = api_service
+
         self._routines_cache: Optional[List[Dict[str, Any]]] = None
         self._cache_timestamp: float = 0
         self._memory_cache_ttl: float = 300  # 5 minutes (distinct du cache_ttl hérité)
@@ -166,7 +170,11 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 return []
 
             # Endpoint API routines (v2 automations)
-            response_data = self._api_call("get", "/api/behaviors/v2/automations", timeout=15)
+            # Prefer injected AlexaAPIService when available
+            if self._api_service is not None:
+                response_data = self._api_service.get("/api/behaviors/v2/automations", timeout=15)
+            else:
+                response_data = self._api_call("get", "/api/behaviors/v2/automations", timeout=15)
 
             if not response_data:
                 logger.warning("API returned empty response for routines")
@@ -285,12 +293,15 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                     "status": "ENABLED",
                 }
 
-                _ = self._api_call(
-                    "post",
-                    "/api/behaviors/preview",
-                    json=payload,
-                    timeout=10,
-                )
+                if self._api_service is not None:
+                    _ = self._api_service.post("/api/behaviors/preview", json=payload, timeout=10)
+                else:
+                    _ = self._api_call(
+                        "post",
+                        "/api/behaviors/preview",
+                        json=payload,
+                        timeout=10,
+                    )
 
                 logger.success(f"Routine exécutée: {automation_id}")
                 return True
