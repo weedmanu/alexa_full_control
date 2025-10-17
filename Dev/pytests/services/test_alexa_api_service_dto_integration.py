@@ -22,6 +22,7 @@ class TestAlexaAPIServiceWithDTOs:
         # Mock the session
         mock_session = Mock()
         mock_response = Mock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {
             "devices": [
                 {

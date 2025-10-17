@@ -8,6 +8,12 @@ from pydantic import ValidationError
 # Phase 3.6: DTO imports for type-safe API responses
 try:
     from core.schemas.device_schemas import GetDevicesResponse, Device
+    from core.schemas.communication_schemas import (
+        SpeakCommandRequest,
+        AnnounceCommandRequest,
+        CommunicationResponse,
+    )
+    from core.schemas.music_schemas import MusicStatusResponse, PlayMusicResponse
     from core.schemas.base import ResponseDTO
     HAS_SCHEMAS = True
 except ImportError:
