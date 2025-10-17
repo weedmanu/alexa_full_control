@@ -18,8 +18,12 @@ class DNDManager(BaseManager[Dict[str, Any]]):
         auth: Any,
         config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
-        api_service: Optional[Any] = None,
+        api_service: Any = None,
     ) -> None:
+        # api_service is MANDATORY in Phase 2
+        if api_service is None:
+            raise ValueError("api_service is mandatory for DNDManager (Phase 2 refactoring)")
+
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth)
 
@@ -32,8 +36,8 @@ class DNDManager(BaseManager[Dict[str, Any]]):
 
         # Attributs spécifiques à DNDManager
         self.auth = auth
-        # Optional AlexaAPIService for future centralized API calls
-        self._api_service: Optional[Any] = api_service
+        # MANDATORY AlexaAPIService for Phase 2
+        self._api_service: Any = api_service
 
         logger.info("DNDManager initialisé")
 
@@ -42,14 +46,7 @@ class DNDManager(BaseManager[Dict[str, Any]]):
         if not self._check_connection():
             return None
         try:
-            # Prefer api_service if injected
-            if getattr(self, "_api_service", None) is not None:
-                try:
-                    data = self._api_service.get("/api/dnd/status")
-                except Exception:
-                    data = self._api_call("get", "/api/dnd/status", timeout=10)
-            else:
-                data = self._api_call("get", "/api/dnd/status", timeout=10)
+            data = self._api_service.get("/api/dnd/status")
             if data is None:
                 return None
 
@@ -80,14 +77,7 @@ class DNDManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "enabled": enabled,
             }
-            # Prefer api_service
-            if getattr(self, "_api_service", None) is not None:
-                try:
-                    result = self._api_service.put("/api/dnd/status", payload=payload)
-                except Exception:
-                    result = self._api_call("put", "/api/dnd/status", json=payload, timeout=10)
-            else:
-                result = self._api_call("put", "/api/dnd/status", json=payload, timeout=10)
+            result = self._api_service.put("/api/dnd/status", payload=payload)
             if result is not None:
                 action = "activé" if enabled else "désactivé"
                 self.logger.success(f"DND {action} pour {device_serial}")
@@ -120,14 +110,7 @@ class DNDManager(BaseManager[Dict[str, Any]]):
                     }
                 ],
             }
-            # Prefer api_service
-            if getattr(self, "_api_service", None) is not None:
-                try:
-                    result = self._api_service.put("/api/dnd/device-status-list", payload=schedule)
-                except Exception:
-                    result = self._api_call("put", "/api/dnd/device-status-list", json=schedule, timeout=10)
-            else:
-                result = self._api_call("put", "/api/dnd/device-status-list", json=schedule, timeout=10)
+            result = self._api_service.put("/api/dnd/device-status-list", payload=schedule)
             if result is not None:
                 self.logger.success(f"Horaire DND configuré pour {device_serial}")
                 return True
