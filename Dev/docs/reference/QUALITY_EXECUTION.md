@@ -16,15 +16,27 @@ python -m pip install --upgrade pip black isort ruff flake8 mypy pytest
 
 ## 1️⃣ BLACK
 
+### Avec `.venv`
+
 ```powershell
 .\.venv\Scripts\python.exe -m black --check cli core utils services models alexa
 .\.venv\Scripts\python.exe -m black cli core utils services models alexa
 .\.venv\Scripts\python.exe -m black --check cli core utils services models alexa
 ```
 
+### Global (Python dans PATH)
+
+```powershell
+python -m black --check cli core utils services models alexa
+python -m black cli core utils services models alexa
+python -m black --check cli core utils services models alexa
+```
+
 ---
 
 ## 2️⃣ ISORT
+
+### Avec `.venv`
 
 ```powershell
 .\.venv\Scripts\python.exe -m isort --check-only cli core utils services models alexa
@@ -32,9 +44,19 @@ python -m pip install --upgrade pip black isort ruff flake8 mypy pytest
 .\.venv\Scripts\python.exe -m isort --check-only cli core utils services models alexa
 ```
 
+### Global (Python dans PATH)
+
+```powershell
+python -m isort --check-only cli core utils services models alexa
+python -m isort cli core utils services models alexa
+python -m isort --check-only cli core utils services models alexa
+```
+
 ---
 
 ## 3️⃣ RUFF
+
+### Avec `.venv`
 
 ```powershell
 .\.venv\Scripts\python.exe -m ruff check cli core utils services models alexa
@@ -42,28 +64,60 @@ python -m pip install --upgrade pip black isort ruff flake8 mypy pytest
 .\.venv\Scripts\python.exe -m ruff check cli core utils services models alexa
 ```
 
+### Global (Python dans PATH)
+
+```powershell
+python -m ruff check cli core utils services models alexa
+python -m ruff check --fix cli core utils services models alexa
+python -m ruff check cli core utils services models alexa
+```
+
 ---
 
 ## 4️⃣ FLAKE8
 
+### Avec `.venv`
+
 ```powershell
 .\.venv\Scripts\python.exe -m flake8 cli core utils services models alexa --max-line-length=120 --ignore=E501,W293,W291
+```
+
+### Global (Python dans PATH)
+
+```powershell
+python -m flake8 cli core utils services models alexa --max-line-length=120 --ignore=E501,W293,W291
 ```
 
 ---
 
 ## 5️⃣ MYPY
 
+### Avec `.venv`
+
 ```powershell
 .\.venv\Scripts\python.exe -m mypy cli core utils services models --ignore-missing-imports
+```
+
+### Global (Python dans PATH)
+
+```powershell
+python -m mypy cli core utils services models --ignore-missing-imports
 ```
 
 ---
 
 ## 6️⃣ PYTEST
 
+### Avec `.venv`
+
 ```powershell
 .\.venv\Scripts\python.exe -m pytest Dev/pytests/ -q --tb=line
+```
+
+### Global (Python dans PATH)
+
+```powershell
+python -m pytest Dev/pytests/ -q --tb=line
 ```
 
 ---
