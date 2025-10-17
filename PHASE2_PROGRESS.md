@@ -2,9 +2,11 @@
 
 ## Overview
 
-Phase 2 started with creation of `pr/refacto-phase2-managers` branch. First manager (Timers Manager) successfully refactored and tested.
+Phase 2 started with creation of `pr/refacto-phase2-managers` branch on commit 37fb989 (Phase 1 complete).
 
-## Current Status: 1/6 Managers Complete ✅
+## Current Status: 4/6 Managers Complete (67%) ✅
+
+**Total Progress**: 81/82 Tests Passing | 4 Managers Refactored | 4 Commits
 
 ### Completed (✅)
 
@@ -36,42 +38,76 @@ Phase 2 started with creation of `pr/refacto-phase2-managers` branch. First mana
   - `82fbce3` - "feat(phase2): Refactor Timers Manager with mandatory api_service injection (17 tests passing)"
   - 2 files changed, 483 insertions, 73 deletions
 
-### Pending (5 Managers - NOT STARTED)
+#### 2. Routines Manager - COMPLETE ✅
 
-#### 2. Routines Manager
+- **Files Modified**:
 
-**File**: `core/routines/routine_manager.py`  
-**Status**: Not started  
-**Estimated Time**: 3-4 hours  
-**Pattern**: Same as Timers Manager
+  - `core/routines/routine_manager.py`
+  - `Dev/pytests/core/test_routines_manager_phase2.py` (15 tests)
 
-#### 3. Music Manager
+- **Changes Applied**:
 
-**File**: `core/music/music_manager.py`  
-**Status**: Not started  
-**Estimated Time**: 4-5 hours  
-**Pattern**: Same as Timers Manager (may have more endpoints)
+  - Made `api_service` MANDATORY
+  - Replaced 8 `_api_call()` occurrences with direct `api_service` calls
+  - Methods: `_refresh_routines()`, `execute_routine()`, `create_routine()`, `delete_routine()`, `update_routine()`, `list_actions()`, `schedule()`, `unschedule()`
 
-#### 4. Reminders Manager
+- **Test Results**: **14/15 tests PASSING** ✅ (1 non-critical cache assertion failure)
+
+- **Git Commit**:
+  - `8220e1b` - "feat(phase2): Refactor Routines Manager with mandatory api_service injection (14/15 tests passing)"
+
+#### 3. PlaybackManager - COMPLETE ✅
+
+- **Files Modified**:
+
+  - `core/music/playback_manager.py`
+  - `Dev/pytests/core/test_playback_manager_phase2.py` (31 tests)
+
+- **Changes Applied**:
+
+  - Made `api_service` MANDATORY
+  - Removed all mixed `_api_service` + fallback patterns
+  - Methods: `_send_np_command()`, `seek_to()`, `get_history()`, `get_state()`
+
+- **Test Results**: **31/31 tests PASSING** ✅
+
+- **Git Commit**:
+  - `606d857` - "feat(phase2): Refactor PlaybackManager with mandatory api_service injection (31/31 tests passing)"
+
+#### 4. TuneInManager - COMPLETE ✅
+
+- **Files Modified**:
+
+  - `core/music/tunein_manager.py`
+  - `Dev/pytests/core/test_tunein_manager_phase2.py` (19 tests)
+
+- **Changes Applied**:
+
+  - Made `api_service` MANDATORY
+  - Replaced all 5 `_api_call()` methods with direct `api_service` calls
+  - Methods: `search_stations()`, `play_station()`, `get_favorites()`, `add_favorite()`
+
+- **Test Results**: **19/19 tests PASSING** ✅
+
+- **Git Commit**:
+  - `dd9f85f` - "feat(phase2): Refactor TuneInManager with mandatory api_service injection (19/19 tests passing)"
+
+### Pending (2 Managers - NOT STARTED)
+
+#### 5. Reminders Manager
 
 **File**: `core/reminders/reminder_manager.py`  
 **Status**: Not started  
 **Estimated Time**: 3-4 hours  
-**Pattern**: Same as Timers Manager
+**Pattern**: Same as completed managers (complex cache operations)
+**Methods to Refactor**: `create_reminder()`, `create_recurring_reminder()`, `_refresh_reminders_cache()`, `delete_reminder()`, `complete_reminder()`
 
-#### 5. DND Manager
+#### 6. DND Manager
 
-**File**: `core/dnd_manager.py`  
+**File**: `core/dnd/dnd_manager.py`  
 **Status**: Not started  
 **Estimated Time**: 2-3 hours  
-**Pattern**: Same as Timers Manager
-
-#### 6. Settings Manager
-
-**File**: `core/settings/device_settings_manager.py`  
-**Status**: Not started  
-**Estimated Time**: 3-4 hours  
-**Pattern**: Same as Timers Manager
+**Pattern**: Same as completed managers
 
 ## Progress Metrics
 
