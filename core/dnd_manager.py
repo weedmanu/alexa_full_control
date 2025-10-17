@@ -13,7 +13,7 @@ from .state_machine import AlexaStateMachine
 class DNDManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire thread-safe du mode Ne Pas Déranger."""
 
-    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth)
 
@@ -26,6 +26,8 @@ class DNDManager(BaseManager[Dict[str, Any]]):
 
         # Attributs spécifiques à DNDManager
         self.auth = auth
+        # Optional AlexaAPIService for future centralized API calls
+        self._api_service: Optional[Any] = api_service
 
         logger.info("DNDManager initialisé")
 

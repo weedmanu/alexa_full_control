@@ -111,6 +111,9 @@ class JsonStorage:
             # Écriture atomique (tmp + rename)
             tmp_path = None
             try:
+                # Ensure base dir exists (race conditions or tests may remove it)
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+
                 tmp_fd, tmp_path = tempfile.mkstemp(
                     dir=self.base_dir,
                     prefix=f"{filename}.",

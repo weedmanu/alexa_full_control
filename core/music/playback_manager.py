@@ -29,7 +29,7 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
     Pas de fallback VoiceCommand - plus rapide mais moins tolérant aux erreurs.
     """
 
-    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
+    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
         http_client = create_http_client_from_auth(auth)
         if state_machine is None:
             state_machine = AlexaStateMachine()
@@ -41,6 +41,8 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
             cache_ttl=300
         )
         self.auth = auth  # Keep for backward compatibility
+        # Optional AlexaAPIService for future centralized API calls
+        self._api_service: Optional[Any] = api_service
 
         # Initialiser VoiceCommandService pour les contrôles de lecture
         from services.voice_command_service import VoiceCommandService

@@ -177,6 +177,20 @@ def setup_di_container(
     favorite_service = FavoriteService()
     container.register_singleton("FavoriteService", favorite_service)
 
+    # Register cache service used by AlexaAPIService and managers
+    from services.cache_service import CacheService
+    cache_service = CacheService()
+    container.register_singleton("cache_service", cache_service)
+
+    # Register AlexaAPIService skeleton for managers that may consume it
+    try:
+        from services.alexa_api_service import AlexaAPIService
+
+        alexa_api_service = AlexaAPIService(auth, cache_service)
+        container.register_singleton("alexa_api_service", alexa_api_service)
+    except Exception as e:
+        logger.warning(f"Could not initialize AlexaAPIService: {e}")
+
     # Register managers
     multiroom_manager = MultiRoomManager()
     container.register_singleton("MultiRoomManager", multiroom_manager)

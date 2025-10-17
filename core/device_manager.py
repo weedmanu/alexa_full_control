@@ -26,6 +26,7 @@ from services.cache_service import CacheService
 if TYPE_CHECKING:
     from alexa_auth.alexa_auth import AlexaAuth
     from core.state_machine import AlexaStateMachine
+    from services.alexa_api_service import AlexaAPIService
 
 
 class DeviceManager(BaseManager[Dict[str, Any]]):
@@ -55,6 +56,7 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         self,
         auth: "AlexaAuth",
         state_machine: "AlexaStateMachine",
+        api_service: Optional["AlexaAPIService"] = None,
         cache_ttl: int = 300,
         cache_service: Optional[CacheService] = None,
     ) -> None:
@@ -88,7 +90,9 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         )
 
         # Attributs spécifiques à DeviceManager
-        self.auth: AlexaAuth = auth
+        self.auth: "AlexaAuth" = auth
+        # Optional AlexaAPIService for centralized API calls
+        self._api_service: Optional["AlexaAPIService"] = api_service
 
         # Pré-calcul de l'URL de base pour optimisation
         self._base_url = f"https://{self.config.amazon_domain}"
@@ -168,14 +172,22 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         try:
             logger.debug("🌐 Récupération de la liste des appareils depuis l'API")
 
-            # Appel API unifié via BaseManager
-            response_data = self._api_call("get", "/api/devices-v2/device", params={"cached": "false"}, timeout=10)
+            # If an AlexaAPIService is injected, use it (preferred)
+            if getattr(self, '_api_service', None) is not None:
+                try:
+                    devices = self._api_service.get_devices()
+                except Exception:
+                    logger.exception("Erreur via AlexaAPIService lors de la récupération des appareils")
+                    return None
+            else:
+                # Appel API unifié via BaseManager (legacy)
+                response_data = self._api_call("get", "/api/devices-v2/device", params={"cached": "false"}, timeout=10)
 
-            if response_data is None:
-                logger.error("Échec de récupération des appareils (réponse None)")
-                return None
+                if response_data is None:
+                    logger.error("Échec de récupération des appareils (réponse None)")
+                    return None
 
-            devices: List[Dict[str, Any]] = response_data.get("devices", [])
+                devices: List[Dict[str, Any]] = response_data.get("devices", [])
 
             # Mise à jour cache mémoire (Niveau 1)
             self._cache = devices

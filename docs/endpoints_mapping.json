@@ -1,0 +1,2092 @@
+{
+  "files": {
+    "alexa_auth\\alexa_auth.py": [
+      {
+        "line": 18,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "from requests.adapters import HTTPAdapter"
+      },
+      {
+        "line": 31,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "session (requests.Session): Session HTTP avec cookies"
+      },
+      {
+        "line": 41,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/devices",
+        "snippet": "...     response = auth.get(\"https://alexa.amazon.fr/api/devices\")"
+      },
+      {
+        "line": 46,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "session: requests.Session"
+      },
+      {
+        "line": 68,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "self.session = requests.Session()"
+      },
+      {
+        "line": 251,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def get(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 257,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "**kwargs: Arguments additionnels pour requests.get"
+      },
+      {
+        "line": 263,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "requests.RequestException: En cas d'erreur réseau"
+      },
+      {
+        "line": 266,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/devices",
+        "snippet": ">>> response = auth.get(\"https://alexa.amazon.fr/api/devices\")"
+      },
+      {
+        "line": 275,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "resp: requests.Response = self.session.get(url, **params)"
+      },
+      {
+        "line": 279,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def post(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 285,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "**kwargs: Arguments additionnels pour requests.post"
+      },
+      {
+        "line": 291,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "requests.RequestException: En cas d'erreur réseau"
+      },
+      {
+        "line": 295,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/timers",
+        "snippet": "...     \"https://alexa.amazon.fr/api/timers\","
+      },
+      {
+        "line": 311,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "resp: requests.Response = self.session.post(url, **params)"
+      },
+      {
+        "line": 315,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def put(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 321,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "**kwargs: Arguments additionnels pour requests.put"
+      },
+      {
+        "line": 335,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "resp: requests.Response = self.session.put(url, **params)"
+      },
+      {
+        "line": 339,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def delete(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 345,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "**kwargs: Arguments additionnels pour requests.delete"
+      },
+      {
+        "line": 359,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "resp: requests.Response = self.session.delete(url, **params)"
+      }
+    ],
+    "cli\\base_command.py": [
+      {
+        "line": 383,
+        "kind": "api_path",
+        "endpoint": "/api/devices",
+        "snippet": "...     '/api/devices'"
+      }
+    ],
+    "config\\constants.py": [
+      {
+        "line": 52,
+        "kind": "api_path",
+        "endpoint": "/api/bootstrap?version=0",
+        "snippet": "BOOTSTRAP = \"/api/bootstrap?version=0\""
+      },
+      {
+        "line": 53,
+        "kind": "api_path",
+        "endpoint": "/api/language",
+        "snippet": "CSRF_LANGUAGE = \"/api/language\""
+      },
+      {
+        "line": 55,
+        "kind": "api_path",
+        "endpoint": "/api/strings",
+        "snippet": "CSRF_STRINGS = \"/api/strings\""
+      },
+      {
+        "line": 58,
+        "kind": "api_path",
+        "endpoint": "/api/devices-v2/device",
+        "snippet": "DEVICES_LIST = \"/api/devices-v2/device\""
+      },
+      {
+        "line": 59,
+        "kind": "api_path",
+        "endpoint": "/api/devices-v2/device?cached=false",
+        "snippet": "DEVICES_CACHED = \"/api/devices-v2/device?cached=false\""
+      },
+      {
+        "line": 60,
+        "kind": "api_path",
+        "endpoint": "/api/device-preferences",
+        "snippet": "DEVICE_PREFERENCES = \"/api/device-preferences\""
+      },
+      {
+        "line": 63,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/preview",
+        "snippet": "BEHAVIORS_PREVIEW = \"/api/behaviors/preview\""
+      },
+      {
+        "line": 64,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations",
+        "snippet": "BEHAVIORS_AUTOMATIONS = \"/api/behaviors/v2/automations\""
+      },
+      {
+        "line": 67,
+        "kind": "api_path",
+        "endpoint": "/api/np/player",
+        "snippet": "PLAYER_STATE = \"/api/np/player\""
+      },
+      {
+        "line": 68,
+        "kind": "api_path",
+        "endpoint": "/api/np/queue",
+        "snippet": "PLAYER_QUEUE = \"/api/np/queue\""
+      },
+      {
+        "line": 69,
+        "kind": "api_path",
+        "endpoint": "/api/media/state",
+        "snippet": "MEDIA_STATE = \"/api/media/state\""
+      },
+      {
+        "line": 70,
+        "kind": "api_path",
+        "endpoint": "/api/tunein/queue-and-play",
+        "snippet": "TUNE_IN = \"/api/tunein/queue-and-play\""
+      },
+      {
+        "line": 73,
+        "kind": "api_path",
+        "endpoint": "/api/notifications",
+        "snippet": "NOTIFICATIONS = \"/api/notifications\""
+      },
+      {
+        "line": 74,
+        "kind": "api_path",
+        "endpoint": "/api/notifications/status",
+        "snippet": "NOTIFICATIONS_STATUS = \"/api/notifications/status\""
+      },
+      {
+        "line": 77,
+        "kind": "api_path",
+        "endpoint": "/api/notifications",
+        "snippet": "ALARMS = \"/api/notifications\"  # Même endpoint que notifications"
+      },
+      {
+        "line": 78,
+        "kind": "api_path",
+        "endpoint": "/api/notifications",
+        "snippet": "TIMERS = \"/api/notifications\"  # Même endpoint que notifications"
+      },
+      {
+        "line": 81,
+        "kind": "api_path",
+        "endpoint": "/api/notifications",
+        "snippet": "REMINDERS = \"/api/notifications\"  # Même endpoint que notifications"
+      },
+      {
+        "line": 84,
+        "kind": "api_path",
+        "endpoint": "/api/namedLists",
+        "snippet": "LISTS = \"/api/namedLists\""
+      },
+      {
+        "line": 85,
+        "kind": "api_path",
+        "endpoint": "/api/namedLists/{listId}/items",
+        "snippet": "LIST_ITEMS = \"/api/namedLists/{listId}/items\""
+      },
+      {
+        "line": 88,
+        "kind": "api_path",
+        "endpoint": "/api/phoenix/state",
+        "snippet": "SMART_HOME_DEVICES = \"/api/phoenix/state\""
+      },
+      {
+        "line": 89,
+        "kind": "api_path",
+        "endpoint": "/api/phoenix/group",
+        "snippet": "SMART_HOME_GROUPS = \"/api/phoenix/group\""
+      },
+      {
+        "line": 92,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/automations",
+        "snippet": "ROUTINES = \"/api/behaviors/automations\""
+      },
+      {
+        "line": 95,
+        "kind": "api_path",
+        "endpoint": "/api/dnd/status",
+        "snippet": "DND_STATUS = \"/api/dnd/status\""
+      },
+      {
+        "line": 96,
+        "kind": "api_path",
+        "endpoint": "/api/dnd/device-status-list",
+        "snippet": "DND_DEVICE_STATUS = \"/api/dnd/device-status-list\""
+      },
+      {
+        "line": 99,
+        "kind": "api_path",
+        "endpoint": "/api/bluetooth",
+        "snippet": "BLUETOOTH_STATE = \"/api/bluetooth\""
+      },
+      {
+        "line": 100,
+        "kind": "api_path",
+        "endpoint": "/api/bluetooth/pair-sink",
+        "snippet": "BLUETOOTH_PAIR = \"/api/bluetooth/pair-sink\""
+      },
+      {
+        "line": 101,
+        "kind": "api_path",
+        "endpoint": "/api/bluetooth/disconnect-sink",
+        "snippet": "BLUETOOTH_DISCONNECT = \"/api/bluetooth/disconnect-sink\""
+      },
+      {
+        "line": 104,
+        "kind": "api_path",
+        "endpoint": "/api/activities",
+        "snippet": "ACTIVITIES = \"/api/activities\""
+      },
+      {
+        "line": 107,
+        "kind": "api_path",
+        "endpoint": "/api/calendar",
+        "snippet": "CALENDAR = \"/api/calendar\""
+      },
+      {
+        "line": 110,
+        "kind": "api_path",
+        "endpoint": "/api/conversations",
+        "snippet": "CONVERSATIONS = \"/api/conversations\""
+      },
+      {
+        "line": 111,
+        "kind": "api_path",
+        "endpoint": "/api/contacts",
+        "snippet": "CONTACTS = \"/api/contacts\""
+      },
+      {
+        "line": 122,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr",
+        "snippet": "URL de base (ex: \"https://alexa.amazon.fr\")"
+      },
+      {
+        "line": 124,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{region}",
+        "snippet": "return f\"https://alexa.{region}\""
+      },
+      {
+        "line": 135,
+        "kind": "absolute_url",
+        "endpoint": "https://www.amazon.fr",
+        "snippet": "URL de base (ex: \"https://www.amazon.fr\")"
+      },
+      {
+        "line": 137,
+        "kind": "absolute_url",
+        "endpoint": "https://www.{region}",
+        "snippet": "return f\"https://www.{region}\""
+      },
+      {
+        "line": 149,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/devices-v2/device",
+        "snippet": "URL complète (ex: \"https://alexa.amazon.fr/api/devices-v2/device\")"
+      },
+      {
+        "line": 154,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/devices-v2/device",
+        "snippet": "https://alexa.amazon.fr/api/devices-v2/device"
+      }
+    ],
+    "core\\activity_manager.py": [
+      {
+        "line": 73,
+        "kind": "absolute_url",
+        "endpoint": "https://www.{self.config.amazon_domain}/alexa-privacy/apd/rvh/customer-history-records-v2/",
+        "snippet": "privacy_url = f\"https://www.{self.config.amazon_domain}/alexa-privacy/apd/rvh/customer-history-records-v2/\""
+      },
+      {
+        "line": 280,
+        "kind": "absolute_url",
+        "endpoint": "https://www.{self.config.amazon_domain}/alexa-privacy/apd/activity?ref=activityHistory",
+        "snippet": "privacy_url = f\"https://www.{self.config.amazon_domain}/alexa-privacy/apd/activity?ref=activityHistory\""
+      }
+    ],
+    "core\\base_manager.py": [
+      {
+        "line": 34,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def get(self, url: str, **kwargs: Any) -> \"requests.Response\":"
+      },
+      {
+        "line": 35,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "return cast(\"requests.Response\", self._session.get(url, **kwargs))"
+      },
+      {
+        "line": 37,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def post(self, url: str, **kwargs: Any) -> \"requests.Response\":"
+      },
+      {
+        "line": 38,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "return cast(\"requests.Response\", self._session.post(url, **kwargs))"
+      },
+      {
+        "line": 40,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def put(self, url: str, **kwargs: Any) -> \"requests.Response\":"
+      },
+      {
+        "line": 41,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "return cast(\"requests.Response\", self._session.put(url, **kwargs))"
+      },
+      {
+        "line": 43,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def delete(self, url: str, **kwargs: Any) -> \"requests.Response\":"
+      },
+      {
+        "line": 44,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "return cast(\"requests.Response\", self._session.delete(url, **kwargs))"
+      },
+      {
+        "line": 97,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 98,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}",
+        "snippet": "\"Origin\": f\"https://alexa.{self.config.amazon_domain}\","
+      },
+      {
+        "line": 173,
+        "kind": "api_path",
+        "endpoint": "/api/alarms",
+        "snippet": "endpoint: Endpoint relatif (ex: '/api/alarms')"
+      },
+      {
+        "line": 181,
+        "kind": "api_path",
+        "endpoint": "/api/alarms",
+        "snippet": ">>> result = self._api_call('post', '/api/alarms', json=payload, timeout=10)"
+      },
+      {
+        "line": 184,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}{endpoint}",
+        "snippet": "url = f\"https://{self.config.alexa_domain}{endpoint}\""
+      },
+      {
+        "line": 216,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.RequestException as e:"
+      }
+    ],
+    "core\\circuit_breaker.py": [
+      {
+        "line": 49,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "return requests.get(\"https://api.example.com\")"
+      },
+      {
+        "line": 49,
+        "kind": "absolute_url",
+        "endpoint": "https://api.example.com",
+        "snippet": "return requests.get(\"https://api.example.com\")"
+      }
+    ],
+    "core\\config.py": [
+      {
+        "line": 231,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.alexa_domain}",
+        "snippet": "return f\"https://{self.alexa_domain}\""
+      },
+      {
+        "line": 235,
+        "kind": "absolute_url",
+        "endpoint": "https://www.{self.amazon_domain}",
+        "snippet": "return f\"https://www.{self.amazon_domain}\""
+      }
+    ],
+    "core\\device_manager.py": [
+      {
+        "line": 94,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.amazon_domain}",
+        "snippet": "self._base_url = f\"https://{self.config.amazon_domain}\""
+      },
+      {
+        "line": 172,
+        "kind": "api_path",
+        "endpoint": "/api/devices-v2/device",
+        "snippet": "response_data = self._api_call(\"get\", \"/api/devices-v2/device\", params={\"cached\": \"false\"}, timeout=10)"
+      }
+    ],
+    "core\\dnd_manager.py": [
+      {
+        "line": 37,
+        "kind": "api_path",
+        "endpoint": "/api/dnd/status",
+        "snippet": "data = self._api_call(\"get\", \"/api/dnd/status\", timeout=10)"
+      },
+      {
+        "line": 68,
+        "kind": "api_path",
+        "endpoint": "/api/dnd/status",
+        "snippet": "result = self._api_call(\"put\", \"/api/dnd/status\", json=payload, timeout=10)"
+      },
+      {
+        "line": 101,
+        "kind": "api_path",
+        "endpoint": "/api/dnd/device-status-list",
+        "snippet": "result = self._api_call(\"put\", \"/api/dnd/device-status-list\", json=schedule, timeout=10)"
+      }
+    ],
+    "core\\notification_manager.py": [
+      {
+        "line": 37,
+        "kind": "api_path",
+        "endpoint": "/api/notifications",
+        "snippet": "data = self._api_call(\"get\", \"/api/notifications\", params={\"size\": limit}, timeout=10)"
+      },
+      {
+        "line": 52,
+        "kind": "api_path",
+        "endpoint": "/api/notifications/{notification_id}",
+        "snippet": "result = self._api_call(\"delete\", f\"/api/notifications/{notification_id}\", timeout=10)"
+      },
+      {
+        "line": 66,
+        "kind": "api_path",
+        "endpoint": "/api/notifications/{notification_id}",
+        "snippet": "result = self._api_call(\"put\", f\"/api/notifications/{notification_id}\", json={\"status\": \"READ\"}, timeout=10)"
+      },
+      {
+        "line": 94,
+        "kind": "api_path",
+        "endpoint": "/api/notifications/createReminder",
+        "snippet": "result = self._api_call(\"put\", \"/api/notifications/createReminder\", json=payload, timeout=10)"
+      }
+    ],
+    "core\\types.py": [
+      {
+        "line": 14,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def get(self, url: str, **kwargs: Any) -> requests.Response: ..."
+      },
+      {
+        "line": 16,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def post(self, url: str, **kwargs: Any) -> requests.Response: ..."
+      },
+      {
+        "line": 18,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def put(self, url: str, **kwargs: Any) -> requests.Response: ..."
+      },
+      {
+        "line": 20,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def delete(self, url: str, **kwargs: Any) -> requests.Response: ..."
+      }
+    ],
+    "data\\device_family_mapping.py": [
+      {
+        "line": 5,
+        "kind": "absolute_url",
+        "endpoint": "https://github.com/alandtse/alexa_media_player/blob/master/custom_components/alexa_media/const.py",
+        "snippet": "https://github.com/alandtse/alexa_media_player/blob/master/custom_components/alexa_media/const.py"
+      }
+    ],
+    "install\\install.py": [
+      {
+        "line": 882,
+        "kind": "absolute_url",
+        "endpoint": "https://python.org",
+        "snippet": "Logger.info(\"Installez Python depuis: https://python.org\")"
+      }
+    ],
+    "services\\auth.py": [
+      {
+        "line": 18,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "- session: requests.Session déjà peuplée avec les cookies Alexa"
+      },
+      {
+        "line": 24,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "session: requests.Session"
+      }
+    ],
+    "services\\music_library.py": [
+      {
+        "line": 35,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{config.amazon_domain}/{referer_path}",
+        "snippet": "\"Referer\": f\"https://alexa.{config.amazon_domain}/{referer_path}\","
+      },
+      {
+        "line": 36,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{config.amazon_domain}",
+        "snippet": "\"Origin\": f\"https://alexa.{config.amazon_domain}\","
+      },
+      {
+        "line": 101,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/entertainment/v1/player/queue",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/entertainment/v1/player/queue\","
+      },
+      {
+        "line": 159,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/cloudplayer/queue-and-play",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/cloudplayer/queue-and-play\","
+      },
+      {
+        "line": 209,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/cloudplayer/queue-and-play",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/cloudplayer/queue-and-play\","
+      },
+      {
+        "line": 250,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-playlist-queue-and-play",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/prime/prime-playlist-queue-and-play\","
+      },
+      {
+        "line": 296,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/gotham/queue-and-play",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/gotham/queue-and-play\","
+      },
+      {
+        "line": 349,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/media/play-historical-queue",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/media/play-historical-queue\","
+      },
+      {
+        "line": 393,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/cloudplayer/playlists/{playlist_type}-V0-OBJECTID",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/cloudplayer/playlists/{playlist_type}-V0-OBJECTID\","
+      },
+      {
+        "line": 452,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-playlist-browse-nodes",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/prime/prime-playlist-browse-nodes\","
+      },
+      {
+        "line": 476,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-playlists-by-browse-node",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/prime/prime-playlists-by-browse-node\","
+      },
+      {
+        "line": 522,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-sections",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/prime/prime-sections\","
+      }
+    ],
+    "services\\sync_service.py": [
+      {
+        "line": 370,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/devices-v2/device",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/devices-v2/device\","
+      },
+      {
+        "line": 390,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome\","
+      },
+      {
+        "line": 393,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 394,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}",
+        "snippet": "\"Origin\": f\"https://alexa.{self.config.amazon_domain}\","
+      },
+      {
+        "line": 415,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/notifications",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/notifications\","
+      },
+      {
+        "line": 447,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/behaviors/v2/automations",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/behaviors/v2/automations\","
+      }
+    ],
+    "services\\voice_command_service.py": [
+      {
+        "line": 196,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/behaviors/preview",
+        "snippet": "\"https://alexa.amazon.fr/api/behaviors/preview\","
+      },
+      {
+        "line": 199,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/spa/index.html",
+        "snippet": "\"Referer\": \"https://alexa.amazon.fr/spa/index.html\","
+      },
+      {
+        "line": 200,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr",
+        "snippet": "\"Origin\": \"https://alexa.amazon.fr\","
+      },
+      {
+        "line": 316,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/behaviors/preview",
+        "snippet": "\"https://alexa.amazon.fr/api/behaviors/preview\","
+      },
+      {
+        "line": 319,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/spa/index.html",
+        "snippet": "\"Referer\": \"https://alexa.amazon.fr/spa/index.html\","
+      },
+      {
+        "line": 320,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr",
+        "snippet": "\"Origin\": \"https://alexa.amazon.fr\","
+      },
+      {
+        "line": 401,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/bootstrap?version=0",
+        "snippet": "url = f\"https://{self.config.alexa_domain}/api/bootstrap?version=0\""
+      },
+      {
+        "line": 806,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/preview",
+        "snippet": "\"/api/behaviors/preview\","
+      },
+      {
+        "line": 808,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr",
+        "snippet": "headers={\"Origin\": \"https://alexa.amazon.fr\"},"
+      }
+    ],
+    "tools\\audit_api_calls.py": [
+      {
+        "line": 11,
+        "kind": "auth_post",
+        "endpoint": null,
+        "snippet": "- occurrences de self._auth.post / self._auth.get"
+      },
+      {
+        "line": 11,
+        "kind": "auth_get",
+        "endpoint": null,
+        "snippet": "- occurrences de self._auth.post / self._auth.get"
+      },
+      {
+        "line": 12,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "- appels `requests.`"
+      },
+      {
+        "line": 33,
+        "kind": "api_path",
+        "endpoint": "/api/...",
+        "snippet": "# Match '/api/...' enclosed in single or double quotes and capture the path"
+      }
+    ],
+    "utils\\http_client.py": [
+      {
+        "line": 52,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def _check_response(self, response: requests.Response) -> None:"
+      },
+      {
+        "line": 53,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "\"\"\"Lève une requests.HTTPError si le status indique une erreur.\"\"\""
+      },
+      {
+        "line": 56,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.HTTPError as e:"
+      },
+      {
+        "line": 63,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def _handle_http_error(self, error: requests.HTTPError) -> None:"
+      },
+      {
+        "line": 64,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "\"\"\"Convertit requests.HTTPError en exceptions typées du domaine.\"\"\""
+      },
+      {
+        "line": 84,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def get(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 99,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.HTTPError as e:"
+      },
+      {
+        "line": 103,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.RequestException as e:"
+      },
+      {
+        "line": 108,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def post(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 122,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.HTTPError as e:"
+      },
+      {
+        "line": 125,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.RequestException as e:"
+      },
+      {
+        "line": 129,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def put(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 139,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.HTTPError as e:"
+      },
+      {
+        "line": 142,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.RequestException as e:"
+      },
+      {
+        "line": 146,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def delete(self, url: str, **kwargs: Any) -> requests.Response:"
+      },
+      {
+        "line": 156,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.HTTPError as e:"
+      },
+      {
+        "line": 159,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.RequestException as e:"
+      }
+    ],
+    "utils\\http_session.py": [
+      {
+        "line": 20,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "from requests.adapters import HTTPAdapter"
+      },
+      {
+        "line": 42,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/devices",
+        "snippet": ">>> response = session.get(\"https://alexa.amazon.fr/api/devices\")"
+      },
+      {
+        "line": 44,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/devices",
+        "snippet": ">>> response2 = session.get(\"https://alexa.amazon.fr/api/devices\")"
+      },
+      {
+        "line": 50,
+        "kind": "api_path",
+        "endpoint": "/api/devices-v2/device",
+        "snippet": "\"/api/devices-v2/device\": 300,  # 5 minutes"
+      },
+      {
+        "line": 51,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations",
+        "snippet": "\"/api/behaviors/v2/automations\": 600,  # 10 minutes"
+      },
+      {
+        "line": 52,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/entities",
+        "snippet": "\"/api/behaviors/entities\": 600,  # 10 minutes"
+      },
+      {
+        "line": 54,
+        "kind": "api_path",
+        "endpoint": "/api/notifications",
+        "snippet": "\"/api/notifications\": 60,  # 1 minute"
+      },
+      {
+        "line": 55,
+        "kind": "api_path",
+        "endpoint": "/api/bluetooth",
+        "snippet": "\"/api/bluetooth\": 120,  # 2 minutes"
+      },
+      {
+        "line": 56,
+        "kind": "api_path",
+        "endpoint": "/api/equalizer",
+        "snippet": "\"/api/equalizer\": 300,  # 5 minutes"
+      },
+      {
+        "line": 58,
+        "kind": "api_path",
+        "endpoint": "/api/np/player",
+        "snippet": "\"/api/np/player\": 0,  # Musique en cours"
+      },
+      {
+        "line": 59,
+        "kind": "api_path",
+        "endpoint": "/api/timers",
+        "snippet": "\"/api/timers\": 0,  # Timers actifs"
+      },
+      {
+        "line": 60,
+        "kind": "api_path",
+        "endpoint": "/api/alarms",
+        "snippet": "\"/api/alarms\": 0,  # Alarmes actives"
+      },
+      {
+        "line": 106,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "self.session = requests.Session()"
+      },
+      {
+        "line": 162,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def get(self, url: str, **kwargs) -> requests.Response:"
+      },
+      {
+        "line": 174,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.amazon.fr/api/devices",
+        "snippet": ">>> response = session.get(\"https://alexa.amazon.fr/api/devices\")"
+      },
+      {
+        "line": 198,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def post(self, url: str, **kwargs) -> requests.Response:"
+      },
+      {
+        "line": 215,
+        "kind": "api_path",
+        "endpoint": "/api/phoenix",
+        "snippet": "if \"/api/phoenix\" in url:"
+      },
+      {
+        "line": 230,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def put(self, url: str, **kwargs) -> requests.Response:"
+      },
+      {
+        "line": 240,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "def delete(self, url: str, **kwargs) -> requests.Response:"
+      }
+    ],
+    "utils\\network_discovery.py": [
+      {
+        "line": 48,
+        "kind": "api_path",
+        "endpoint": "/api/status",
+        "snippet": "\"/api/status\","
+      },
+      {
+        "line": 49,
+        "kind": "api_path",
+        "endpoint": "/api/device",
+        "snippet": "\"/api/device\","
+      },
+      {
+        "line": 50,
+        "kind": "api_path",
+        "endpoint": "/api/calendar",
+        "snippet": "\"/api/calendar\","
+      },
+      {
+        "line": 51,
+        "kind": "api_path",
+        "endpoint": "/api/events",
+        "snippet": "\"/api/events\","
+      },
+      {
+        "line": 226,
+        "kind": "absolute_url",
+        "endpoint": "http://{ip}:{port}{endpoint}",
+        "snippet": "url = f\"http://{ip}:{port}{endpoint}\""
+      },
+      {
+        "line": 229,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "response = requests.get(url, timeout=3)"
+      },
+      {
+        "line": 246,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.Timeout:"
+      },
+      {
+        "line": 248,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.ConnectionError:"
+      }
+    ],
+    "core\\alarms\\alarm_manager.py": [
+      {
+        "line": 146,
+        "kind": "api_path",
+        "endpoint": "/api/alarms",
+        "snippet": "result = self._api_call(\"post\", \"/api/alarms\", json=payload)"
+      },
+      {
+        "line": 204,
+        "kind": "api_path",
+        "endpoint": "/api/notifications",
+        "snippet": "result = self._api_call(\"get\", \"/api/notifications\")"
+      },
+      {
+        "line": 248,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/alarms/{alarm_id}\","
+      },
+      {
+        "line": 251,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 265,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.RequestException as e:"
+      },
+      {
+        "line": 297,
+        "kind": "api_path",
+        "endpoint": "/api/alarms/{alarm_id}",
+        "snippet": "result = self._api_call(\"put\", f\"/api/alarms/{alarm_id}\", json=payload)"
+      },
+      {
+        "line": 316,
+        "kind": "api_path",
+        "endpoint": "/api/alarms/{alarm_id}",
+        "snippet": "result = self._api_call(\"put\", f\"/api/alarms/{alarm_id}\", json=payload)"
+      }
+    ],
+    "core\\audio\\bluetooth_manager.py": [
+      {
+        "line": 35,
+        "kind": "api_path",
+        "endpoint": "/api/bluetooth",
+        "snippet": "response = self._api_call(\"get\", r\"/api/bluetooth\","
+      },
+      {
+        "line": 55,
+        "kind": "api_path",
+        "endpoint": "/api/bluetooth/pair-sink/{device_type}/{device_serial}",
+        "snippet": "self._api_call(\"post\", r\"/api/bluetooth/pair-sink/{device_type}/{device_serial}\","
+      },
+      {
+        "line": 71,
+        "kind": "api_path",
+        "endpoint": "/api/bluetooth/disconnect-sink/{device_type}/{device_serial}",
+        "snippet": "self._api_call(\"post\", r\"/api/bluetooth/disconnect-sink/{device_type}/{device_serial}\","
+      }
+    ],
+    "core\\audio\\equalizer_manager.py": [
+      {
+        "line": 39,
+        "kind": "api_path",
+        "endpoint": "/api/equalizer/{device_serial}/{device_type}",
+        "snippet": "response = self._api_call(\"get\", r\"/api/equalizer/{device_serial}/{device_type}\","
+      },
+      {
+        "line": 61,
+        "kind": "api_path",
+        "endpoint": "/api/equalizer/{device_serial}/{device_type}",
+        "snippet": "self._api_call(\"post\", r\"/api/equalizer/{device_serial}/{device_type}\","
+      }
+    ],
+    "core\\calendar\\calendar_manager.py": [
+      {
+        "line": 120,
+        "kind": "api_path",
+        "endpoint": "/api/calendar/events",
+        "snippet": "(\"/api/calendar/events\", \"GET\"),"
+      },
+      {
+        "line": 121,
+        "kind": "api_path",
+        "endpoint": "/api/calendar-events",
+        "snippet": "(\"/api/calendar-events\", \"GET\"),"
+      },
+      {
+        "line": 122,
+        "kind": "api_path",
+        "endpoint": "/api/namedLists?listType=CALENDAR",
+        "snippet": "(\"/api/namedLists?listType=CALENDAR\", \"GET\"),"
+      },
+      {
+        "line": 127,
+        "kind": "absolute_url",
+        "endpoint": "https://www.{self.config.amazon_domain}{endpoint}",
+        "snippet": "url = f\"https://www.{self.config.amazon_domain}{endpoint}\""
+      }
+    ],
+    "core\\lists\\lists_manager.py": [
+      {
+        "line": 61,
+        "kind": "api_path",
+        "endpoint": "/api/namedLists",
+        "snippet": "(\"/api/namedLists\", \"lists\"),"
+      },
+      {
+        "line": 62,
+        "kind": "api_path",
+        "endpoint": "/api/todos",
+        "snippet": "(\"/api/todos\", \"values\"),  # Retourne {\"values\": [...]}"
+      },
+      {
+        "line": 63,
+        "kind": "api_path",
+        "endpoint": "/api/household/lists",
+        "snippet": "(\"/api/household/lists\", \"lists\"),"
+      }
+    ],
+    "core\\music\\playback_manager.py": [
+      {
+        "line": 57,
+        "kind": "api_path",
+        "endpoint": "/api/np/command",
+        "snippet": "\"/api/np/command\","
+      },
+      {
+        "line": 170,
+        "kind": "api_path",
+        "endpoint": "/api/np/command",
+        "snippet": "\"/api/np/command\","
+      },
+      {
+        "line": 188,
+        "kind": "api_path",
+        "endpoint": "/api/media/history",
+        "snippet": "\"/api/media/history\","
+      },
+      {
+        "line": 249,
+        "kind": "api_path",
+        "endpoint": "/api/np/player",
+        "snippet": "\"/api/np/player\","
+      },
+      {
+        "line": 259,
+        "kind": "api_path",
+        "endpoint": "/api/media/state",
+        "snippet": "\"/api/media/state\","
+      },
+      {
+        "line": 268,
+        "kind": "api_path",
+        "endpoint": "/api/np/queue",
+        "snippet": "\"/api/np/queue\","
+      }
+    ],
+    "core\\music\\tunein_manager.py": [
+      {
+        "line": 41,
+        "kind": "api_path",
+        "endpoint": "/api/tunein/search",
+        "snippet": "\"/api/tunein/search\","
+      },
+      {
+        "line": 67,
+        "kind": "api_path",
+        "endpoint": "/api/tunein/queue-and-play",
+        "snippet": "\"/api/tunein/queue-and-play\","
+      },
+      {
+        "line": 85,
+        "kind": "api_path",
+        "endpoint": "/api/tunein/favorites",
+        "snippet": "\"/api/tunein/favorites\","
+      },
+      {
+        "line": 103,
+        "kind": "api_path",
+        "endpoint": "/api/tunein/favorites",
+        "snippet": "\"/api/tunein/favorites\","
+      }
+    ],
+    "core\\reminders\\reminder_manager.py": [
+      {
+        "line": 133,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/notifications",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/notifications\","
+      },
+      {
+        "line": 187,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/notifications",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/notifications\","
+      },
+      {
+        "line": 261,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/notifications",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/notifications\","
+      },
+      {
+        "line": 306,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/notifications/{reminder_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/notifications/{reminder_id}\","
+      },
+      {
+        "line": 340,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/notifications/{reminder_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/notifications/{reminder_id}\","
+      }
+    ],
+    "core\\routines\\routine_manager.py": [
+      {
+        "line": 169,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations",
+        "snippet": "response_data = self._api_call(\"get\", \"/api/behaviors/v2/automations\", timeout=15)"
+      },
+      {
+        "line": 290,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/preview",
+        "snippet": "\"/api/behaviors/preview\","
+      },
+      {
+        "line": 418,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations",
+        "snippet": "\"/api/behaviors/v2/automations\","
+      },
+      {
+        "line": 461,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations/{routine_id}",
+        "snippet": "f\"/api/behaviors/v2/automations/{routine_id}\","
+      },
+      {
+        "line": 520,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations/{routine_id}",
+        "snippet": "f\"/api/behaviors/v2/automations/{routine_id}\","
+      },
+      {
+        "line": 558,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/actions",
+        "snippet": "\"/api/behaviors/v2/actions\","
+      },
+      {
+        "line": 655,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations/{routine_id}/schedule",
+        "snippet": "f\"/api/behaviors/v2/automations/{routine_id}/schedule\","
+      },
+      {
+        "line": 688,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/v2/automations/{routine_id}/schedule",
+        "snippet": "f\"/api/behaviors/v2/automations/{routine_id}/schedule\","
+      }
+    ],
+    "core\\security\\secure_headers.py": [
+      {
+        "line": 65,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://{self.config.alexa_domain}/spa/index.html\","
+      },
+      {
+        "line": 66,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}",
+        "snippet": "\"Origin\": f\"https://{self.config.alexa_domain}\","
+      }
+    ],
+    "core\\settings\\device_settings_manager.py": [
+      {
+        "line": 58,
+        "kind": "api_path",
+        "endpoint": "/api/device-preferences/{device_serial}",
+        "snippet": "response = self._api_call(\"get\", r\"/api/device-preferences/{device_serial}\","
+      },
+      {
+        "line": 86,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/wake-word",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/wake-word\","
+      },
+      {
+        "line": 109,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/device-preferences/time-zone",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/device-preferences/time-zone\","
+      },
+      {
+        "line": 132,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/device-preferences/locale",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/device-preferences/locale\","
+      },
+      {
+        "line": 185,
+        "kind": "api_path",
+        "endpoint": "/api/behaviors/preview",
+        "snippet": "self._api_call(\"post\", r\"/api/behaviors/preview\","
+      },
+      {
+        "line": 202,
+        "kind": "api_path",
+        "endpoint": "/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes",
+        "snippet": "response = self._api_call(\"get\", r\"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes\","
+      },
+      {
+        "line": 228,
+        "kind": "api_path",
+        "endpoint": "/api/bootstrap?version=0",
+        "snippet": "response = self._api_call(\"get\", r\"/api/bootstrap?version=0\","
+      }
+    ],
+    "core\\smart_home\\device_controller.py": [
+      {
+        "line": 148,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 183,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 203,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix/state/{entity_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix/state/{entity_id}\","
+      }
+    ],
+    "core\\smart_home\\light_controller.py": [
+      {
+        "line": 102,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 140,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 175,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 225,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 288,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome\","
+      },
+      {
+        "line": 291,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 292,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}",
+        "snippet": "\"Origin\": f\"https://alexa.{self.config.amazon_domain}\","
+      },
+      {
+        "line": 429,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix/state",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix/state\","
+      }
+    ],
+    "core\\smart_home\\thermostat_controller.py": [
+      {
+        "line": 90,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 129,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      },
+      {
+        "line": 161,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/phoenix\","
+      }
+    ],
+    "core\\timers\\alarm_manager.py": [
+      {
+        "line": 114,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/alarms",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/alarms\","
+      },
+      {
+        "line": 117,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 118,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}",
+        "snippet": "\"Origin\": f\"https://alexa.{self.config.amazon_domain}\","
+      },
+      {
+        "line": 130,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.RequestException as e:"
+      },
+      {
+        "line": 156,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/alarms",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/alarms\","
+      },
+      {
+        "line": 159,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 175,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.RequestException as e:"
+      },
+      {
+        "line": 199,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/alarms/{alarm_id}\","
+      },
+      {
+        "line": 202,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 212,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.RequestException as e:"
+      },
+      {
+        "line": 279,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/alarms/{alarm_id}\","
+      },
+      {
+        "line": 282,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 293,
+        "kind": "requests",
+        "endpoint": null,
+        "snippet": "except requests.exceptions.RequestException as e:"
+      }
+    ],
+    "core\\timers\\reminder_manager.py": [
+      {
+        "line": 68,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/reminders",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/reminders\","
+      },
+      {
+        "line": 71,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 92,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/reminders",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/reminders\","
+      },
+      {
+        "line": 95,
+        "kind": "absolute_url",
+        "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+        "snippet": "\"Referer\": f\"https://alexa.{self.config.amazon_domain}/spa/index.html\","
+      },
+      {
+        "line": 114,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/reminders/{reminder_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/reminders/{reminder_id}\","
+      }
+    ],
+    "core\\timers\\timer_manager.py": [
+      {
+        "line": 139,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/timers",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/timers\","
+      },
+      {
+        "line": 215,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/notifications",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/notifications\","
+      },
+      {
+        "line": 300,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/timers/{timer_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/timers/{timer_id}\","
+      },
+      {
+        "line": 330,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/timers/{timer_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/timers/{timer_id}\","
+      },
+      {
+        "line": 361,
+        "kind": "absolute_url",
+        "endpoint": "https://{self.config.alexa_domain}/api/timers/{timer_id}",
+        "snippet": "f\"https://{self.config.alexa_domain}/api/timers/{timer_id}\","
+      }
+    ],
+    "cli\\commands\\lists.py": [
+      {
+        "line": 408,
+        "kind": "absolute_url",
+        "endpoint": "https://www.amazon.fr/alexa-privacy/apd/activity?ref=activityHistory",
+        "snippet": "url = \"https://www.amazon.fr/alexa-privacy/apd/activity?ref=activityHistory\""
+      }
+    ]
+  },
+  "endpoints_count": [
+    {
+      "endpoint": "https://alexa.{self.config.amazon_domain}/spa/index.html",
+      "count": 10
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/phoenix",
+      "count": 9
+    },
+    {
+      "endpoint": "/api/notifications",
+      "count": 7
+    },
+    {
+      "endpoint": "https://alexa.amazon.fr/api/devices",
+      "count": 5
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/notifications",
+      "count": 5
+    },
+    {
+      "endpoint": "/api/behaviors/preview",
+      "count": 4
+    },
+    {
+      "endpoint": "/api/behaviors/v2/automations",
+      "count": 4
+    },
+    {
+      "endpoint": "https://alexa.amazon.fr",
+      "count": 4
+    },
+    {
+      "endpoint": "https://alexa.{self.config.amazon_domain}",
+      "count": 4
+    },
+    {
+      "endpoint": "/api/alarms",
+      "count": 4
+    },
+    {
+      "endpoint": "/api/devices-v2/device",
+      "count": 3
+    },
+    {
+      "endpoint": "/api/np/player",
+      "count": 3
+    },
+    {
+      "endpoint": "/api/dnd/status",
+      "count": 3
+    },
+    {
+      "endpoint": "/api/bluetooth",
+      "count": 3
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/alarms/{alarm_id}",
+      "count": 3
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/timers/{timer_id}",
+      "count": 3
+    },
+    {
+      "endpoint": "/api/bootstrap?version=0",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/np/queue",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/media/state",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/tunein/queue-and-play",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/namedLists",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/dnd/device-status-list",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/calendar",
+      "count": 2
+    },
+    {
+      "endpoint": "https://alexa.amazon.fr/api/devices-v2/device",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/notifications/{notification_id}",
+      "count": 2
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/cloudplayer/queue-and-play",
+      "count": 2
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome",
+      "count": 2
+    },
+    {
+      "endpoint": "https://alexa.amazon.fr/api/behaviors/preview",
+      "count": 2
+    },
+    {
+      "endpoint": "https://alexa.amazon.fr/spa/index.html",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/alarms/{alarm_id}",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/equalizer/{device_serial}/{device_type}",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/np/command",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/tunein/favorites",
+      "count": 2
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/notifications/{reminder_id}",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/behaviors/v2/automations/{routine_id}",
+      "count": 2
+    },
+    {
+      "endpoint": "/api/behaviors/v2/automations/{routine_id}/schedule",
+      "count": 2
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/alarms",
+      "count": 2
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/reminders",
+      "count": 2
+    },
+    {
+      "endpoint": "https://alexa.amazon.fr/api/timers",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/devices",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/language",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/strings",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/devices-v2/device?cached=false",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/device-preferences",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/notifications/status",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/namedLists/{listId}/items",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/phoenix/state",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/phoenix/group",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/behaviors/automations",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/bluetooth/pair-sink",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/bluetooth/disconnect-sink",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/activities",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/conversations",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/contacts",
+      "count": 1
+    },
+    {
+      "endpoint": "https://alexa.{region}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://www.amazon.fr",
+      "count": 1
+    },
+    {
+      "endpoint": "https://www.{region}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://www.{self.config.amazon_domain}/alexa-privacy/apd/rvh/customer-history-records-v2/",
+      "count": 1
+    },
+    {
+      "endpoint": "https://www.{self.config.amazon_domain}/alexa-privacy/apd/activity?ref=activityHistory",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}{endpoint}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://api.example.com",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.alexa_domain}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://www.{self.amazon_domain}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.amazon_domain}",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/notifications/createReminder",
+      "count": 1
+    },
+    {
+      "endpoint": "https://github.com/alandtse/alexa_media_player/blob/master/custom_components/alexa_media/const.py",
+      "count": 1
+    },
+    {
+      "endpoint": "https://python.org",
+      "count": 1
+    },
+    {
+      "endpoint": "https://alexa.{config.amazon_domain}/{referer_path}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://alexa.{config.amazon_domain}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/entertainment/v1/player/queue",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-playlist-queue-and-play",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/gotham/queue-and-play",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/media/play-historical-queue",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/cloudplayer/playlists/{playlist_type}-V0-OBJECTID",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-playlist-browse-nodes",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-playlists-by-browse-node",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/prime/prime-sections",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/devices-v2/device",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/behaviors/v2/automations",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/bootstrap?version=0",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/...",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/behaviors/entities",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/equalizer",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/timers",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/phoenix",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/status",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/device",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/events",
+      "count": 1
+    },
+    {
+      "endpoint": "http://{ip}:{port}{endpoint}",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/bluetooth/pair-sink/{device_type}/{device_serial}",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/bluetooth/disconnect-sink/{device_type}/{device_serial}",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/calendar/events",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/calendar-events",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/namedLists?listType=CALENDAR",
+      "count": 1
+    },
+    {
+      "endpoint": "https://www.{self.config.amazon_domain}{endpoint}",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/todos",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/household/lists",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/media/history",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/tunein/search",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/behaviors/v2/actions",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/spa/index.html",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/device-preferences/{device_serial}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/wake-word",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/device-preferences/time-zone",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/device-preferences/locale",
+      "count": 1
+    },
+    {
+      "endpoint": "/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/phoenix/state/{entity_id}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/phoenix/state",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/reminders/{reminder_id}",
+      "count": 1
+    },
+    {
+      "endpoint": "https://{self.config.alexa_domain}/api/timers",
+      "count": 1
+    },
+    {
+      "endpoint": "https://www.amazon.fr/alexa-privacy/apd/activity?ref=activityHistory",
+      "count": 1
+    }
+  ]
+}

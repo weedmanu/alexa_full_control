@@ -36,6 +36,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
         config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
+        api_service: Optional[Any] = None,
     ) -> None:
         """
         Initialise le gestionnaire de rappels.
@@ -60,6 +61,8 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
         )
 
         self.auth = auth
+        # Optional AlexaAPIService for future centralized API calls
+        self._api_service: Optional[Any] = api_service
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
 
         # compatibility memory cache attrs
