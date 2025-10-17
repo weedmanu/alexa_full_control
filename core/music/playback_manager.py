@@ -21,6 +21,13 @@ from loguru import logger
 from core.base_manager import BaseManager, create_http_client_from_auth
 from core.state_machine import AlexaStateMachine
 
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.music_schemas import MusicStatusResponse, QueueResponse
+    HAS_MUSIC_PLAYBACK_DTO = True
+except ImportError:
+    HAS_MUSIC_PLAYBACK_DTO = False
+
 
 class PlaybackManager(BaseManager[Dict[str, Any]]):
     """Gestionnaire de lecture musicale - API directe uniquement.
@@ -189,6 +196,45 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
             except Exception as e:
                 logger.error(f"Erreur historique: {e}")
                 return []
+
+    def get_music_status_typed(self, device_serial: str, device_type: str) -> Optional["MusicStatusResponse"]:
+        """
+        Phase 3.7: Typed DTO version of get_state returning MusicStatusResponse.
+        
+        Returns music status as MusicStatusResponse DTO with full type safety.
+        Falls back gracefully if DTOs not available.
+        
+        Args:
+            device_serial: Device serial number
+            device_type: Device type
+            
+        Returns:
+            MusicStatusResponse DTO or None if DTOs unavailable
+        """
+        if not HAS_MUSIC_PLAYBACK_DTO:
+            logger.debug("DTO not available, falling back to legacy path")
+            return None
+        
+        try:
+            # Get state as dict
+            state_dict = self.get_state(device_serial, device_type)
+            if not state_dict:
+                return None
+            
+            # Try to build MusicStatusResponse from player data
+            player_data = state_dict.get("player", {})
+            return MusicStatusResponse(
+                isPlaying=player_data.get("isPlaying", False),
+                volume=player_data.get("volume", 0),
+                currentTrack=None,  # Optional field
+                progress=player_data.get("progress", 0),
+                duration=player_data.get("duration"),
+                queueLength=player_data.get("queueLength"),
+                queueIndex=player_data.get("queueIndex")
+            )
+        except Exception as e:
+            logger.error(f"Error in get_music_status_typed: {e}")
+            return None
 
     def play_artist(self, device_serial: str, artist_name: str) -> bool:
         """Joue de la musique d'un artiste spécifique."""

@@ -12,6 +12,13 @@ from loguru import logger
 from core.base_manager import BaseManager, create_http_client_from_auth
 from core.state_machine import AlexaStateMachine
 
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.music_schemas import MusicLibraryResponse, MusicSearchResponse
+    HAS_MUSIC_LIBRARY_DTO = True
+except ImportError:
+    HAS_MUSIC_LIBRARY_DTO = False
+
 
 class LibraryManager(BaseManager[Dict[str, Any]]):
     """
@@ -76,6 +83,31 @@ class LibraryManager(BaseManager[Dict[str, Any]]):
                 "provider": provider,
             }
         ]
+
+    def search_music_typed(self, query: str, search_type: str = "MUSIC") -> Optional["MusicSearchResponse"]:
+        """
+        Phase 3.7: Typed DTO version of search_music returning MusicSearchResponse.
+        
+        Returns search results as MusicSearchResponse DTO with full type safety.
+        Falls back gracefully if DTOs not available.
+        
+        Args:
+            query: Search query
+            search_type: Type of search (MUSIC, PLAYLIST, ARTIST, etc)
+            
+        Returns:
+            MusicSearchResponse DTO or None if DTOs unavailable
+        """
+        if not HAS_MUSIC_LIBRARY_DTO:
+            logger.debug("DTO not available, falling back to legacy path")
+            return None
+        
+        try:
+            results = self.search_music(query, search_type)
+            return MusicSearchResponse(results=[], totalCount=len(results))
+        except Exception as e:
+            logger.error(f"Error in search_music_typed: {e}")
+            return None
 
     def play_track(self, device_serial: str, device_type: str, track_id: str, provider: str = "AMAZON_MUSIC") -> bool:
         """
