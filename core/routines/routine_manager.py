@@ -66,44 +66,57 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
     def __init__(
         self,
         auth: Any,
-        config: Any,
-        state_machine: Optional[AlexaStateMachine] = None,
+        state_machine: AlexaStateMachine,
+        api_service: Any,
         cache_service: Optional[CacheService] = None,
-        api_service: Optional[Any] = None,
+        cache_ttl: int = 300,
     ) -> None:
         """
-        Initialise le gestionnaire de routines.
+        Initialise le gestionnaire de routines avec injection obligatoire.
 
         Args:
             auth: Instance AlexaAuth pour authentification
-            config: Configuration système (alexa_domain, etc.)
-            state_machine: Machine d'état système (défaut: nouvelle instance)
-            cache_service: Service cache (défaut: nouvelle instance)
+            state_machine: Machine à états pour gestion d'état
+            api_service: Service API centralisé (MANDATORY, jamais None)
+            cache_service: Service cache optionnel (créé si None)
+            cache_ttl: Durée de vie du cache en secondes (défaut: 300)
+
+        Raises:
+            ValueError: Si api_service est None (injection obligatoire)
         """
+        if api_service is None:
+            raise ValueError("api_service is mandatory and cannot be None")
+
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth)
 
-        # Initialiser BaseManager (hérite: breaker, _lock, cache_service, _api_call, headers)
+        # Phase 2: Create minimal config for BaseManager (only needs amazon_domain)
+        class _MinimalConfig:
+            amazon_domain = "amazon.com"
+        
+        minimal_config = _MinimalConfig()
+
+        # Initialiser BaseManager (hérite: breaker, _lock, cache_service, headers)
         super().__init__(
             http_client=http_client,
-            config=config,
-            state_machine=state_machine or AlexaStateMachine(),
+            config=minimal_config,  # Minimal config just for BaseManager initialization
+            state_machine=state_machine,
             cache_service=cache_service,
-            cache_ttl=300,  # 5 minutes mémoire
+            cache_ttl=cache_ttl,
         )
 
         # Attributs spécifiques à RoutineManager
         self.auth = auth
-        # Optional centralized AlexaAPIService
-        self._api_service: Optional[Any] = api_service
+        # Phase 2: Mandatory API Service (no fallback)
+        self._api_service = api_service
 
         self._routines_cache: Optional[List[Dict[str, Any]]] = None
         self._cache_timestamp: float = 0
-        self._memory_cache_ttl: float = 300  # 5 minutes (distinct du cache_ttl hérité)
+        self._memory_cache_ttl: float = cache_ttl
         self._available_actions_cache: Optional[List[Dict[str, Any]]] = None
         self._actions_cache_timestamp: float = 0
 
-        logger.info("RoutineManager initialisé (cache 5min mémoire + 1h disque)")
+        logger.info("✅ RoutineManager initialisé avec api_service obligatoire (cache 5min mémoire + 1h disque)")
 
     def get_routines(
         self,
@@ -170,14 +183,11 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 return []
 
             # Endpoint API routines (v2 automations)
-            # Prefer injected AlexaAPIService when available
-            if self._api_service is not None:
-                response_data = self._api_service.get("/api/behaviors/v2/automations", timeout=15)
-            else:
-                response_data = self._api_call("get", "/api/behaviors/v2/automations", timeout=15)
+            # Phase 2: Use api_service directly (mandatory, no fallback)
+            response_data = self._api_service.get("/api/behaviors/v2/automations", timeout=15)
 
             if not response_data:
-                logger.warning("API returned empty response for routines")
+                logger.warning("⚠️  API returned empty response for routines")
                 return []
 
             routines: List[Dict[str, Any]] = response_data if isinstance(response_data, list) else []
@@ -186,11 +196,11 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             self._update_memory_cache(routines)
             self.cache_service.set("routines", {"routines": routines}, ttl_seconds=3600)
 
-            logger.success(f"{len(routines)} routine(s) récupérées depuis API")
+            logger.success(f"✅ {len(routines)} routine(s) récupérées depuis API")
             return self._filter_routines(routines, enabled_only, disabled_only, limit)
 
         except Exception as e:
-            logger.error(f"Erreur récupération routines: {e}")
+            logger.error(f"❌ Erreur récupération routines: {e}")
             return []
 
     def execute_routine(
@@ -293,21 +303,14 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                     "status": "ENABLED",
                 }
 
-                if self._api_service is not None:
-                    _ = self._api_service.post("/api/behaviors/preview", json=payload, timeout=10)
-                else:
-                    _ = self._api_call(
-                        "post",
-                        "/api/behaviors/preview",
-                        json=payload,
-                        timeout=10,
-                    )
+                # Phase 2: Use api_service directly (no fallback)
+                _ = self._api_service.post("/api/behaviors/preview", json=payload, timeout=10)
 
-                logger.success(f"Routine exécutée: {automation_id}")
+                logger.success(f"✅ Routine exécutée: {automation_id}")
                 return True
 
             except Exception as e:
-                logger.error(f"Erreur exécution routine {automation_id}: {e}")
+                logger.error(f"❌ Erreur exécution routine {automation_id}: {e}")
                 return False
 
     def execute(self, routine_id: str, device: Optional[str] = None, **kwargs: Any) -> Dict[str, Any]:
@@ -418,9 +421,8 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             if description:
                 payload["description"] = description
 
-            # Appel API pour créer
-            response = self._api_call(
-                "post",
+            # Phase 2: Use api_service directly (no fallback)
+            response = self._api_service.post(
                 "/api/behaviors/v2/automations",
                 json=payload,
                 timeout=15,
@@ -428,7 +430,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
 
             # Invalider cache
             self.invalidate_cache()
-            logger.success(f"Routine créée: {routine_id}")
+            logger.success(f"✅ Routine créée: {routine_id}")
             result = {
                 "routine_id": routine_id,
                 "name": name,
@@ -439,7 +441,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             return result
 
         except Exception as e:
-            logger.error(f"Erreur création routine: {e}")
+            logger.error(f"❌ Erreur création routine: {e}")
             raise
 
     def delete_routine(self, routine_id: str) -> Dict[str, Any]:
@@ -461,9 +463,8 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             raise ValueError(f"Routine not found: {routine_id}")
 
         try:
-            # Appel API pour supprimer
-            response = self._api_call(
-                "delete",
+            # Phase 2: Use api_service directly (no fallback)
+            response = self._api_service.delete(
                 f"/api/behaviors/v2/automations/{routine_id}",
                 timeout=15,
             )
@@ -471,7 +472,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             # Invalider cache
             self.invalidate_cache()
 
-            logger.success(f"Routine supprimée: {routine_id}")
+            logger.success(f"✅ Routine supprimée: {routine_id}")
             result = {
                 "routine_id": routine_id,
                 "deleted": True,
@@ -481,7 +482,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             return result
 
         except Exception as e:
-            logger.error(f"Erreur suppression routine: {e}")
+            logger.error(f"❌ Erreur suppression routine: {e}")
             raise KeyError(f"Failed to delete routine: {str(e)}")
 
     def update_routine(
@@ -520,9 +521,8 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             if enabled is not None:
                 payload["status"] = "ENABLED" if enabled else "DISABLED"
 
-            # Appel API pour mettre à jour
-            response = self._api_call(
-                "patch",
+            # Phase 2: Use api_service directly (no fallback)
+            response = self._api_service.patch(
                 f"/api/behaviors/v2/automations/{routine_id}",
                 json=payload,
                 timeout=15,
@@ -537,11 +537,11 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             if response:
                 updated_routine.update(response)
 
-            logger.success(f"Routine mise à jour: {routine_id}")
+            logger.success(f"✅ Routine mise à jour: {routine_id}")
             return updated_routine
 
         except Exception as e:
-            logger.error(f"Erreur mise à jour routine: {e}")
+            logger.error(f"❌ Erreur mise à jour routine: {e}")
             raise
 
     def list_actions(self) -> List[Dict[str, Any]]:
@@ -558,9 +558,8 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 return self._available_actions_cache
 
         try:
-            # Appel API pour récupérer actions disponibles
-            response = self._api_call(
-                "get",
+            # Phase 2: Use api_service directly (no fallback)
+            response = self._api_service.get(
                 "/api/behaviors/v2/actions",
                 timeout=15,
             )
@@ -572,11 +571,11 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
                 self._available_actions_cache = actions
                 self._actions_cache_timestamp = time.time()
 
-            logger.debug(f"{len(actions)} action(s) disponible(s)")
+            logger.debug(f"✅ {len(actions)} action(s) disponible(s)")
             return actions
 
         except Exception as e:
-            logger.error(f"Erreur récupération actions: {e}")
+            logger.error(f"❌ Erreur récupération actions: {e}")
             return []
 
     def set_enabled(self, routine_id: str, enabled: bool) -> Dict[str, Any]:
@@ -648,15 +647,14 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             if recurring:
                 payload["recurring"] = recurring
 
-            # Appel API
-            response = self._api_call(
-                "post",
+            # Phase 2: Use api_service directly (no fallback)
+            response = self._api_service.post(
                 f"/api/behaviors/v2/automations/{routine_id}/schedule",
                 json=payload,
                 timeout=15,
             )
 
-            logger.success(f"Routine planifiée: {routine_id} à {time_str}")
+            logger.success(f"✅ Routine planifiée: {routine_id} à {time_str}")
             result = {
                 "routine_id": routine_id,
                 "scheduled_time": time_str,
@@ -668,7 +666,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             return result
 
         except Exception as e:
-            logger.error(f"Erreur planification routine: {e}")
+            logger.error(f"❌ Erreur planification routine: {e}")
             raise
 
     def unschedule(self, routine_id: str) -> Dict[str, Any]:
@@ -682,13 +680,13 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             Dictionnaire avec résultat
         """
         try:
-            response = self._api_call(
-                "delete",
+            # Phase 2: Use api_service directly (no fallback)
+            response = self._api_service.delete(
                 f"/api/behaviors/v2/automations/{routine_id}/schedule",
                 timeout=15,
             )
 
-            logger.success(f"Planification supprimée: {routine_id}")
+            logger.success(f"✅ Planification supprimée: {routine_id}")
             result = {
                 "routine_id": routine_id,
                 "scheduled": False,
@@ -698,7 +696,7 @@ class RoutineManager(BaseManager[Dict[str, Any]]):
             return result
 
         except Exception as e:
-            logger.error(f"Erreur suppression planification: {e}")
+            logger.error(f"❌ Erreur suppression planification: {e}")
             raise
 
     def invalidate_cache(self) -> None:
