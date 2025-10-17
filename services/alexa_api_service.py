@@ -1,9 +1,21 @@
 ﻿"""AlexaAPIService for Phase 1."""
 from __future__ import annotations
 import time, logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List, Type, TypeVar
+
+from pydantic import ValidationError
+
+# Phase 3.6: DTO imports for type-safe API responses
+try:
+    from core.schemas.device_schemas import GetDevicesResponse, Device
+    from core.schemas.base import ResponseDTO
+    HAS_SCHEMAS = True
+except ImportError:
+    HAS_SCHEMAS = False
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar('T', bound=ResponseDTO)
 
 class AlexaAPIError(Exception):
     pass
@@ -83,6 +95,7 @@ class AlexaAPIService:
         return body
     
     def get(self, path: str, cache_key: Optional[str] = None, **kwargs: Any) -> Any:
+        """Perform GET request with optional cache fallback."""
         try:
             return self._request("GET", path, **kwargs)
         except NetworkError:
@@ -97,13 +110,52 @@ class AlexaAPIService:
             raise
     
     def post(self, path: str, json: Any = None, **kwargs: Any) -> Any:
+        """Perform POST request."""
         return self._request("POST", path, json=json, **kwargs)
     
-    def get_devices(self, use_cache_fallback: bool = True) -> list:
+    # Phase 3.6: DTO parsing helper methods
+    def _parse_dto(self, data: Dict[str, Any], dto_class: Type[T]) -> T:
+        """Parse response data into a typed DTO.
+        
+        Args:
+            data: Raw response dict from API
+            dto_class: Target DTO class to parse into
+            
+        Returns:
+            Parsed DTO instance
+            
+        Raises:
+            ApiError: If validation fails
+        """
+        if not HAS_SCHEMAS:
+            logger.warning("DTOs not available, returning raw data")
+            return data
+        
+        try:
+            return dto_class(**data)
+        except ValidationError as e:
+            logger.error("DTO validation error: %s", e)
+            raise ApiError(
+                status=400,
+                body={'error': str(e), 'errorCode': 'VALIDATION_ERROR'},
+                endpoint='parse_response'
+            ) from e
+    
+    def get_devices(self, use_cache_fallback: bool = True) -> List[Dict[str, Any]]:
+        """Get list of devices from Alexa API.
+        
+        Args:
+            use_cache_fallback: Whether to fall back to cache on network error
+            
+        Returns:
+            List of device dicts or GetDevicesResponse DTO if schemas available
+        """
         if not hasattr(self, "_auth") or self._auth is None:
             res = self.get("devices")
-            if isinstance(res, dict): return res.get("devices", [])
+            if isinstance(res, dict):
+                return res.get("devices", [])
             return res
+        
         cache_key = "devices_list"
         try:
             path = self.ENDPOINTS.get("get_devices", "/devices")
@@ -111,22 +163,40 @@ class AlexaAPIService:
             url = f"https://alexa.{domain}{path}"
             resp = self._auth.get(url, timeout=10)
             data = resp.json()
-            return data.get("devices", [])
+            devices = data.get("devices", [])
+            
+            # Phase 3.6: Parse with DTO if available
+            if HAS_SCHEMAS:
+                try:
+                    return self._parse_dto({"devices": devices}, GetDevicesResponse).devices
+                except ApiError as e:
+                    logger.warning("DTO parsing failed, returning raw devices: %s", e)
+                    return devices
+            
+            return devices
         except Exception as exc:
             if use_cache_fallback and hasattr(self, "_cache") and self._cache:
                 try:
                     cached = self._cache.get(cache_key, ignore_ttl=True)
-                    if cached: return cached.get("devices", [])
+                    if cached:
+                        return cached.get("devices", [])
                 except Exception:
                     pass
             from core.exceptions import APIError as CoreAPIError
             raise CoreAPIError(f"Failed: {exc}") from exc
     
     def send_speak_command(self, device_serial: str, text: str) -> None:
+        """Send speak command to device.
+        
+        Args:
+            device_serial: Device serial number
+            text: Text to speak
+        """
         if not hasattr(self, "_auth") or self._auth is None:
             path = self.ENDPOINTS.get("speak", "/speak")
             self.post(path, json={"deviceSerialNumber": device_serial, "textToSpeak": text}, timeout=10)
             return
+        
         try:
             path = self.ENDPOINTS.get("speak", "/speak")
             domain = getattr(self._auth, "amazon_domain", "amazon.fr")
