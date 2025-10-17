@@ -190,7 +190,7 @@ class RoutineCommand(BaseCommand):
         try:
             only_active = getattr(args, "only_active", False)
 
-            self.info("� Récupération des routines...")
+            self.info("… Récupération des routines...")
 
             ctx = self.require_context()
             routine_mgr = getattr(ctx, "routine_mgr", None)

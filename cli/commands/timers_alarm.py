@@ -18,7 +18,7 @@ from cli.commands.base_subcommand import BaseSubCommand as TimeSubCommand
 class AlarmsCommands(TimeSubCommand):
     """Commandes de gestion des alarmes."""
 
-    # Patterns de répétition
+    # Patterns de râ€¦pâ€¦tition
     ALARM_REPEAT_PATTERNS = {
         "ONCE": "Une seule fois",
         "DAILY": "Chaque jour",
@@ -35,7 +35,7 @@ class AlarmsCommands(TimeSubCommand):
     }
 
     def create(self, args: argparse.Namespace) -> bool:
-        """Créer une alarme."""
+        """Crâ€¦er une alarme."""
         try:
             serial = self.get_device_serial(args.device)
             if not serial:
@@ -51,14 +51,14 @@ class AlarmsCommands(TimeSubCommand):
             label_text = f" '{args.label}'" if args.label else ""
             repeat_text = self.ALARM_REPEAT_PATTERNS.get(args.recurring, args.recurring)
 
-            self.info(f"? Création alarme{label_text} à {args.time} ({repeat_text}) sur '{args.device}'...")
+            self.info(f"? Crâ€¦ation alarme{label_text} â€¦ {args.time} ({repeat_text}) sur '{args.device}'...")
 
             ctx = getattr(self, "context", None)
             if not ctx or not getattr(ctx, "alarm_mgr", None):
                 self.error("AlarmManager non disponible")
                 return False
 
-            # Créer l'alarme
+            # Crâ€¦er l'alarme
             device_type = self._get_device_type(args.device)
             result = self.call_with_breaker(
                 ctx.alarm_mgr.create_alarm,
@@ -71,13 +71,13 @@ class AlarmsCommands(TimeSubCommand):
 
             if result:
                 alarm_id = result.get("id", "N/A")
-                self.success(f"? Alarme créée (ID: {alarm_id})")
+                self.success(f"? Alarme crâ€¦â€¦e (ID: {alarm_id})")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la création de l'alarme")
+            self.logger.exception("Erreur lors de la crâ€¦ation de l'alarme")
             self.error(f"Erreur: {e}")
             return False
 
@@ -99,7 +99,7 @@ class AlarmsCommands(TimeSubCommand):
 
             if alarms:
                 if not alarms:
-                    self.warning("Aucune alarme trouvée")
+                    self.warning("Aucune alarme trouvâ€¦e")
                     return True
 
                 if hasattr(args, "json_output") and args.json_output:
@@ -109,7 +109,7 @@ class AlarmsCommands(TimeSubCommand):
 
                 return True
 
-            self.warning("Aucune alarme trouvée")
+            self.warning("Aucune alarme trouvâ€¦e")
             return True
 
         except Exception as e:
@@ -135,7 +135,7 @@ class AlarmsCommands(TimeSubCommand):
             result = self.call_with_breaker(ctx.alarm_mgr.delete_alarm, serial, device_type, args.id)
 
             if result:
-                self.success("? Alarme supprimée")
+                self.success("? Alarme supprimâ€¦e")
                 return True
 
             return False
@@ -169,7 +169,7 @@ class AlarmsCommands(TimeSubCommand):
                 updates["repeat"] = args.recurring
 
             if not updates:
-                self.error("Aucune modification spécifiée")
+                self.error("Aucune modification spâ€¦cifiâ€¦e")
                 self.info("Utilisez --time, --label ou --recurring")
                 return False
 
@@ -184,7 +184,7 @@ class AlarmsCommands(TimeSubCommand):
             result = self.call_with_breaker(ctx.alarm_mgr.update_alarm, serial, device_type, args.id, **updates)
 
             if result:
-                self.success("? Alarme modifiée")
+                self.success("? Alarme modifiâ€¦e")
                 return True
 
             return False
@@ -212,7 +212,7 @@ class AlarmsCommands(TimeSubCommand):
             result = self.call_with_breaker(ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, True)
 
             if result:
-                self.success("? Alarme activée")
+                self.success("? Alarme activâ€¦e")
                 return True
 
             return False
@@ -223,13 +223,13 @@ class AlarmsCommands(TimeSubCommand):
             return False
 
     def disable(self, args: argparse.Namespace) -> bool:
-        """Désactiver une alarme."""
+        """Dâ€¦sactiver une alarme."""
         try:
             serial = self.get_device_serial(args.device)
             if not serial:
                 return False
 
-            self.info(f"? Désactivation alarme {args.id} sur '{args.device}'...")
+            self.info(f"? Dâ€¦sactivation alarme {args.id} sur '{args.device}'...")
 
             ctx = getattr(self, "context", None)
             if not ctx or not getattr(ctx, "alarm_mgr", None):
@@ -240,13 +240,13 @@ class AlarmsCommands(TimeSubCommand):
             result = self.call_with_breaker(ctx.alarm_mgr.set_alarm_enabled, serial, device_type, args.id, False)
 
             if result:
-                self.success("? Alarme désactivée")
+                self.success("? Alarme dâ€¦sactivâ€¦e")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la désactivation de l'alarme")
+            self.logger.exception("Erreur lors de la dâ€¦sactivation de l'alarme")
             self.error(f"Erreur: {e}")
             return False
 
@@ -255,7 +255,7 @@ class AlarmsCommands(TimeSubCommand):
         Parse une heure au format HH:MM.
 
         Args:
-            time_str: Chaîne d'heure (ex: "07:30", "18:45")
+            time_str: Chaâ€¦ne d'heure (ex: "07:30", "18:45")
 
         Returns:
             Heure au format ISO 8601, None si invalide
@@ -270,7 +270,7 @@ class AlarmsCommands(TimeSubCommand):
         hours = int(match.group(1))
         minutes = int(match.group(2))
 
-        # Créer un objet time et convertir en ISO 8601
+        # Crâ€¦er un objet time et convertir en ISO 8601
         alarm_time = time(hours, minutes)
         return alarm_time.isoformat()
 
@@ -290,7 +290,7 @@ class AlarmsCommands(TimeSubCommand):
 
             print(f"  {status_emoji} {alarm_time} - {label}")
             print(f"     ID: {alarm_id}")
-            print(f"     Répétition: {repeat_text}")
+            print(f"     Râ€¦pâ€¦tition: {repeat_text}")
             print()
 
     @staticmethod
@@ -299,28 +299,28 @@ class AlarmsCommands(TimeSubCommand):
         Configure le sous-parser pour les alarmes.
 
         Args:
-            subparsers: Sous-parsers de la catégorie timer
+            subparsers: Sous-parsers de la catâ€¦gorie timer
         """
-        # Sous-catégorie: alarm
+        # Sous-catâ€¦gorie: alarm
         alarm_parser = subparsers.add_parser(
             "alarm",
-            help="Gérer les alarmes",
-            description="Créer et gérer les alarmes sur Amazon Alexa",
+            help="Gâ€¦rer les alarmes",
+            description="Crâ€¦er et gâ€¦rer les alarmes sur Amazon Alexa",
             formatter_class=UniversalHelpFormatter,
         )
 
         alarm_subparsers = alarm_parser.add_subparsers(
             dest="action",
             title="Actions alarm",
-            description="Gérer les alarmes sur Amazon Alexa",
-            help="Action à exécuter",
+            description="Gâ€¦rer les alarmes sur Amazon Alexa",
+            help="Action â€¦ exâ€¦cuter",
             required=True,
         )
 
         # Action: create
         create_parser = alarm_subparsers.add_parser(
             "create",
-            help="Créer une alarme",
+            help="Crâ€¦er une alarme",
             description="",
             formatter_class=UniversalHelpFormatter,
         )
@@ -339,12 +339,12 @@ class AlarmsCommands(TimeSubCommand):
             metavar="TIME",
             help="Heure de l'alarme (ex: 07:30, 14:15)",
         )
-        create_parser.add_argument("--label", type=str, metavar="LABEL", help="Étiquette de l'alarme (optionnel)")
+        create_parser.add_argument("--label", type=str, metavar="LABEL", help="â€¦tiquette de l'alarme (optionnel)")
         create_parser.add_argument(
             "--recurring",
             type=str,
             metavar="DAYS",
-            help="Jours de récurrence (ex: mon,wed,fri ou weekdays,weekends)",
+            help="Jours de râ€¦currence (ex: mon,wed,fri ou weekdays,weekends)",
         )
 
         # Action: list
@@ -383,7 +383,7 @@ class AlarmsCommands(TimeSubCommand):
             type=str,
             required=True,
             metavar="ALARM_ID",
-            help="ID de l'alarme à supprimer",
+            help="ID de l'alarme â€¦ supprimer",
         )
 
         # Action: update
@@ -406,7 +406,7 @@ class AlarmsCommands(TimeSubCommand):
             type=str,
             required=True,
             metavar="ALARM_ID",
-            help="ID de l'alarme à modifier",
+            help="ID de l'alarme â€¦ modifier",
         )
         update_parser.add_argument(
             "--time",
@@ -414,12 +414,12 @@ class AlarmsCommands(TimeSubCommand):
             metavar="TIME",
             help="Nouvelle heure (ex: 07:30, 14:15)",
         )
-        update_parser.add_argument("--label", type=str, metavar="LABEL", help="Nouvelle étiquette")
+        update_parser.add_argument("--label", type=str, metavar="LABEL", help="Nouvelle â€¦tiquette")
         update_parser.add_argument(
             "--recurring",
             type=str,
             metavar="DAYS",
-            help="Nouveaux jours de récurrence",
+            help="Nouveaux jours de râ€¦currence",
         )
 
         # Action: enable
@@ -442,13 +442,13 @@ class AlarmsCommands(TimeSubCommand):
             type=str,
             required=True,
             metavar="ALARM_ID",
-            help="ID de l'alarme à activer",
+            help="ID de l'alarme â€¦ activer",
         )
 
         # Action: disable
         disable_parser = alarm_subparsers.add_parser(
             "disable",
-            help="Désactiver une alarme",
+            help="Dâ€¦sactiver une alarme",
             description="",
             formatter_class=UniversalHelpFormatter,
         )
@@ -465,5 +465,5 @@ class AlarmsCommands(TimeSubCommand):
             type=str,
             required=True,
             metavar="ALARM_ID",
-            help="ID de l'alarme à désactiver",
+            help="ID de l'alarme â€¦ dâ€¦sactiver",
         )

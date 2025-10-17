@@ -290,10 +290,10 @@ class ListsCommand(BaseCommand):
             # même si on ne peut pas récupérer la réponse textuelle
             if list_type == "shopping":
                 self.success("✅ 📋 Commande vocale envoyée pour afficher la liste de courses")
-                self.info("� Vérifiez votre appareil Alexa pour entendre le contenu de la liste")
+                self.info("… Vérifiez votre appareil Alexa pour entendre le contenu de la liste")
             else:
-                self.success("✅ � Commande vocale envoyée pour afficher la liste de tâches")
-                self.info("� Vérifiez votre appareil Alexa pour entendre le contenu de la liste")
+                self.success("✅ … Commande vocale envoyée pour afficher la liste de tâches")
+                self.info("… Vérifiez votre appareil Alexa pour entendre le contenu de la liste")
             return True
 
         except Exception as e:

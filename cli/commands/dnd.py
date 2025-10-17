@@ -1,10 +1,10 @@
 """
-Commandes de gestion du mode Ne Pas Déranger (DND).
+Commandes de gestion du mode Ne Pas Dâ€¦ranger (DND).
 
-Ce module gère toutes les opérations liées au DND:
+Ce module gâ€¦re toutes les opâ€¦rations liâ€¦es au DND:
 - status: Statut DND d'un appareil
 - enable: Activer le DND
-- disable: Désactiver le DND
+- disable: Dâ€¦sactiver le DND
 - schedule: Programmer le DND
 
 Auteur: M@nu
@@ -17,9 +17,9 @@ import json
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
-# Constantes de description simplifiées
-DND_DESCRIPTION = "Gérer le mode Ne Pas Déranger"
-DISABLE_HELP = "Désactiver le DND"
+# Constantes de description simplifiâ€¦es
+DND_DESCRIPTION = "Gâ€¦rer le mode Ne Pas Dâ€¦ranger"
+DISABLE_HELP = "Dâ€¦sactiver le DND"
 ENABLE_HELP = "Activer le DND"
 SCHEDULE_HELP = "Programmer le DND"
 STATUS_HELP = "Statut DND d'un appareil"
@@ -27,14 +27,14 @@ STATUS_HELP = "Statut DND d'un appareil"
 
 class DNDCommand(BaseCommand):
     """
-    Commande de gestion du mode Ne Pas Déranger.
+    Commande de gestion du mode Ne Pas Dâ€¦ranger.
 
-    Gère status, enable, disable, schedule.
+    Gâ€¦re status, enable, disable, schedule.
 
     Actions:
-        - status: Vérifier le statut DND
+        - status: Vâ€¦rifier le statut DND
         - enable: Activer le mode DND
-        - disable: Désactiver le mode DND
+        - disable: Dâ€¦sactiver le mode DND
         - schedule: Programmer des horaires DND
 
     Example:
@@ -61,21 +61,21 @@ class DNDCommand(BaseCommand):
         Configure le parser pour les commandes dnd.
 
         Args:
-            parser: Sous-parser pour la catégorie 'dnd'
+            parser: Sous-parser pour la catâ€¦gorie 'dnd'
         """
-        # Utiliser le formatter universel pour l'ordre exact demandé
+        # Utiliser le formatter universel pour l'ordre exact demandâ€¦
         parser.formatter_class = UniversalHelpFormatter
 
-        # Définir un usage plus détaillé
+        # Dâ€¦finir un usage plus dâ€¦taillâ€¦
         parser.usage = "alexa [OPTIONS_GLOBALES] dnd <ACTION> [OPTIONS_ACTION]"
 
-        # Description centralisée
+        # Description centralisâ€¦e
         parser.description = DND_DESCRIPTION
 
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
-            help="Action à exécuter",
+            help="Action â€¦ exâ€¦cuter",
             required=True,
         )
 
@@ -116,7 +116,7 @@ class DNDCommand(BaseCommand):
         # Action: disable
         disable_parser = subparsers.add_parser(
             "disable",
-            help="Désactiver DND",
+            help="Dâ€¦sactiver DND",
             description=DISABLE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
@@ -151,7 +151,7 @@ class DNDCommand(BaseCommand):
             type=str,
             required=True,
             metavar="HH:MM",
-            help="Heure de début (format 24h: HH:MM)",
+            help="Heure de dâ€¦but (format 24h: HH:MM)",
         )
         schedule_parser.add_argument(
             "--end",
@@ -166,13 +166,13 @@ class DNDCommand(BaseCommand):
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
-        Exécute la commande dnd.
+        Exâ€¦cute la commande dnd.
 
         Args:
-            args: Arguments parsés
+            args: Arguments parsâ€¦s
 
         Returns:
-            True si succès, False sinon
+            True si succâ€¦s, False sinon
         """
         # Validation connexion
         if not self.validate_connection():
@@ -191,9 +191,9 @@ class DNDCommand(BaseCommand):
             return False
 
     def _check_status(self, args: argparse.Namespace) -> bool:
-        """Vérifier le statut DND."""
+        """Vâ€¦rifier le statut DND."""
         try:
-            # Récupérer le serial de l'appareil
+            # Râ€¦cupâ€¦rer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:
                 return False
@@ -215,18 +215,18 @@ class DNDCommand(BaseCommand):
 
                 return True
             else:
-                self.warning(f"Aucun statut DND trouvé pour '{args.device}' (serial: {serial})")
+                self.warning(f"Aucun statut DND trouvâ€¦ pour '{args.device}' (serial: {serial})")
                 return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la vérification du statut DND")
+            self.logger.exception("Erreur lors de la vâ€¦rification du statut DND")
             self.error(f"Erreur: {e}")
             return False
 
     def _enable_dnd(self, args: argparse.Namespace) -> bool:
         """Activer le DND."""
         try:
-            # Récupérer le serial de l'appareil
+            # Râ€¦cupâ€¦rer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:
                 return False
@@ -242,7 +242,7 @@ class DNDCommand(BaseCommand):
             result = self.call_with_breaker(ctx.dnd_mgr.enable_dnd, serial, device_type)
 
             if result:
-                self.success(f"? DND activé sur '{args.device}'")
+                self.success(f"? DND activâ€¦ sur '{args.device}'")
                 return True
 
             return False
@@ -253,15 +253,15 @@ class DNDCommand(BaseCommand):
             return False
 
     def _disable_dnd(self, args: argparse.Namespace) -> bool:
-        """Désactiver le DND."""
+        """Dâ€¦sactiver le DND."""
         try:
-            # Récupérer le serial de l'appareil
+            # Râ€¦cupâ€¦rer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:
                 return False
 
             device_type = self._get_device_type(args.device)
-            self.info(f"?? Désactivation DND sur '{args.device}'...")
+            self.info(f"?? Dâ€¦sactivation DND sur '{args.device}'...")
 
             ctx = self.require_context()
             if not ctx.dnd_mgr:
@@ -271,13 +271,13 @@ class DNDCommand(BaseCommand):
             result = self.call_with_breaker(ctx.dnd_mgr.disable_dnd, serial, device_type)
 
             if result:
-                self.success(f"? DND désactivé sur '{args.device}'")
+                self.success(f"? DND dâ€¦sactivâ€¦ sur '{args.device}'")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la désactivation DND")
+            self.logger.exception("Erreur lors de la dâ€¦sactivation DND")
             self.error(f"Erreur: {e}")
             return False
 
@@ -286,14 +286,14 @@ class DNDCommand(BaseCommand):
         try:
             # Validation des heures
             if not self._validate_time(args.start):
-                self.error(f"Heure de début invalide: {args.start} (format: HH:MM)")
+                self.error(f"Heure de dâ€¦but invalide: {args.start} (format: HH:MM)")
                 return False
 
             if not self._validate_time(args.end):
                 self.error(f"Heure de fin invalide: {args.end} (format: HH:MM)")
                 return False
 
-            # Parser les jours si spécifiés
+            # Parser les jours si spâ€¦cifiâ€¦s
             days = None
             if hasattr(args, "days") and args.days:
                 days = [d.strip() for d in args.days.split(",")]
@@ -302,7 +302,7 @@ class DNDCommand(BaseCommand):
                         self.error(f"Jour invalide: {day} (valeurs: {', '.join(self.DAYS.keys())})")
                         return False
 
-            # Récupérer le serial de l'appareil
+            # Râ€¦cupâ€¦rer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:
                 return False
@@ -318,7 +318,7 @@ class DNDCommand(BaseCommand):
             result = self.call_with_breaker(ctx.dnd_mgr.set_dnd_schedule, serial, args.start, args.end, days)
 
             if result:
-                self.success(f"? Programmation DND configurée sur '{args.device}'")
+                self.success(f"? Programmation DND configurâ€¦e sur '{args.device}'")
                 return True
 
             return False
@@ -337,7 +337,7 @@ class DNDCommand(BaseCommand):
         Valide un format d'heure HH:MM.
 
         Args:
-            time_str: Chaîne au format HH:MM
+            time_str: Chaâ€¦ne au format HH:MM
 
         Returns:
             True si valide, False sinon
@@ -360,9 +360,9 @@ class DNDCommand(BaseCommand):
 
         enabled = status.get("enabled", False)
         status_icon = "??" if enabled else "??"
-        status_text = "Activé" if enabled else "Désactivé"
+        status_text = "Activâ€¦" if enabled else "Dâ€¦sactivâ€¦"
 
-        print(f"  {status_icon} État: {status_text}")
+        print(f"  {status_icon} â€¦tat: {status_text}")
 
         # Afficher la programmation si elle existe
         if "schedule" in status and status["schedule"]:
@@ -380,9 +380,9 @@ class DNDCommand(BaseCommand):
             else:
                 print("     Jours: Tous les jours")
         else:
-            print("\n  ?? Aucune programmation configurée")
+            print("\n  ?? Aucune programmation configurâ€¦e")
 
     def _get_device_type(self, device_name: str) -> str:
-        """Récupère le type d'appareil (placeholder)."""
-        # TODO: Récupérer depuis device_mgr
+        """Râ€¦cupâ€¦re le type d'appareil (placeholder)."""
+        # TODO: Râ€¦cupâ€¦rer depuis device_mgr
         return "ECHO_DEVICE"

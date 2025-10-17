@@ -16,7 +16,7 @@ class RemindersCommands(TimeSubCommand):
     """Commandes de gestion des rappels."""
 
     def create(self, args: argparse.Namespace) -> bool:
-        """Créer un nouveau rappel."""
+        """Crâ€¦er un nouveau rappel."""
         try:
             device_name = getattr(args, "device", None)
             if not device_name:
@@ -29,7 +29,7 @@ class RemindersCommands(TimeSubCommand):
                 return False
 
             if not args.datetime and not (getattr(args, "recurrence", None) and getattr(args, "time", None)):
-                self.error("Spécifiez soit --datetime, soit --recurrence + --time")
+                self.error("Spâ€¦cifiez soit --datetime, soit --recurrence + --time")
                 return False
 
             serial = self.get_device_serial(device_name)
@@ -41,21 +41,21 @@ class RemindersCommands(TimeSubCommand):
                 self.error("ReminderManager non disponible")
                 return False
 
-            # Créer le rappel
+            # Crâ€¦er le rappel
             if args.datetime:
                 # Rappel ponctuel
-                self.info(f"? Création rappel pour '{device_name}'...")
+                self.info(f"? Crâ€¦ation rappel pour '{device_name}'...")
                 self.info(f"   Texte: {args.label}")
                 self.info(f"   Date: {args.datetime}")
 
                 result = self.call_with_breaker(ctx.reminder_mgr.create_reminder, serial, args.label, args.datetime)
             else:
-                # Rappel récurrent
+                # Rappel râ€¦current
                 recurrence = getattr(args, "recurrence", None)
                 time_val = getattr(args, "time", None)
-                self.info(f"?? Création rappel récurrent pour '{device_name}'...")
+                self.info(f"?? Crâ€¦ation rappel râ€¦current pour '{device_name}'...")
                 self.info(f"   Texte: {args.label}")
-                self.info(f"   Récurrence: {recurrence}")
+                self.info(f"   Râ€¦currence: {recurrence}")
                 self.info(f"   Heure: {time_val}")
 
                 result = self.call_with_breaker(
@@ -67,13 +67,13 @@ class RemindersCommands(TimeSubCommand):
                 )
 
             if result:
-                self.success("? Rappel créé avec succès")
+                self.success("? Rappel crâ€¦â€¦ avec succâ€¦s")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la création du rappel")
+            self.logger.exception("Erreur lors de la crâ€¦ation du rappel")
             self.error(f"Erreur: {e}")
             return False
 
@@ -84,12 +84,12 @@ class RemindersCommands(TimeSubCommand):
             device_name = getattr(args, "device", None)
 
             if device_name:
-                self.info(f"?? Récupération des rappels pour '{device_name}'...")
+                self.info(f"?? Râ€¦cupâ€¦ration des rappels pour '{device_name}'...")
                 serial = self.get_device_serial(device_name)
                 if not serial:
                     return False
             else:
-                self.info("?? Récupération de tous les rappels...")
+                self.info("?? Râ€¦cupâ€¦ration de tous les rappels...")
                 serial = None
 
             ctx = getattr(self, "context", None)
@@ -100,10 +100,10 @@ class RemindersCommands(TimeSubCommand):
             reminders = self.call_with_breaker(ctx.reminder_mgr.list_reminders)
 
             if not reminders:
-                self.warning("Aucun rappel trouvé")
+                self.warning("Aucun rappel trouvâ€¦")
                 return True
 
-            # Filtrer les rappels complétés si pas --all
+            # Filtrer les rappels complâ€¦tâ€¦s si pas --all
             if not show_all:
                 reminders = [r for r in reminders if not r.get("completed", False)]
 
@@ -112,7 +112,7 @@ class RemindersCommands(TimeSubCommand):
             return True
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la récupération des rappels")
+            self.logger.exception("Erreur lors de la râ€¦cupâ€¦ration des rappels")
             self.error(f"Erreur: {e}")
             return False
 
@@ -137,7 +137,7 @@ class RemindersCommands(TimeSubCommand):
             result = self.call_with_breaker(ctx.reminder_mgr.delete_reminder, args.id)
 
             if result:
-                self.success(f"? Rappel '{args.id}' supprimé")
+                self.success(f"? Rappel '{args.id}' supprimâ€¦")
                 return True
 
             return False
@@ -148,9 +148,9 @@ class RemindersCommands(TimeSubCommand):
             return False
 
     def complete(self, args: argparse.Namespace) -> bool:
-        """Marquer un rappel comme complété."""
+        """Marquer un rappel comme complâ€¦tâ€¦."""
         try:
-            self.info(f"? Marquage rappel '{args.id}' comme complété...")
+            self.info(f"? Marquage rappel '{args.id}' comme complâ€¦tâ€¦...")
 
             ctx = getattr(self, "context", None)
             if not ctx or not getattr(ctx, "reminder_mgr", None):
@@ -160,7 +160,7 @@ class RemindersCommands(TimeSubCommand):
             result = self.call_with_breaker(ctx.reminder_mgr.complete_reminder, args.id)
 
             if result:
-                self.success(f"? Rappel '{args.id}' marqué comme complété")
+                self.success(f"? Rappel '{args.id}' marquâ€¦ comme complâ€¦tâ€¦")
                 return True
 
             return False
@@ -171,7 +171,7 @@ class RemindersCommands(TimeSubCommand):
             return False
 
     def _display(self, reminders: List[Dict[str, Any]]) -> None:
-        """Affiche la liste des rappels de manière formatée."""
+        """Affiche la liste des rappels de maniâ€¦re formatâ€¦e."""
         print(f"\n?? Rappels ({len(reminders)}):")
         print("=" * 80)
 
@@ -185,12 +185,12 @@ class RemindersCommands(TimeSubCommand):
                 self._display_single(reminder)
 
         if completed_reminders:
-            print("\n? Rappels complétés:")
+            print("\n? Rappels complâ€¦tâ€¦s:")
             for reminder in completed_reminders:
                 self._display_single(reminder)
 
     def _display_single(self, reminder: Dict[str, Any]) -> None:
-        """Affiche un rappel de manière formatée."""
+        """Affiche un rappel de maniâ€¦re formatâ€¦e."""
         reminder_id = reminder.get("id", "N/A")
         label = reminder.get("label", "N/A")
         datetime_str = reminder.get("datetime", "N/A")
@@ -205,7 +205,7 @@ class RemindersCommands(TimeSubCommand):
         print(f"   Appareil: {device_name}")
 
         if recurrence:
-            print(f"   Récurrence: {recurrence}")
+            print(f"   Râ€¦currence: {recurrence}")
             print(f"   Heure: {datetime_str}")
         else:
             print(f"   Date: {datetime_str}")
@@ -216,28 +216,28 @@ class RemindersCommands(TimeSubCommand):
         Configure le sous-parser pour les rappels.
 
         Args:
-            subparsers: Sous-parsers de la catégorie timer
+            subparsers: Sous-parsers de la catâ€¦gorie timer
         """
-        # Sous-catégorie: reminder
+        # Sous-catâ€¦gorie: reminder
         reminder_parser = subparsers.add_parser(
             "reminder",
-            help="Gérer les rappels",
-            description="Créer et gérer les rappels sur Amazon Alexa",
+            help="Gâ€¦rer les rappels",
+            description="Crâ€¦er et gâ€¦rer les rappels sur Amazon Alexa",
             formatter_class=UniversalHelpFormatter,
         )
 
         reminder_subparsers = reminder_parser.add_subparsers(
             dest="action",
             title="Actions reminder",
-            description="Gérer les rappels sur Amazon Alexa",
-            help="Action à exécuter",
+            description="Gâ€¦rer les rappels sur Amazon Alexa",
+            help="Action â€¦ exâ€¦cuter",
             required=True,
         )
 
         # Action: create
         create_parser = reminder_subparsers.add_parser(
             "create",
-            help="Créer un rappel",
+            help="Crâ€¦er un rappel",
             description="",
             formatter_class=UniversalHelpFormatter,
         )
@@ -246,7 +246,7 @@ class RemindersCommands(TimeSubCommand):
             type=str,
             required=True,
             metavar="LABEL",
-            help="Étiquette du rappel",
+            help="â€¦tiquette du rappel",
         )
         create_parser.add_argument(
             "--datetime",
@@ -290,13 +290,13 @@ class RemindersCommands(TimeSubCommand):
             type=str,
             required=True,
             metavar="REMINDER_ID",
-            help="ID du rappel à supprimer",
+            help="ID du rappel â€¦ supprimer",
         )
 
         # Action: complete
         complete_parser = reminder_subparsers.add_parser(
             "complete",
-            help="Marquer un rappel comme terminé",
+            help="Marquer un rappel comme terminâ€¦",
             description="",
             formatter_class=UniversalHelpFormatter,
         )
@@ -305,5 +305,5 @@ class RemindersCommands(TimeSubCommand):
             type=str,
             required=True,
             metavar="REMINDER_ID",
-            help="ID du rappel à marquer comme terminé",
+            help="ID du rappel â€¦ marquer comme terminâ€¦",
         )

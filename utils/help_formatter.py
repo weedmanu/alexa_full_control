@@ -1030,7 +1030,7 @@ def create_main_help() -> str:
     builder = HelpBuilder()
 
     return (
-        builder.add_header("�️", "ALEXA ADVANCED CONTROL - CONTRÔLE AVANCÉ D'ALEXA")
+        builder.add_header("…️", "ALEXA ADVANCED CONTROL - CONTRÔLE AVANCÉ D'ALEXA")
         .add_features(
             [
                 "Contrôle complet des appareils Alexa",
