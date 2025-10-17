@@ -17,6 +17,7 @@ pre-commit==3.4.0
 pip-tools==7.0.0
 safety==2.2.0
 bandit==1.7.0
+pbr==6.0.0
 
 # Docs and diagrams
 sphinx==6.2.0
@@ -33,6 +34,8 @@ coverage-badge==1.1.2
 
 # Static analysis / dead code detection
 vulture==2.5
+pylint==3.3.1
+pydocstyle==6.3.0
 
 # Performance / profiling / caching helpers
 pytest-benchmark==3.4.1
