@@ -14,6 +14,16 @@ Date: 7 octobre 2025
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
+from loguru import logger
+
+from core.circuit_breaker import CircuitBreaker
+
+# Runtime imports
+from core.config import Config
+from core.state_machine import AlexaStateMachine
+from services.cache_service import CacheService
+from services.favorite_service import FavoriteService
+
 if TYPE_CHECKING:
     # Importer uniquement pour annotations afin d'éviter cycles d'import
     from alexa_auth.alexa_auth import AlexaAuth
@@ -24,6 +34,7 @@ if TYPE_CHECKING:
     # from core.communication import AnnouncementManager  # DEPRECATED - module vide
     from core.calendar import CalendarManager
     from core.device_manager import DeviceManager
+    from core.di_container import get_di_container
     from core.dnd_manager import DNDManager
     from core.lists.lists_manager import ListsManager
     from core.multiroom import MultiRoomManager
@@ -33,23 +44,15 @@ if TYPE_CHECKING:
     from core.routines import RoutineManager
     from core.scenario.scenario_manager import ScenarioManager
     from core.settings import DeviceSettingsManager
-    from core.smart_home import LightController, SmartDeviceController, ThermostatController
+    from core.smart_home import (
+        LightController,
+        SmartDeviceController,
+        ThermostatController,
+    )
     from core.timers import TimerManager
     from services.music_library import MusicLibraryService
     from services.sync_service import SyncService
     from services.voice_command_service import VoiceCommandService
-
-from loguru import logger
-
-from core.circuit_breaker import CircuitBreaker
-from core.config import Config
-from core.di_container import get_di_container
-from core.state_machine import AlexaStateMachine
-from services.cache_service import CacheService
-from services.favorite_service import FavoriteService
-
-if TYPE_CHECKING:
-    from core.multiroom.multiroom_manager import MultiRoomManager
 
 
 class Context:

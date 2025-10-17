@@ -9,7 +9,8 @@ ARCHITECTURE DES FONCTIONS DE FORMATAGE
 
 Chaque champ de la ligne d'usage possède sa propre fonction de formatage :
 
-Usage complet : alexa [OPTIONS_GLOBALES] <CATEGORIE> [OPTIONS_CATEGORIE] [<SOUS-CATEGORIE>] [OPTIONS_SOUS-CATEGORIE] [<ACTION>] [OPTIONS_ACTION]
+Usage complet : alexa [OPTIONS_GLOBALES] <CATEGORIE> [OPTIONS_CATEGORIE]
+    [<SOUS-CATEGORIE>] [OPTIONS_SOUS-CATEGORIE] [<ACTION>] [OPTIONS_ACTION]
 
 Fonctions par champ de la ligne d'usage :
 ------------------------------------------
@@ -727,17 +728,28 @@ def format_more_help_main() -> str:
     )
 
     nav_items = [
-        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.MAGENTA}--help{Colors.RESET}                                                  : Cette aide générale",
-        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET} {Colors.GREEN}--help{Colors.RESET}                                      : Aide détaillée d'une catégorie",
-        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET} {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}                     : Aide spécifique d'une sous-catégorie",
-        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET} {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.ORANGE_BOLD}<action>{Colors.RESET} {Colors.ORANGE}--help{Colors.RESET}            : Aide d'une action précise",
+        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.MAGENTA}--help{Colors.RESET}"
+        f"                                                  : Cette aide générale",
+        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET}"
+        f" {Colors.GREEN}--help{Colors.RESET}                                      : Aide détaillée d'une catégorie",
+        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET}"
+        f" {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}"
+        f"                     : Aide spécifique d'une sous-catégorie",
+        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET}"
+        f" {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.ORANGE_BOLD}<action>{Colors.RESET}"
+        f" {Colors.ORANGE}--help{Colors.RESET}            : Aide d'une action précise",
     ]
 
     examples_title = f"\n  {Colors.GRAY_BOLD}📚 Exemples pratiques :{Colors.RESET}\n\n"
     examples = [
-        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}timer{Colors.RESET} {Colors.GREEN}--help{Colors.RESET}                        : Découvrir les fonctionnalités temporelles",
-        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}music{Colors.RESET} {Colors.CYAN_BOLD}playback{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}               : Maîtriser le contrôle musical",
-        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}smarthome{Colors.RESET} {Colors.CYAN_BOLD}light{Colors.RESET} {Colors.ORANGE_BOLD}on{Colors.RESET} {Colors.ORANGE}--help{Colors.RESET}           : Contrôler l'éclairage domotique",
+        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}timer{Colors.RESET}"
+        f" {Colors.GREEN}--help{Colors.RESET}                        : Découvrir les fonctionnalités temporelles",
+        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}music{Colors.RESET}"
+        f" {Colors.CYAN_BOLD}playback{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}"
+        f"               : Maîtriser le contrôle musical",
+        f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}smarthome{Colors.RESET}"
+        f" {Colors.CYAN_BOLD}light{Colors.RESET} {Colors.ORANGE_BOLD}on{Colors.RESET}"
+        f" {Colors.ORANGE}--help{Colors.RESET}           : Contrôler l'éclairage domotique",
     ]
 
     tips_title = f"\n  {Colors.GRAY_BOLD}💫 Astuces :{Colors.RESET}\n\n"
@@ -964,18 +976,29 @@ class HelpBuilder:
 
         # Navigation dans l'aide (sans titre de sous-section)
         nav_items = [
-            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.MAGENTA}--help{Colors.RESET}                                                  : Cette aide générale",
-            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET} {Colors.GREEN}--help{Colors.RESET}                                      : Aide détaillée d'une catégorie",
-            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET} {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}                     : Aide spécifique d'une sous-catégorie",
-            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET} {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.ORANGE_BOLD}<action>{Colors.RESET} {Colors.ORANGE}--help{Colors.RESET}            : Aide d'une action précise",
+            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.MAGENTA}--help{Colors.RESET}"
+            f"                                                  : Cette aide générale",
+            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET}"
+            f" {Colors.GREEN}--help{Colors.RESET}                                      : Aide détaillée d'une catégorie",
+            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET}"
+            f" {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}"
+            f"                     : Aide spécifique d'une sous-catégorie",
+            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}<categorie>{Colors.RESET}"
+            f" {Colors.CYAN_BOLD}<sous-categorie>{Colors.RESET} {Colors.ORANGE_BOLD}<action>{Colors.RESET}"
+            f" {Colors.ORANGE}--help{Colors.RESET}            : Aide d'une action précise",
         ]
 
         # Exemples pratiques
         examples_title = f"\n  {Colors.GRAY_BOLD}📚 Exemples pratiques :{Colors.RESET}\n\n"
         examples = [
-            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}timers{Colors.RESET} {Colors.GREEN}--help{Colors.RESET}                        : Découvrir les fonctionnalités temporelles",
-            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}music{Colors.RESET} {Colors.CYAN_BOLD}playback{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}               : Maîtriser le contrôle musical",
-            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}smarthome{Colors.RESET} {Colors.CYAN_BOLD}light{Colors.RESET} {Colors.ORANGE_BOLD}on{Colors.RESET} {Colors.ORANGE}--help{Colors.RESET}           : Contrôler l'éclairage domotique",
+            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}timers{Colors.RESET}"
+            f" {Colors.GREEN}--help{Colors.RESET}                        : Découvrir les fonctionnalités temporelles",
+            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}music{Colors.RESET}"
+            f" {Colors.CYAN_BOLD}playback{Colors.RESET} {Colors.CYAN}--help{Colors.RESET}"
+            f"               : Maîtriser le contrôle musical",
+            f"  {Colors.WHITE_BOLD}alexa{Colors.RESET} {Colors.GREEN_BOLD}smarthome{Colors.RESET}"
+            f" {Colors.CYAN_BOLD}light{Colors.RESET} {Colors.ORANGE_BOLD}on{Colors.RESET}"
+            f" {Colors.ORANGE}--help{Colors.RESET}           : Contrôler l'éclairage domotique",
         ]
 
         # Astuces
@@ -1213,16 +1236,25 @@ def format_usage_fields(
     # Champ actions
     actions_str = ", ".join([f"{Colors.ORANGE_BOLD}{action}{Colors.RESET}" for action in actions])
     actions_field = f"  {Colors.ORANGE_BOLD}<ACTION>{Colors.RESET}"
-    actions_desc = f"  {Colors.GRAY_BOLD}•{Colors.RESET} {actions_field} {Colors.GRAY_BOLD}: Une des actions disponibles ({actions_str}){Colors.RESET}"
+    actions_desc = (
+        f"  {Colors.GRAY_BOLD}•{Colors.RESET} {actions_field} {Colors.GRAY_BOLD}: "
+        f"Une des actions disponibles ({actions_str}){Colors.RESET}"
+    )
 
     # Champ options globales
     global_opts_str = ", ".join([f"{Colors.MAGENTA}{opt}{Colors.RESET}" for opt in global_options])
     global_field = f"  {Colors.MAGENTA}[OPTIONS_GLOBALES]{Colors.RESET}"
-    global_desc = f"  {Colors.GRAY_BOLD}•{Colors.RESET} {global_field} {Colors.GRAY_BOLD}: Options applicables partout ({global_opts_str}){Colors.RESET}"
+    global_desc = (
+        f"  {Colors.GRAY_BOLD}•{Colors.RESET} {global_field} {Colors.GRAY_BOLD}: "
+        f"Options applicables partout ({global_opts_str}){Colors.RESET}"
+    )
 
     # Champ options action
     action_opts_field = f"  {Colors.ORANGE}[OPTIONS_ACTION]{Colors.RESET}"
-    action_opts_desc_formatted = f"  {Colors.GRAY_BOLD}•{Colors.RESET} {action_opts_field} {Colors.GRAY_BOLD}: {action_options_desc}{Colors.RESET}"
+    action_opts_desc_formatted = (
+        f"  {Colors.GRAY_BOLD}•{Colors.RESET} {action_opts_field} "
+        f"{Colors.GRAY_BOLD}: {action_options_desc}{Colors.RESET}"
+    )
 
     content = "\n".join([category_desc, actions_desc, global_desc, action_opts_desc_formatted])
 

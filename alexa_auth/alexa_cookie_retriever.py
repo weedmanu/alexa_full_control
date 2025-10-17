@@ -9,13 +9,12 @@ Utilise nodeenv pour un environnement Node.js isolé
 """
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
 
-# Ajouter le parent au path pour importer utils
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.logger import setup_logger
 from utils.term import Colors
 
@@ -201,7 +200,6 @@ class CookieRetriever:
         refresh_script = self.nodejs_dir / "refresh-cookie.js"
 
         # Vérifier que l'exécutable node est trouvable
-        import shutil
 
         # Chercher le binaire node via PATH, puis fallbacks locaux
         node_in_path = shutil.which("node")
@@ -240,7 +238,6 @@ class CookieRetriever:
             cmd.extend(["--mfaSecret", mfa_secret])
 
         # Vérifier que node existe avant d'appeler
-        import shutil
 
         # Construire la commande node avec plusieurs fallbacks
         node_cmd = shutil.which(str(node_executable))

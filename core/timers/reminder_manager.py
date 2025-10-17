@@ -19,14 +19,6 @@ try:
 except ImportError:
     HAS_REMINDER_DTO = False
 
-# Phase 3.7: Import DTO for typed return
-try:
-    from core.schemas.reminder_schemas import GetRemindersResponse, ReminderDTO
-
-    HAS_REMINDER_DTO = True
-except ImportError:
-    HAS_REMINDER_DTO = False
-
 
 class ReminderManager:
     """Gestionnaire thread-safe de rappels Alexa."""

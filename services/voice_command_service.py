@@ -711,22 +711,6 @@ class VoiceCommandService:
 
                 logger.debug(f"🔊 Device trouvé: {device_name} (serial={device_serial})")
 
-                # Construire le payload pour jouer le son (non nécessaire stocker variable si non réutilisée)
-                _sequence_json_content = {
-                    "@type": "com.amazon.alexa.behaviors.model.Sequence",
-                    "startNode": {
-                        "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
-                        "type": "Alexa.Sound",
-                        "operationPayload": {
-                            "deviceType": device_type,
-                            "deviceSerialNumber": device_serial,
-                            "locale": "fr-FR",
-                            "customerId": self._customer_id,
-                            "soundId": sound_id,
-                        },
-                    },
-                }
-
                 return self.speak_as_voice.__wrapped__(self, f"Sound: {sound_id}", device_serial, device_type)
 
             except Exception as e:
