@@ -50,6 +50,10 @@ class CircuitOpenError(AlexaAPIError):
     pass
 
 
+# Backward-compatibility aliases expected by older tests
+CircuitOpen = CircuitOpenError
+
+
 class AlexaAPIService:
     ENDPOINTS: dict[str, str] = {"get_devices": "/api/devices-v2/device", "speak": "/api/speak"}
 

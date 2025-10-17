@@ -26,7 +26,7 @@ class SubParsersActionProtocol(Protocol):
     We only expose add_parser which is the part callers rely on.
     """
 
-    def add_parser(self, name: str, **kwargs: Any) -> argparse.ArgumentParser:  # pragma: no cover - simple protocol
+    def add_parser(self, name: str, *args: Any, **kwargs: Any) -> argparse.ArgumentParser:  # pragma: no cover - simple protocol
         ...
 
 

@@ -293,7 +293,8 @@ class Context:
         if self._music_library is None and self.auth:
             from services.music_library import MusicLibraryService
 
-            # MusicLibraryService expects a pybreaker.CircuitBreaker or None; pass None when using custom core CircuitBreaker
+            # MusicLibraryService expects a pybreaker.CircuitBreaker or None.
+            # Pass None to use the custom core CircuitBreaker implementation.
             self._music_library = MusicLibraryService(self.auth, self.config, None)
             logger.debug("MusicLibraryService chargé (shell script parity)")
         return self._music_library

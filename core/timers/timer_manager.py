@@ -160,15 +160,15 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 }
 
                 # Phase 2: Use api_service directly (no fallback)
-                timer_data = self._api_service.post(
+                from typing import cast
+
+                raw_timer = self._api_service.post(
                     "/api/timers",
                     json=payload,
                     timeout=10,
                 )
 
-                from typing import cast
-
-                timer_data = cast(Dict[str, Any], timer_data)
+                timer_data: Dict[str, Any] = cast(Dict[str, Any], raw_timer)
                 logger.success(f"✅ Timer '{label}' créé ({duration_minutes} min)")
                 return timer_data
 
