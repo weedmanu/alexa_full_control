@@ -63,6 +63,23 @@ Write-Host "Tools to run: $($toolList -join ', ') | Mode: $Mode | Strict: $Stric
 
 # Execute each tool with appropriate command
 $nonZeroCount = 0
+## detect personal config directory and config files
+$configDir = Join-Path (Get-Location) 'Dev\config'
+$usePersonalConfig = Test-Path $configDir
+if ($usePersonalConfig) { Write-Host "Using personal config files from $configDir" -ForegroundColor Green }
+
+function ConfigPathOrNull([string]$rel) {
+    $p = Join-Path $configDir $rel
+    if (Test-Path $p) { return $p } else { return $null }
+}
+
+## resolve specific config files
+$flake8Cfg = $null; $mypyCfg = $null; $pytestCfg = $null
+if ($usePersonalConfig) {
+    $flake8Cfg = ConfigPathOrNull('.flake8')
+    $mypyCfg = ConfigPathOrNull('mypy.ini')
+    $pytestCfg = ConfigPathOrNull('pytest.ini')
+}
 foreach ($t in $toolList) {
     switch ($t) {
         'isort' {
@@ -76,14 +93,14 @@ foreach ($t in $toolList) {
         }
         'flake8' {
             # flake8 has no auto-fix; always check
-            $cmd = 'python -m flake8 .'
+            if ($flake8Cfg) { $cmd = "python -m flake8 --config `"$flake8Cfg`" ." } else { $cmd = 'python -m flake8 .' }
         }
         'mypy' {
             # mypy is type-check only
-            $cmd = 'python -m mypy .'
+            if ($mypyCfg) { $cmd = "python -m mypy --config-file `"$mypyCfg`" ." } else { $cmd = 'python -m mypy .' }
         }
         'pytest' {
-            $cmd = 'python -m pytest --cov=core --cov=services --cov=utils --cov=cli --cov-report=term-missing --cov-report=html -q'
+            if ($pytestCfg) { $cmd = "python -m pytest -c `"$pytestCfg`" --cov=core --cov=services --cov=utils --cov=cli --cov-report=term-missing --cov-report=html -q" } else { $cmd = 'python -m pytest --cov=core --cov=services --cov=utils --cov=cli --cov-report=term-missing --cov-report=html -q' }
         }
         default {
             Write-Host "Unknown tool: $t" -ForegroundColor Yellow
