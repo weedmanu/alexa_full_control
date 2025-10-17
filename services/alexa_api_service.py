@@ -29,6 +29,7 @@ except Exception:
             return fn(*args, **kwargs)
 
 from core.exceptions import APIError
+import contextlib
 
 
 class AlexaAPIService:
@@ -79,10 +80,9 @@ class AlexaAPIService:
             devices = data.get("devices", [])
             # set correlation id for tracing
             self._get_correlation_id()
-            try:
+            # Best-effort logging; don't fail on logging errors
+            with contextlib.suppress(Exception):
                 logger.info("get_devices success", extra={"count": len(devices), "correlation_id": self._current_correlation_id})
-            except Exception:
-                pass
             return devices
         except Exception as e:
             # fallback

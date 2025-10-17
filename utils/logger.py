@@ -422,69 +422,63 @@ class InstallLogger:
             # analyze the module implementation.
             from importlib import import_module
 
-            FallbackLogger = import_module("scripts.install").Logger
+            fallback_logger = import_module("scripts.install").Logger
 
-            FallbackLogger.header(msg, emoji)
+            fallback_logger.header(msg, emoji)
 
     def step(self, msg: str, emoji: str = "⚡") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{emoji} {msg}")
         else:
             from importlib import import_module
+            fallback_logger = import_module("scripts.install").Logger
 
-            FallbackLogger = import_module("scripts.install").Logger
-
-            FallbackLogger.step(msg, emoji)
+            fallback_logger.step(msg, emoji)
 
     def progress(self, msg: str) -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"⏳ {msg}...")
         else:
             from importlib import import_module
+            fallback_logger = import_module("scripts.install").Logger
 
-            FallbackLogger = import_module("scripts.install").Logger
-
-            FallbackLogger.progress(msg)
+            fallback_logger.progress(msg)
 
     def success(self, msg: str, emoji: str = "✅") -> None:
         if self.use_loguru:
             logger.opt(depth=1).success(f"{msg}")
         else:
             from importlib import import_module
+            fallback_logger = import_module("scripts.install").Logger
 
-            FallbackLogger = import_module("scripts.install").Logger
-
-            FallbackLogger.success(msg, emoji)
+            fallback_logger.success(msg, emoji)
 
     def error(self, msg: str, emoji: str = "❌") -> None:
         if self.use_loguru:
             logger.opt(depth=1).error(f"{msg}")
         else:
             from importlib import import_module
+            fallback_logger = import_module("scripts.install").Logger
 
-            FallbackLogger = import_module("scripts.install").Logger
-
-            FallbackLogger.error(msg, emoji)
+            fallback_logger.error(msg, emoji)
 
     def warning(self, msg: str, emoji: str = "⚠️") -> None:
         if self.use_loguru:
             logger.opt(depth=1).warning(f"{msg}")
         else:
             from importlib import import_module
+            fallback_logger = import_module("scripts.install").Logger
 
-            FallbackLogger = import_module("scripts.install").Logger
-
-            FallbackLogger.warning(msg, emoji)
+            fallback_logger.warning(msg, emoji)
 
     def info(self, msg: str, emoji: str = "ℹ️") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{msg}")
         else:
             from importlib import import_module
+            fallback_logger = import_module("scripts.install").Logger
 
-            FallbackLogger = import_module("scripts.install").Logger
-
-            FallbackLogger.info(msg, emoji)
+            fallback_logger.info(msg, emoji)
 
     def debug(self, msg: str) -> None:
         if self.use_loguru:

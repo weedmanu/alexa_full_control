@@ -133,12 +133,12 @@ class JsonStorage:
             except (OSError, TypeError) as e:
                 from loguru import logger
                 logger.error(f"Erreur sauvegarde JSON {filename}: {e}")
-                # Nettoyer fichier temporaire
+                # Nettoyer fichier temporaire (best-effort)
                 if tmp_path and os.path.exists(tmp_path):
-                    try:
+                    import contextlib
+
+                    with contextlib.suppress(OSError):
                         os.remove(tmp_path)
-                    except OSError:
-                        pass
                 return False
 
     def exists(self, filename: str) -> bool:
