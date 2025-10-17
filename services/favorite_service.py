@@ -12,6 +12,9 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from utils.json_storage import JsonStorage
+from utils.text_utils import normalize_name
+
 
 class FavoriteService:
     """Service de gestion des favoris."""
@@ -26,6 +29,7 @@ class FavoriteService:
         self.config_dir.mkdir(parents=True, exist_ok=True)
         
         self.favorites_file = self.config_dir / "favorites.json"
+        self._storage = JsonStorage(self.config_dir)
         self._favorites: Dict[str, Dict[str, Any]] = {}
         
         # Charger les favoris existants
@@ -33,27 +37,18 @@ class FavoriteService:
 
     def _normalize_name(self, name: str) -> str:
         """Normalise le nom du favori pour la clé."""
-        return name.lower().replace(" ", "_").replace("-", "_")
+        return normalize_name(name)
 
     def _load_favorites(self) -> None:
         """Charge les favoris depuis le fichier."""
-        try:
-            if self.favorites_file.exists():
-                with open(self.favorites_file, "r") as f:
-                    self._favorites = json.load(f)
-            else:
-                self._favorites = {}
-        except (json.JSONDecodeError, IOError) as e:
-            logger.warning(f"Erreur lors du chargement des favoris: {e}")
-            self._favorites = {}
+        self._favorites = self._storage.load("favorites.json", default={})
 
     def save_favorites(self) -> bool:
         """Sauvegarde les favoris dans le fichier."""
         try:
-            with open(self.favorites_file, "w") as f:
-                json.dump(self._favorites, f, indent=2)
+            self._storage.save("favorites.json", self._favorites)
             return True
-        except IOError as e:
+        except Exception as e:
             logger.error(f"Erreur lors de la sauvegarde des favoris: {e}")
             return False
 

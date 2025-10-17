@@ -5,57 +5,60 @@ Permet de grouper les appareils Alexa et d'exécuter des commandes
 simultanément sur tous les appareils du groupe.
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from core.base_persistence_manager import BasePersistenceManager
 
-class MultiRoomManager:
+
+class MultiRoomManager(BasePersistenceManager):
     """Gestionnaire des groupes multiroom."""
 
     def __init__(self, config_dir: Optional[Path] = None) -> None:
         """Initialise le manager."""
-        # Déterminer le répertoire de config
-        if config_dir is None:
-            config_dir = Path.home() / ".alexa"
+        super().__init__("multiroom_groups.json", config_dir)
 
-        self.config_dir = Path(config_dir)
-        self.config_dir.mkdir(parents=True, exist_ok=True)
+    def _validate_item(self, item: Dict[str, Any]) -> bool:
+        """
+        Valide la structure d'un groupe multiroom.
 
-        self.groups_file = self.config_dir / "multiroom_groups.json"
-        self._groups: Dict[str, Dict[str, Any]] = {}
+        Args:
+            item: Groupe à valider
 
-        # Charger les groupes existants
-        self._load_groups()
-
-    def _normalize_name(self, name: str) -> str:
-        """Normalise le nom du groupe pour la clé."""
-        return name.lower().replace(" ", "_").replace("-", "_")
-
-    def _load_groups(self) -> None:
-        """Charge les groupes depuis le fichier."""
-        try:
-            if self.groups_file.exists():
-                with open(self.groups_file, "r") as f:
-                    self._groups = json.load(f)
-            else:
-                self._groups = {}
-        except (json.JSONDecodeError, IOError) as e:
-            logger.warning(f"Erreur lors du chargement des groupes: {e}")
-            self._groups = {}
-
-    def save_groups(self) -> bool:
-        """Sauvegarde les groupes dans le fichier."""
-        try:
-            with open(self.groups_file, "w") as f:
-                json.dump(self._groups, f, indent=2)
-            return True
-        except IOError as e:
-            logger.error(f"Erreur lors de la sauvegarde des groupes: {e}")
+        Returns:
+            True si valide, False sinon
+        """
+        required_keys = {"name", "devices"}
+        if not isinstance(item, dict) or not required_keys.issubset(item.keys()):
             return False
+
+        devices = item.get("devices", [])
+        if not isinstance(devices, list) or len(devices) < 2:
+            return False
+
+        return True
+
+    def _create_item(self, name: str, **kwargs: Any) -> Dict[str, Any]:
+        """
+        Crée un nouvel élément groupe.
+
+        Args:
+            name: Nom du groupe
+            **kwargs: Doit contenir 'devices'
+
+        Returns:
+            Groupe créé
+        """
+        devices = kwargs.get("devices", [])
+        return {
+            "name": name,
+            "devices": list(set(devices)),  # Dédupliquer
+            "created": datetime.now().isoformat(),
+            "modified": None,
+        }
 
     def create_group(
         self,
@@ -80,24 +83,8 @@ class MultiRoomManager:
             logger.warning("Au moins 2 appareils requis pour un groupe")
             return False
 
-        # Vérifier s'il existe déjà
-        key = self._normalize_name(name)
-        if key in self._groups:
-            logger.warning(f"Groupe '{name}' existe déjà")
-            return False
-
-        # Créer le groupe
-        self._groups[key] = {
-            "name": name,
-            "devices": list(set(devices)),  # Dédupliquer
-            "created": datetime.now().isoformat(),
-            "modified": None,
-        }
-
-        logger.info(f"Groupe '{name}' créé avec {len(devices)} appareils")
-
-        # Sauvegarder
-        return self.save_groups()
+        # Utiliser BasePersistenceManager pour créer
+        return self.add_item(name, devices=devices)
 
     def delete_group(self, name: str) -> bool:
         """Supprime un groupe.
@@ -108,16 +95,7 @@ class MultiRoomManager:
         Returns:
             True si succès, False sinon
         """
-        key = self._normalize_name(name)
-
-        if key not in self._groups:
-            logger.warning(f"Groupe '{name}' introuvable")
-            return False
-
-        del self._groups[key]
-        logger.info(f"Groupe '{name}' supprimé")
-
-        return self.save_groups()
+        return self.remove_item(name)
 
     def get_group(self, name: str) -> Optional[Dict[str, Any]]:
         """Récupère un groupe par son nom.
@@ -128,8 +106,7 @@ class MultiRoomManager:
         Returns:
             Dict du groupe ou None
         """
-        key = self._normalize_name(name)
-        return self._groups.get(key)
+        return self.get_item(name)
 
     def get_groups(self) -> Dict[str, Dict[str, Any]]:
         """Récupère tous les groupes.
@@ -137,7 +114,7 @@ class MultiRoomManager:
         Returns:
             Dict de tous les groupes
         """
-        return self._groups.copy()
+        return self.get_all_items()
 
     def add_device_to_group(self, group_name: str, device_serial: str) -> bool:
         """Ajoute un appareil au groupe.
@@ -149,28 +126,23 @@ class MultiRoomManager:
         Returns:
             True si succès, False sinon
         """
-        key = self._normalize_name(group_name)
-
-        if key not in self._groups:
+        group = self.get_item(group_name)
+        if not group:
             logger.warning(f"Groupe '{group_name}' introuvable")
             return False
 
         # Vérifier que l'appareil n'est pas déjà dans le groupe
-        if device_serial in self._groups[key]["devices"]:
+        if device_serial in group["devices"]:
             logger.warning(
                 f"Appareil '{device_serial}' est déjà dans le groupe '{group_name}'"
             )
             return False
 
         # Ajouter l'appareil
-        self._groups[key]["devices"].append(device_serial)
-        self._groups[key]["modified"] = datetime.now().isoformat()
+        group["devices"].append(device_serial)
+        group["modified"] = datetime.now().isoformat()
 
-        logger.info(
-            f"Appareil '{device_serial}' ajouté au groupe '{group_name}'"
-        )
-
-        return self.save_groups()
+        return self.update_item(group_name, devices=group["devices"], modified=group["modified"])
 
     def remove_device_from_group(self, group_name: str, device_serial: str) -> bool:
         """Retire un appareil du groupe.
@@ -182,28 +154,23 @@ class MultiRoomManager:
         Returns:
             True si succès, False sinon
         """
-        key = self._normalize_name(group_name)
-
-        if key not in self._groups:
+        group = self.get_item(group_name)
+        if not group:
             logger.warning(f"Groupe '{group_name}' introuvable")
             return False
 
         # Vérifier que l'appareil est dans le groupe
-        if device_serial not in self._groups[key]["devices"]:
+        if device_serial not in group["devices"]:
             logger.warning(
                 f"Appareil '{device_serial}' n'est pas dans le groupe '{group_name}'"
             )
             return False
 
         # Retirer l'appareil
-        self._groups[key]["devices"].remove(device_serial)
-        self._groups[key]["modified"] = datetime.now().isoformat()
+        group["devices"].remove(device_serial)
+        group["modified"] = datetime.now().isoformat()
 
-        logger.info(
-            f"Appareil '{device_serial}' retiré du groupe '{group_name}'"
-        )
-
-        return self.save_groups()
+        return self.update_item(group_name, devices=group["devices"], modified=group["modified"])
 
     def rename_group(self, old_name: str, new_name: str) -> bool:
         """Renomme un groupe.
@@ -215,26 +182,26 @@ class MultiRoomManager:
         Returns:
             True si succès, False sinon
         """
-        old_key = self._normalize_name(old_name)
-        new_key = self._normalize_name(new_name)
-
-        if old_key not in self._groups:
+        # Récupérer l'ancien groupe
+        old_group = self.get_item(old_name)
+        if not old_group:
             logger.warning(f"Groupe '{old_name}' introuvable")
             return False
 
-        if new_key in self._groups:
+        # Vérifier que le nouveau nom n'existe pas
+        if self.item_exists(new_name):
             logger.warning(f"Groupe '{new_name}' existe déjà")
             return False
 
-        # Renommer
-        group = self._groups.pop(old_key)
-        group["name"] = new_name
-        group["modified"] = datetime.now().isoformat()
-        self._groups[new_key] = group
+        # Créer le nouveau groupe avec le nouveau nom
+        old_group["name"] = new_name
+        old_group["modified"] = datetime.now().isoformat()
 
-        logger.info(f"Groupe renommé: '{old_name}' → '{new_name}'")
+        # Supprimer l'ancien et ajouter le nouveau
+        if not self.remove_item(old_name):
+            return False
 
-        return self.save_groups()
+        return self.add_item(new_name, devices=old_group["devices"])
 
     def get_group_devices(self, group_name: str) -> List[str]:
         """Récupère la liste des appareils d'un groupe.
@@ -257,6 +224,6 @@ class MultiRoomManager:
         Returns:
             Liste des groupes triés
         """
-        groups = list(self._groups.values())
+        groups = list(self.get_all_items().values())
         groups.sort(key=lambda x: x.get("created", ""), reverse=True)
         return groups

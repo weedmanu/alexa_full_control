@@ -171,7 +171,6 @@ exclude = [
 
 
 [tool.pytest.ini_options]
-# Updated: All tests now in Dev/pytests/ directory (Phase 5 cleanup)
 testpaths = ["Dev/pytests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]

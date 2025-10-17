@@ -9,23 +9,24 @@ import argparse
 from typing import Dict, List, Optional
 
 from utils.logger import SharedIcons
+from utils.term import Colors
 
 
 class ShortHelpFormatter:
     """Générateur d'aide courte avec couleurs ANSI."""
 
-    # Codes couleur ANSI
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
+    # Codes couleur ANSI - utilisation centralisée depuis term.Colors
+    RESET = Colors.RESET
+    BOLD = Colors.BOLD
 
     # Couleurs pour différents types de contenu
-    COLOR_HEADER = "\033[1;36m"  # Cyan bold pour les headers
-    COLOR_USAGE = "\033[1;33m"  # Jaune bold pour usage
-    COLOR_ACTION = "\033[1;32m"  # Vert bold pour actions
-    COLOR_OPTION = "\033[1;35m"  # Magenta bold pour options
-    COLOR_EXAMPLE = "\033[0;37m"  # Blanc pour exemples
-    COLOR_DESCRIPTION = "\033[0;90m"  # Gris pour descriptions
-    COLOR_SEPARATOR = "\033[0;36m"  # Cyan pour séparateurs
+    COLOR_HEADER = Colors.CYAN_BOLD  # Cyan bold pour les headers
+    COLOR_USAGE = Colors.YELLOW_BOLD  # Jaune bold pour usage
+    COLOR_ACTION = Colors.GREEN_BOLD  # Vert bold pour actions
+    COLOR_OPTION = Colors.MAGENTA_BOLD  # Magenta bold pour options
+    COLOR_EXAMPLE = Colors.WHITE_BOLD  # Blanc pour exemples
+    COLOR_DESCRIPTION = Colors.GRAY  # Gris pour descriptions
+    COLOR_SEPARATOR = Colors.CYAN  # Cyan pour séparateurs
 
     @staticmethod
     def _separator(length: int = 120) -> str:

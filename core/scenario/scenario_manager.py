@@ -4,7 +4,6 @@ Gestionnaire des scénarios/macros Alexa (TDD - GREEN phase).
 Permet de créer, exécuter, lister et gérer des séquences de commandes.
 """
 
-import json
 import time
 from datetime import datetime
 from pathlib import Path
@@ -12,8 +11,10 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from core.base_persistence_manager import BasePersistenceManager
 
-class ScenarioManager:
+
+class ScenarioManager(BasePersistenceManager):
     """Gestionnaire des scénarios/macros pour Alexa."""
 
     def __init__(self, storage_path: Optional[str] = None) -> None:
@@ -23,46 +24,75 @@ class ScenarioManager:
         Args:
             storage_path: Chemin personnalisé de stockage (défaut: ~/.alexa/)
         """
-        if storage_path:
-            self.storage_path = Path(storage_path)
-        else:
-            self.storage_path = Path.home() / ".alexa"
+        config_dir = Path(storage_path) if storage_path else None
+        super().__init__("scenarios.json", config_dir)
 
-        self.storage_path.mkdir(parents=True, exist_ok=True)
-        self.json_file = self.storage_path / "scenarios.json"
-        self._scenarios: Dict[str, Dict[str, Any]] = {}
-        self._load_scenarios()
+    @property
+    def storage_path(self) -> str:
+        """Chemin de stockage pour compatibilité."""
+        return str(self.storage.base_dir)
 
-    def _load_scenarios(self) -> None:
-        """Charge les scénarios depuis le fichier JSON."""
-        if self.json_file.exists():
-            try:
-                with open(self.json_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    if isinstance(data, dict) and "scenarios" in data:
-                        for scenario in data["scenarios"]:
-                            name = scenario.get("name", "").lower()
-                            self._scenarios[name] = scenario
-                logger.debug(f"Chargé {len(self._scenarios)} scénarios depuis JSON")
-            except Exception as e:
-                logger.error(f"Erreur lors du chargement des scénarios: {e}")
-                self._scenarios = {}
-        else:
-            self._scenarios = {}
+    def _load_data(self) -> None:
+        """Charge les scénarios depuis le fichier JSON avec format spécial."""
+        raw_data = self.storage.load(self.storage_key, default={"scenarios": []})
+        self._data = {}
 
-    def _save_scenarios(self) -> None:
-        """Sauvegarde les scénarios dans le fichier JSON."""
-        try:
-            data = {"scenarios": list(self._scenarios.values())}
-            with open(self.json_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-            logger.debug(f"Scénarios sauvegardés ({len(self._scenarios)} scénarios)")
-        except Exception as e:
-            logger.error(f"Erreur lors de la sauvegarde des scénarios: {e}")
+        if isinstance(raw_data, dict) and "scenarios" in raw_data:
+            for scenario in raw_data["scenarios"]:
+                if isinstance(scenario, dict) and "name" in scenario:
+                    name = scenario["name"].lower()
+                    self._data[name] = scenario
 
-    def _normalize_name(self, name: str) -> str:
-        """Normalise le nom d'un scénario (lowercase)."""
-        return name.lower().strip()
+        logger.debug(f"Chargé {len(self._data)} scénarios depuis JSON")
+
+    def _save_data(self) -> bool:
+        """Sauvegarde les scénarios dans le fichier JSON avec format spécial."""
+        data = {"scenarios": list(self._data.values())}
+        return self.storage.save(self.storage_key, data)
+
+    def _validate_item(self, item: Dict[str, Any]) -> bool:
+        """
+        Valide la structure d'un scénario.
+
+        Args:
+            item: Scénario à valider
+
+        Returns:
+            True si valide, False sinon
+        """
+        required_keys = {"name", "actions"}
+        if not isinstance(item, dict) or not required_keys.issubset(item.keys()):
+            return False
+
+        # Valider les actions
+        actions = item.get("actions", [])
+        if not isinstance(actions, list):
+            return False
+
+        for action in actions:
+            if not self._validate_action(action):
+                return False
+
+        return True
+
+    def _create_item(self, name: str, **kwargs: Any) -> Dict[str, Any]:
+        """
+        Crée un nouvel élément scénario.
+
+        Args:
+            name: Nom du scénario
+            **kwargs: Doit contenir 'actions'
+
+        Returns:
+            Scénario créé
+        """
+        actions = kwargs.get("actions", [])
+        return {
+            "name": name,
+            "actions": actions,
+            "created": datetime.now().isoformat(),
+            "modified": datetime.now().isoformat()
+        }
 
     def _validate_action(self, action: Dict[str, Any]) -> bool:
         """
@@ -117,25 +147,8 @@ class ScenarioManager:
                 logger.warning(f"Action invalide: {action}")
                 return False
 
-        # Vérifier les doublons
-        normalized = self._normalize_name(name)
-        if normalized in self._scenarios:
-            logger.warning(f"Scénario '{name}' existe déjà")
-            return False
-
-        # Créer le scénario
-        now = datetime.now().isoformat()
-        scenario = {
-            "name": name,
-            "actions": actions,
-            "created": now,
-            "modified": now,
-        }
-
-        self._scenarios[normalized] = scenario
-        self._save_scenarios()
-        logger.info(f"Scénario '{name}' créé avec {len(actions)} action(s)")
-        return True
+        # Utiliser BasePersistenceManager pour ajouter
+        return self.add_item(name, actions=actions)
 
     def get_scenario(self, name: str) -> Optional[Dict[str, Any]]:
         """
@@ -147,8 +160,7 @@ class ScenarioManager:
         Returns:
             Dictionnaire du scénario ou None
         """
-        normalized = self._normalize_name(name)
-        return self._scenarios.get(normalized)
+        return self.get_item(name)
 
     def get_scenarios(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -157,7 +169,7 @@ class ScenarioManager:
         Returns:
             Dictionnaire {normalized_name: scenario_data}
         """
-        return self._scenarios
+        return self.get_all_items()
 
     def delete_scenario(self, name: str) -> bool:
         """
@@ -169,15 +181,7 @@ class ScenarioManager:
         Returns:
             True si suppression réussie, False sinon
         """
-        normalized = self._normalize_name(name)
-        if normalized not in self._scenarios:
-            logger.warning(f"Scénario '{name}' non trouvé")
-            return False
-
-        del self._scenarios[normalized]
-        self._save_scenarios()
-        logger.info(f"Scénario '{name}' supprimé")
-        return True
+        return self.remove_item(name)
 
     def run_scenario(self, name: str, auth: Optional[Any] = None) -> bool:
         """
@@ -233,27 +237,26 @@ class ScenarioManager:
         Returns:
             True si renommage réussi, False sinon
         """
-        old_normalized = self._normalize_name(old_name)
-        new_normalized = self._normalize_name(new_name)
-
-        if old_normalized not in self._scenarios:
+        # Récupérer l'ancien scénario
+        old_scenario = self.get_item(old_name)
+        if not old_scenario:
             logger.warning(f"Scénario '{old_name}' non trouvé")
             return False
 
-        if new_normalized in self._scenarios and new_normalized != old_normalized:
+        # Vérifier que le nouveau nom n'existe pas
+        if self.item_exists(new_name):
             logger.warning(f"Scénario '{new_name}' existe déjà")
             return False
 
-        scenario = self._scenarios[old_normalized]
-        scenario["name"] = new_name
-        scenario["modified"] = datetime.now().isoformat()
+        # Créer le nouveau scénario avec le nouveau nom
+        old_scenario["name"] = new_name
+        old_scenario["modified"] = datetime.now().isoformat()
 
-        del self._scenarios[old_normalized]
-        self._scenarios[new_normalized] = scenario
-        self._save_scenarios()
+        # Supprimer l'ancien et ajouter le nouveau
+        if not self.remove_item(old_name):
+            return False
 
-        logger.info(f"Scénario renommé '{old_name}' → '{new_name}'")
-        return True
+        return self.add_item(new_name, **{"actions": old_scenario["actions"]})
 
     def edit_scenario(self, name: str, new_actions: List[Dict[str, Any]]) -> bool:
         """
@@ -276,19 +279,8 @@ class ScenarioManager:
                 logger.warning(f"Action invalide: {action}")
                 return False
 
-        scenario = self.get_scenario(name)
-        if not scenario:
-            logger.warning(f"Scénario '{name}' non trouvé")
-            return False
-
-        normalized = self._normalize_name(name)
-        scenario["actions"] = new_actions
-        scenario["modified"] = datetime.now().isoformat()
-        self._scenarios[normalized] = scenario
-        self._save_scenarios()
-
-        logger.info(f"Scénario '{name}' édité ({len(new_actions)} action(s))")
-        return True
+        # Mettre à jour via BasePersistenceManager
+        return self.update_item(name, actions=new_actions, modified=datetime.now().isoformat())
 
     def search_scenarios(self, query: str) -> List[Dict[str, Any]]:
         """
@@ -303,7 +295,7 @@ class ScenarioManager:
         query_lower = query.lower()
         results = [
             scenario
-            for scenario in self._scenarios.values()
+            for scenario in self.get_all_items().values()
             if query_lower in scenario.get("name", "").lower()
         ]
         logger.debug(f"Recherche '{query}': {len(results)} résultat(s)")
@@ -333,7 +325,7 @@ class ScenarioManager:
         Returns:
             Liste de tous les scénarios
         """
-        return list(self._scenarios.values())
+        return list(self.get_all_items().values())
 
     def import_scenario(self, scenario_dict: Dict[str, Any]) -> bool:
         """
@@ -362,20 +354,10 @@ class ScenarioManager:
                 logger.warning(f"Action invalide dans import: {action}")
                 return False
 
-        # Créer le scénario
-        normalized = self._normalize_name(name)
-        if normalized in self._scenarios:
+        # Vérifier que le scénario n'existe pas déjà
+        if self.item_exists(name):
             logger.warning(f"Scénario '{name}' existe déjà")
             return False
 
-        scenario = {
-            "name": name,
-            "actions": actions,
-            "created": scenario_dict.get("created", datetime.now().isoformat()),
-            "modified": scenario_dict.get("modified", datetime.now().isoformat()),
-        }
-
-        self._scenarios[normalized] = scenario
-        self._save_scenarios()
-        logger.info(f"Scénario '{name}' importé")
-        return True
+        # Créer le scénario
+        return self.add_item(name, actions=actions)

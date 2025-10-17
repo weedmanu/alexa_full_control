@@ -4,8 +4,8 @@
 import sys
 from pathlib import Path
 
-# Add parent to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from cli import create_context
 from cli.commands import ScenarioCommand

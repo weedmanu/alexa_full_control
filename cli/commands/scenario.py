@@ -15,10 +15,20 @@ from typing import Any, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from cli.help_texts.scenario_help import CREATE_HELP, DELETE_HELP, EDIT_HELP, INFO_HELP, LIST_HELP, RUN_HELP, SCENARIO_DESCRIPTION
 
 # Constantes de description simplifiées
 DESCRIPTION = "Gérer les scénarios/macros Alexa"
+
+# Descriptions des actions
+CREATE_HELP = "Créer un nouveau scénario"
+DELETE_HELP = "Supprimer un scénario existant"
+EDIT_HELP = "Éditer les actions d'un scénario"
+INFO_HELP = "Afficher les détails d'un scénario"
+LIST_HELP = "Lister tous les scénarios"
+RUN_HELP = "Exécuter un scénario"
+
+# Description principale
+SCENARIO_DESCRIPTION = "Gestion des scénarios/macros Alexa"
 
 
 class ScenarioCommand(BaseCommand):

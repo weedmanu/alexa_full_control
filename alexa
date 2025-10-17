@@ -23,10 +23,13 @@ Pour plus d'aide:
     alexa <CATEGORY> <ACTION> --help
 
 Auteur: M@nu
-Version: 2.0.0
+Version: {__version__}
 Date: 8 octobre 2025
 ============================================================================
 """
+
+# Version centralisée - SINGLE SOURCE OF TRUTH
+__version__ = "2.0.0"
 
 import io
 import sys
@@ -161,7 +164,7 @@ def main() -> int:
         logger.add(sys.stdout, level="CRITICAL", format="{message}")  # Seulement CRITICAL
 
         # Créer le parser
-        parser = create_parser(version="2.0.0")
+        parser = create_parser(version=__version__)
 
         # Enregistrer toutes les commandes
         register_all_commands(parser)
@@ -213,7 +216,7 @@ def main() -> int:
         else:
             setup_logging(verbose=verbose_mode, debug=debug_mode)
 
-        logger.info(f"Alexa Voice Control CLI v2.0.0 - Catégorie: {args.category}")
+        logger.info(f"Alexa Voice Control CLI v{__version__} - Catégorie: {args.category}")
 
         # Créer le contexte
         config_file = args.config if hasattr(args, "config") and args.config else None
