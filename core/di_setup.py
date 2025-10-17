@@ -20,14 +20,14 @@ class DISetup:
 
     @staticmethod
     def setup_for_cli(
-        auth_file: Optional[str] = None,
+        _auth_file: Optional[str] = None,
         config_file: Optional[str] = None,
     ) -> DIContainer:
         """
         Setup DI container for CLI usage.
 
         Args:
-            auth_file: Path to auth credentials file (Note: AlexaAuth loads from default dir)
+            _auth_file: Path to auth credentials file (Note: AlexaAuth loads from default dir)
             config_file: Path to configuration file (Note: Config loads from default dir)
 
         Returns:

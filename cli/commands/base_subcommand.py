@@ -279,3 +279,15 @@ class BaseSubCommand:
             parts.append(f"{seconds_remainder}s")
 
         return " ".join(parts) if parts else "0s"
+
+    # ------------------------------------------------------------------
+    # Compatibility aliases (historical names used by CLI commands)
+    # ------------------------------------------------------------------
+    def _parse_duration(self, duration_str: str) -> Optional[int]:
+        return self.parse_duration(duration_str)
+
+    def _format_duration(self, seconds: int) -> str:
+        return self.format_duration(seconds)
+
+    def _get_device_type(self, device_name: str) -> str:
+        return self.get_device_type(device_name)

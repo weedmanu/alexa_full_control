@@ -6,7 +6,7 @@ et protection par CircuitBreaker. Convertit erreurs HTTP en exceptions
 typiées (core.exceptions).
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import requests
 from loguru import logger
@@ -95,7 +95,7 @@ class AlexaHTTPClient:
         try:
             response = self.breaker.call(self.session.get, url, **kwargs)
             self._check_response(response)
-            return response
+            return cast(requests.Response, response)
         except requests.HTTPError as e:
             # Convert HTTP errors to domain exceptions
             self._handle_http_error(e)
@@ -118,7 +118,7 @@ class AlexaHTTPClient:
         try:
             response = self.breaker.call(self.session.post, url, **kwargs)
             self._check_response(response)
-            return response
+            return cast(requests.Response, response)
         except requests.HTTPError as e:
             self._handle_http_error(e)
             raise
@@ -135,7 +135,7 @@ class AlexaHTTPClient:
         try:
             response = self.breaker.call(self.session.put, url, **kwargs)
             self._check_response(response)
-            return response
+            return cast(requests.Response, response)
         except requests.HTTPError as e:
             self._handle_http_error(e)
             raise
@@ -152,7 +152,7 @@ class AlexaHTTPClient:
         try:
             response = self.breaker.call(self.session.delete, url, **kwargs)
             self._check_response(response)
-            return response
+            return cast(requests.Response, response)
         except requests.HTTPError as e:
             self._handle_http_error(e)
             raise

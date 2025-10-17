@@ -16,7 +16,7 @@ Date: 7 octobre 2025
 """
 
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 from loguru import logger
 
@@ -179,12 +179,16 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
 
         try:
             # Call API service which returns typed DTO
-            response = self._api_service.get_devices()
+            response = cast(Optional["GetDevicesResponse"], self._api_service.get_devices())
 
             # Cache the response
             if response and hasattr(response, "devices"):
                 with self._lock:
-                    self._cache = response.devices  # Cache the device list
+                    # Convert DTO devices to plain dicts for backward compatibility with legacy cache
+                    self._cache = [
+                        cast(Dict[str, Any], d.model_dump()) if hasattr(d, "model_dump") else cast(Dict[str, Any], d)
+                        for d in response.devices
+                    ]
                     self._cache_timestamp = time.time()
                     # Also store in disk cache
                     if response.devices:
@@ -232,7 +236,7 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
 
             # Use AlexaAPIService
             try:
-                devices = self._api_service.get_devices()
+                devices = cast(Optional[List[Dict[str, Any]]], self._api_service.get_devices())
             except Exception:
                 logger.exception("Erreur lors de la récupération des appareils via AlexaAPIService")
                 return None
@@ -242,9 +246,10 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
             self._cache_timestamp = time.time()
 
             # Mise à jour cache disque (Niveau 2) - TTL 1h
-            self.cache_service.set("devices", {"devices": devices}, ttl_seconds=3600)
+            if devices:
+                self.cache_service.set("devices", {"devices": devices}, ttl_seconds=3600)
+                logger.info(f"✅ {len(devices)} appareils récupérés et mis en cache (mémoire + disque)")
 
-            logger.info(f"✅ {len(devices)} appareils récupérés et mis en cache (mémoire + disque)")
             return devices
 
         except Exception:

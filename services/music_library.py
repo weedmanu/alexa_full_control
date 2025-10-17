@@ -10,12 +10,12 @@ Date: 8 octobre 2025
 import base64
 import json
 from threading import RLock
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 from pybreaker import CircuitBreaker
 
-from config import Config
+from core.config import Config
 from services.auth import AuthClient
 from utils.logger import SharedIcons, setup_loguru_logger
 
@@ -533,7 +533,7 @@ class MusicLibraryService:
                 data = response.json()
 
                 logger.success(f"{SharedIcons.MUSIC} Stations Prime récupérées pour {device_serial}")
-                return data.get("primeMusicSections", [])
+                return cast(List[Dict[str, Any]], data.get("primeMusicSections", []))
 
             except Exception as e:
                 msg = f"{SharedIcons.ERROR} Erreur récupération Prime stations pour {device_serial}: {e}"

@@ -151,28 +151,6 @@ class AnnouncementCommand(BaseCommand):
             self.info("   TODO: Investiguer le bon endpoint pour les annonces")
             return False
 
-            # R…cup…rer le serial de l'appareil
-            serial = self.get_device_serial(args.device)
-            if not serial:
-                return False
-
-            title = getattr(args, "title", None) or "Annonce"
-
-            self.info(f"? Envoi annonce … '{args.device}'...")
-
-            ctx = self.require_context()
-            if not ctx.notification_mgr:
-                self.error("Gestionnaire d'annonces non disponible")
-                return False
-
-            result = self.call_with_breaker(ctx.notification_mgr.send_notification, serial, args.message, title)
-
-            if result:
-                self.success(f"? Annonce envoy…e … '{args.device}'")
-                return True
-
-            return False
-
         except Exception as e:
             self.logger.exception("Erreur lors de l'envoi d'annonce")
             self.error(f"Erreur: {e}")

@@ -12,7 +12,7 @@ Usage:
 
 import argparse
 import json
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from cli.base_command import BaseCommand
 from cli.command_adapter import get_command_adapter
@@ -24,8 +24,15 @@ class FavoriteCommand(BaseCommand):
     def __init__(self, context: Optional[Any] = None) -> None:
         """Initialise la commande."""
         super().__init__(context)
-        self.favorite_service = None
-        self.adapter = get_command_adapter()
+        self.favorite_service: Any = None
+        self.adapter: Any = get_command_adapter()
+
+    def _fs(self) -> Any:
+        """Return the favorite service typed as Any for attribute access.
+
+        Callers should ensure `self.favorite_service` is not None (execute() does this).
+        """
+        return self.favorite_service
 
     def setup_parser(self, parser: argparse.ArgumentParser) -> None:
         """Configure le parser."""
@@ -116,19 +123,16 @@ class FavoriteCommand(BaseCommand):
 
         # Parser les paramètres JSON
         try:
-            params = json.loads(args.params) if args.params else {}
+            params: Dict[str, Any] = json.loads(args.params) if args.params else {}
         except json.JSONDecodeError as e:
             self.error(f"Paramètres JSON invalides: {e}")
             return False
 
         # Ajouter le favori
-        result = self.favorite_service.add_favorite(
-            name=args.name,
-            favorite_type=args.type,
-            params=params,
-        )
+        fs = self._fs()
+        result_any = fs.add_favorite(name=args.name, favorite_type=args.type, params=params)
 
-        if result:
+        if bool(result_any):
             self.success(f"✅ Favori '{args.name}' ajouté")
             return True
         else:
@@ -137,14 +141,28 @@ class FavoriteCommand(BaseCommand):
 
     def _list_favorites(self, args: argparse.Namespace) -> bool:
         """Liste les favoris."""
+        favorites: List[Dict[str, Any]] = []
+        
         if hasattr(args, "type_filter") and args.type_filter:
             # Filtrer par type
-            favorites = self.favorite_service.get_favorites_by_type(args.type_filter)
+            fs = self._fs()
+            favorites_any = fs.get_favorites_by_type(args.type_filter)
+            if isinstance(favorites_any, dict):
+                favorites = cast(List[Dict[str, Any]], list(favorites_any.values()))
+            elif isinstance(favorites_any, list):
+                favorites = cast(List[Dict[str, Any]], favorites_any)
+            else:
+                favorites = cast(List[Dict[str, Any]], list(favorites_any or []))
             self.info(f"📋 Favoris de type '{args.type_filter}':")
         else:
-            # Tous les favoris
-            all_favs = self.favorite_service.get_favorites()
-            favorites = list(all_favs.values())
+            fs = self._fs()
+            all_favs = fs.get_favorites()
+            if isinstance(all_favs, dict):
+                favorites = cast(List[Dict[str, Any]], list(all_favs.values()))
+            elif isinstance(all_favs, list):
+                favorites = cast(List[Dict[str, Any]], all_favs)
+            else:
+                favorites = cast(List[Dict[str, Any]], list(all_favs or []))
             self.info(f"📋 Tous les favoris ({len(favorites)}):")
 
         if not favorites:
@@ -161,9 +179,10 @@ class FavoriteCommand(BaseCommand):
 
     def _delete_favorite(self, args: argparse.Namespace) -> bool:
         """Supprime un favori."""
-        result = self.favorite_service.delete_favorite(args.name)
+        fs = self._fs()
+        result_any = fs.delete_favorite(args.name)
 
-        if result:
+        if bool(result_any):
             self.success(f"✅ Favori '{args.name}' supprimé")
             return True
         else:
@@ -178,13 +197,16 @@ class FavoriteCommand(BaseCommand):
             return False
 
         # Récupérer le favori
-        favorite = self.favorite_service.get_favorite(args.name)
-        if not favorite:
+        fs = self._fs()
+        favorite = fs.get_favorite(args.name)
+
+        if not favorite or not isinstance(favorite, dict):
             self.error(f"Favori '{args.name}' introuvable")
             return False
 
-        fav_type = favorite.get("type", "")
-        params = favorite.get("params", {})
+        favorite_dict = cast(Dict[str, Any], favorite)
+        fav_type: str = str(favorite_dict.get("type", ""))
+        params: Dict[str, Any] = favorite_dict.get("params", {})
 
         try:
             # Jouer selon le type de favori
@@ -218,7 +240,7 @@ class FavoriteCommand(BaseCommand):
         name: str,
         device: str,
         music_type: str,
-        params: dict,
+        params: Dict[str, Any],
     ) -> bool:
         """Joue une station de musique."""
         try:
@@ -246,21 +268,22 @@ class FavoriteCommand(BaseCommand):
                     if playback_mgr:
                         # Méthodes courantes qu'un PlaybackManager peut implémenter
                         if hasattr(playback_mgr, "play_from_favorite"):
-                            return playback_mgr.play_from_favorite(name, device, params)
+                            return bool(playback_mgr.play_from_favorite(name, device, params))
                         if hasattr(playback_mgr, "play_tunein"):
                             # some managers expect (serial, station_id)
                             try:
                                 serial = None
                                 # Essayer à récupérer un serial si disponible via device_mgr
-                                if self.device_mgr:
+                                device_mgr = getattr(self, "device_mgr", None)
+                                if device_mgr:
                                     serial = self.get_device_serial(device)
                                 if serial:
-                                    return playback_mgr.play_tunein(serial, station_id)
+                                    return bool(playback_mgr.play_tunein(serial, station_id))
                             except Exception:
                                 # fallback to generic call
-                                return playback_mgr.play_tunein(name, device, station_id)
+                                return bool(playback_mgr.play_tunein(name, device, station_id))
                         if hasattr(playback_mgr, "play"):
-                            return playback_mgr.play(name, device, params)
+                            return bool(playback_mgr.play(name, device, params))
                 except Exception as e:
                     self.logger.debug(f"PlaybackManager non disponible: {e}")
                     # Continuer sans le manager
@@ -282,7 +305,7 @@ class FavoriteCommand(BaseCommand):
         self,
         name: str,
         device: str,
-        params: dict,
+        params: Dict[str, Any],
     ) -> bool:
         """Exécute une scène Alexa."""
         try:
@@ -297,7 +320,7 @@ class FavoriteCommand(BaseCommand):
         self,
         name: str,
         device: str,
-        params: dict,
+        params: Dict[str, Any],
     ) -> bool:
         """Exécute une skill."""
         try:
@@ -310,7 +333,9 @@ class FavoriteCommand(BaseCommand):
 
     def _show_favorite(self, args: argparse.Namespace) -> bool:
         """Affiche les détails d'un favori."""
-        favorite = self.favorite_service.get_favorite(args.name)
+        # used in show
+        fs = self._fs()
+        favorite = fs.get_favorite(args.name)
 
         if not favorite:
             self.error(f"Favori '{args.name}' introuvable")
@@ -328,7 +353,8 @@ class FavoriteCommand(BaseCommand):
 
     def _search_favorites(self, args: argparse.Namespace) -> bool:
         """Cherche des favoris."""
-        results = self.favorite_service.search_favorites(args.query)
+        fs = self._fs()
+        results = fs.search_favorites(args.query)
 
         if not results:
             self.info(f"Aucun résultat pour '{args.query}'")

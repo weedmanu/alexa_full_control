@@ -1,7 +1,7 @@
 ﻿import threading
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
@@ -135,7 +135,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 logger.debug(f"Création rappel: {payload}")
 
-                result = self._api_service.post("/api/notifications", payload=payload)
+                result = cast(Optional[Dict[str, Any]], self._api_service.post("/api/notifications", payload=payload))
 
                 logger.success(f"Rappel créé pour {device_serial}")
 
@@ -184,7 +184,7 @@ class ReminderManager(BaseManager[Dict[str, Any]]):
 
                 logger.debug(f"Création rappel récurrent: {payload}")
 
-                result = self._api_service.post("/api/notifications", payload=payload)
+                result = cast(Optional[Dict[str, Any]], self._api_service.post("/api/notifications", payload=payload))
 
                 logger.success(f"Rappel récurrent créé pour {device_serial}")
 

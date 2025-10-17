@@ -54,7 +54,7 @@ class AlexaAPIService:
     ENDPOINTS: dict[str, str] = {"get_devices": "/api/devices-v2/device", "speak": "/api/speak"}
 
     def __init__(
-        self, *args: Any, session: Any = None, cache_service: Any = None, breaker_registry: Any = None, **kwargs: Any
+        self, *args: Any, session: Any = None, cache_service: Any = None, _breaker_registry: Any = None, **kwargs: Any
     ) -> None:
         self._breaker_failures: dict[str, int] = {}
         if args:

@@ -12,7 +12,7 @@ Date: 7 octobre 2025
 """
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 import requests
 import requests_cache
@@ -159,7 +159,7 @@ class OptimizedHTTPSession:
         # Défaut: 60 secondes pour endpoints inconnus
         return 60
 
-    def get(self, url: str, **kwargs) -> requests.Response:
+    def get(self, url: str, **kwargs: Any) -> Any:
         """
         Requête GET avec cache et retry automatique.
 
@@ -195,7 +195,7 @@ class OptimizedHTTPSession:
             logger.debug(f"📡 API Call: {url}")
             return self.session.get(url, **kwargs)
 
-    def post(self, url: str, **kwargs) -> requests.Response:
+    def post(self, url: str, **kwargs: Any) -> Any:
         """
         Requête POST avec retry automatique.
 
@@ -227,7 +227,7 @@ class OptimizedHTTPSession:
         else:
             return self.session.post(url, **kwargs)
 
-    def put(self, url: str, **kwargs) -> requests.Response:
+    def put(self, url: str, **kwargs: Any) -> Any:
         """Requête PUT (jamais cachée)."""
         logger.debug(f"📡 PUT: {url}")
 
@@ -237,7 +237,7 @@ class OptimizedHTTPSession:
         else:
             return self.session.put(url, **kwargs)
 
-    def delete(self, url: str, **kwargs) -> requests.Response:
+    def delete(self, url: str, **kwargs: Any) -> Any:
         """Requête DELETE (jamais cachée)."""
         logger.debug(f"📡 DELETE: {url}")
 
@@ -261,7 +261,7 @@ class OptimizedHTTPSession:
             return count
         return 0
 
-    def get_cache_info(self) -> dict:
+    def get_cache_info(self) -> Dict[str, Any]:
         """
         Retourne les statistiques du cache HTTP.
 
@@ -299,6 +299,6 @@ class OptimizedHTTPSession:
         """Support context manager."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, _exc_type: Optional[type], _exc_val: Optional[BaseException], _exc_tb: Optional[Any]) -> None:
         """Ferme session à la sortie du context."""
         self.close()

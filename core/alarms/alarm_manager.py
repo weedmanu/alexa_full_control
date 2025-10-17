@@ -7,7 +7,7 @@ modifier et supprimer des alarmes via l'API Alexa.
 
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import requests
 from loguru import logger
@@ -148,7 +148,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
             logger.debug(f"Création alarme: {payload}")
 
             if self._api_service is not None:
-                result = self._api_service.post("/api/alarms", json=payload)
+                result = cast(Optional[Dict[str, Any]], self._api_service.post("/api/alarms", json=payload))
             else:
                 result = self._api_call("post", "/api/alarms", json=payload)
 

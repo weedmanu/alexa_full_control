@@ -12,7 +12,7 @@ Date: 7 octobre 2025
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 from loguru import logger
 
@@ -120,9 +120,12 @@ class Context:
         self.cache_service = CacheService()
 
         # DI container exposure for gradual migration
+        self.di_container: Optional[Any] = None
         try:
-            self.di_container = get_di_container()
+            # get_di_container is only available during TYPE_CHECKING import path
+            self.di_container = cast(Optional[Any], get_di_container())
         except Exception:
+            # Graceful degrade to None when DI container not available
             self.di_container = None
 
         # Auth et device manager (initialisés à None, créés au login)
@@ -185,8 +188,10 @@ class Context:
         """Gestionnaire de timers (lazy-loaded)."""
         if self._timer_mgr is None and self.auth:
             from core.timers import TimerManager
+            from services.alexa_api_service import AlexaAPIService
 
-            self._timer_mgr = TimerManager(self.auth, self.config, self.state_machine)
+            api_service = AlexaAPIService(self.auth, self.cache_service)
+            self._timer_mgr = TimerManager(self.auth, self.state_machine, api_service)
             logger.debug("TimerManager chargé")
         return self._timer_mgr
 
@@ -293,7 +298,8 @@ class Context:
         if self._music_library is None and self.auth:
             from services.music_library import MusicLibraryService
 
-            self._music_library = MusicLibraryService(self.auth, self.config, self.breaker)
+            # MusicLibraryService expects a pybreaker.CircuitBreaker or None; pass None when using custom core CircuitBreaker
+            self._music_library = MusicLibraryService(self.auth, self.config, None)
             logger.debug("MusicLibraryService chargé (shell script parity)")
         return self._music_library
 
@@ -354,7 +360,8 @@ class Context:
         if self._routine_mgr is None and self.auth:
             from core.routines import RoutineManager
 
-            self._routine_mgr = RoutineManager(self.auth, self.config, self.state_machine, self.cache_service)
+            # RoutineManager expects (auth, state_machine, cache_service)
+            self._routine_mgr = RoutineManager(self.auth, self.state_machine, self.cache_service)
             logger.debug("RoutineManager chargé")
         return self._routine_mgr
 
@@ -464,9 +471,9 @@ class Context:
         Initialise l'authentification et lance la synchronisation initiale.
 
         Args:
-            auth_instance: Instance de AlexaAuth
+            auth_instance: "AlexaAuth"
         """
-        self.auth = auth_instance
+        self.auth: Optional["AlexaAuth"] = auth_instance
         logger.info("Authentification initialisée dans le contexte")
 
         # Lancer synchronisation automatique
@@ -519,11 +526,10 @@ class Context:
         """Support context manager."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, _exc_type: Optional[type], _exc_val: Optional[BaseException], _exc_tb: Optional[Any]) -> bool:
         """Support context manager (cleanup automatique)."""
         self.cleanup()
         return False
-
 
 # Factory function
 def create_context(config_file: Optional[Path] = None) -> Context:

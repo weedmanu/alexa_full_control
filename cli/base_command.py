@@ -14,9 +14,6 @@ import sys
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-if TYPE_CHECKING:
-    from .types import ContextProtocol
-
 from loguru import logger
 
 from utils.logger import SharedIcons
@@ -328,7 +325,7 @@ class BaseCommand(ABC):
     # Convenience properties that delegate to the underlying context
     # ------------------------------------------------------------------
     @property
-    def context(self) -> Optional["ContextProtocol"]:
+    def context(self) -> Optional[Any]:
         return self._context
 
     @property
@@ -351,8 +348,8 @@ class BaseCommand(ABC):
     def breaker(self) -> Optional[Any]:
         return self._context.breaker if self._context else None
 
-    def require_context(self) -> "ContextProtocol":
-        """Return the context cast to ContextProtocol or raise RuntimeError.
+    def require_context(self) -> Any:
+        """Return the context or raise RuntimeError.
 
         Use this in command implementations when the context must be present
         (for example after authentication). This helps mypy narrow Optional
