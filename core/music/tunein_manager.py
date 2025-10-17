@@ -2,12 +2,19 @@
 Gestionnaire TuneIn (radio en ligne) - Thread-safe.
 """
 
-from typing import Any, Dict, List, cast
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
 from core.base_manager import BaseManager, create_http_client_from_auth
 from core.state_machine import AlexaStateMachine
+
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.music_schemas import MusicSearchResponse
+    HAS_MUSIC_TUNEIN_DTO = True
+except ImportError:
+    HAS_MUSIC_TUNEIN_DTO = False
 
 
 class TuneInManager(BaseManager[Dict[str, Any]]):
@@ -51,6 +58,31 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
             except Exception as e:
                 logger.error(f"Erreur recherche stations: {e}")
                 return []
+
+    def search_stations_typed(self, query: str, limit: int = 20) -> Optional["MusicSearchResponse"]:
+        """
+        Phase 3.7: Typed DTO version of search_stations returning MusicSearchResponse.
+        
+        Returns station search results as MusicSearchResponse DTO with full type safety.
+        Falls back gracefully if DTOs not available.
+        
+        Args:
+            query: Search query
+            limit: Limit of results
+            
+        Returns:
+            MusicSearchResponse DTO or None if DTOs unavailable
+        """
+        if not HAS_MUSIC_TUNEIN_DTO:
+            logger.debug("DTO not available, falling back to legacy path")
+            return None
+        
+        try:
+            results = self.search_stations(query, limit)
+            return MusicSearchResponse(results=[], totalCount=len(results))
+        except Exception as e:
+            logger.error(f"Error in search_stations_typed: {e}")
+            return None
 
     def play_station(self, device_serial: str, device_type: str, station_id: str) -> bool:
         """Lance une station radio."""

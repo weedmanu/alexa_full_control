@@ -133,3 +133,31 @@ class AlarmResponse(ResponseDTO):
         extra='forbid',
         str_strip_whitespace=True
     )
+
+
+class GetAlarmsResponse(ResponseDTO):
+    """
+    Response containing list of all alarms.
+    
+    Response DTO for GET /api/alarms endpoint.
+    
+    Attributes:
+        alarms: List of AlarmDTO objects
+    
+    Example:
+        >>> response = GetAlarmsResponse(
+        ...     alarms=[
+        ...         AlarmDTO(alarm_id="a1", label="Morning", time="07:00:00", enabled=True)
+        ...     ]
+        ... )
+    """
+    
+    alarms: list[AlarmDTO] = Field(default_factory=list)
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        frozen=True,
+        extra='forbid',
+        str_strip_whitespace=True
+    )
+

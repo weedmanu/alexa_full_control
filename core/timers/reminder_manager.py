@@ -11,6 +11,20 @@ from core.circuit_breaker import CircuitBreaker
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.reminder_schemas import GetRemindersResponse, ReminderDTO
+    HAS_REMINDER_DTO = True
+except ImportError:
+    HAS_REMINDER_DTO = False
+
+# Phase 3.7: Import DTO for typed return
+try:
+    from core.schemas.reminder_schemas import GetRemindersResponse, ReminderDTO
+    HAS_REMINDER_DTO = True
+except ImportError:
+    HAS_REMINDER_DTO = False
+
 
 class ReminderManager:
     """Gestionnaire thread-safe de rappels Alexa."""
@@ -102,6 +116,51 @@ class ReminderManager:
             except Exception as e:
                 logger.error(f"Erreur liste rappels: {e}")
                 return []
+
+    def get_reminders_typed(self) -> Optional["GetRemindersResponse"]:
+        """
+        Phase 3.7: Typed DTO version of list_reminders returning GetRemindersResponse.
+        
+        Returns reminders as GetRemindersResponse DTO with full type safety.
+        Falls back gracefully if DTOs not available.
+        
+        Returns:
+            GetRemindersResponse DTO or None if DTOs unavailable
+        """
+        if not HAS_REMINDER_DTO:
+            logger.debug("DTO not available, falling back to legacy path")
+            return None
+        
+        try:
+            from datetime import datetime, timezone
+            
+            # Get reminders as dict list
+            reminders_list = self.list_reminders()
+            
+            # Convert to ReminderDTO objects
+            reminder_dtos = []
+            for r in reminders_list:
+                try:
+                    # Map dict to ReminderDTO with camelCase aliases
+                    reminder_dict = {
+                        "reminderId": r.get("id") or r.get("reminderId", f"reminder_{len(reminder_dtos)}"),
+                        "label": r.get("label", "Reminder"),
+                        "triggerTime": r.get("triggerTime") or datetime.now(timezone.utc),
+                        "enabled": r.get("enabled", True),
+                        "description": r.get("description"),
+                    }
+                    reminder_dtos.append(ReminderDTO(**reminder_dict))
+                except Exception as e:
+                    logger.warning(f"Could not convert reminder to DTO: {e}, skipping")
+                    continue
+            
+            response = GetRemindersResponse(reminders=reminder_dtos)
+            logger.debug(f"Returning {len(reminder_dtos)} reminders as DTO")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error in get_reminders_typed: {e}")
+            return None
 
     def delete_reminder(self, reminder_id: str) -> bool:
         """Supprime un rappel."""

@@ -23,6 +23,13 @@ from loguru import logger
 from core.base_manager import BaseManager, create_http_client_from_auth
 from services.cache_service import CacheService
 
+# Phase 3.7: Import DTO for type-safe responses
+try:
+    from core.schemas.device_schemas import GetDevicesResponse, Device
+    HAS_DEVICE_DTO = True
+except ImportError:
+    HAS_DEVICE_DTO = False
+
 if TYPE_CHECKING:
     from alexa_auth.alexa_auth import AlexaAuth
     from core.state_machine import AlexaStateMachine
@@ -144,6 +151,53 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
 
             # Niveau 3 : API
             return self._refresh_cache()
+
+    def get_devices_typed(self, force_refresh: bool = False) -> Optional["GetDevicesResponse"]:
+        """
+        Récupère les appareils Alexa avec une réponse typée DTO (Phase 3.7).
+
+        Même fonctionnalité que get_devices() mais retourne un GetDevicesResponse DTO
+        pour la type-safety complète.
+
+        Args:
+            force_refresh: Force le refresh du cache (ignore tous les niveaux)
+
+        Returns:
+            GetDevicesResponse DTO avec type-safe device list, ou None en cas d'erreur
+
+        Example:
+            >>> response = device_mgr.get_devices_typed()
+            >>> if response and response.devices:
+            ...     for device in response.devices:  # Full IDE auto-completion!
+            ...         print(f"{device.device_name}: {device.online}")
+        """
+        if not HAS_DEVICE_DTO:
+            logger.warning("GetDevicesResponse DTO not available, falling back to legacy get_devices()")
+            devices = self.get_devices(force_refresh=force_refresh)
+            return None  # Graceful fallback
+
+        try:
+            # Call API service which returns typed DTO
+            response = self._api_service.get_devices()
+            
+            # Cache the response
+            if response and hasattr(response, 'devices'):
+                with self._lock:
+                    self._cache = response.devices  # Cache the device list
+                    self._cache_timestamp = time.time()
+                    # Also store in disk cache
+                    if response.devices:
+                        self.cache_service.set(
+                            "devices",
+                            {"devices": [d.model_dump() if hasattr(d, 'model_dump') else d for d in response.devices]},
+                            ttl_seconds=3600
+                        )
+                    logger.info(f"✅ {len(response.devices)} appareils récupérés via DTO (mémoire + disque)")
+            
+            return response
+        except Exception as exc:
+            logger.exception(f"Erreur lors de la récupération des appareils via DTO: {exc}")
+            return None
 
     def _is_cache_valid(self) -> bool:
         """
