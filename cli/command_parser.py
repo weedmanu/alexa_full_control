@@ -12,7 +12,7 @@ Date: 7 octobre 2025
 """
 
 import argparse
-from typing import TYPE_CHECKING, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
 
 from loguru import logger
 
@@ -113,16 +113,15 @@ class CommandParser:
         try:
             setup = getattr(command_class, "setup_parser", None)
             if setup and callable(setup):
-                # Si c'est une function définie sur la classe, appeler comme
-                # method de classe. Certains BaseCommand implementent
-                # setup_parser en tant que méthode d'instance; cela permettra
-                # au fallback de marcher.
+                # Certains setup_parser sont des méthodes d'instance et d'autres
+                # des fonctions de classe. Pour satisfaire mypy, on force un
+                # cast en Any lors de l'appel - le runtime accepte les deux.
                 try:
-                    # Appel en tant que méthode de classe
-                    command_class.setup_parser(category_parser)
+                    # Appel en tant que méthode de classe (cast pour mypy)
+                    cast_any: Any = command_class
+                    cast_any.setup_parser(category_parser)
                     setup_done = True
                 except TypeError:
-                    # La signature n'est pas compatible en tant que classmethod
                     setup = None
 
         except Exception:

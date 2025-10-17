@@ -185,10 +185,13 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
             if response and hasattr(response, "devices"):
                 with self._lock:
                     # Convert DTO devices to plain dicts for backward compatibility with legacy cache
-                    self._cache = [
-                        cast(Dict[str, Any], d.model_dump()) if hasattr(d, "model_dump") else cast(Dict[str, Any], d)
-                        for d in response.devices
-                    ]
+                    devices_list = []
+                    for d in response.devices:
+                        if hasattr(d, "model_dump"):
+                            devices_list.append(d.model_dump())
+                        else:
+                            devices_list.append(cast(Dict[str, Any], d))
+                    self._cache = devices_list
                     self._cache_timestamp = time.time()
                     # Also store in disk cache
                     if response.devices:

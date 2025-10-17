@@ -4,7 +4,7 @@ from cli.command_template import ManagerCommand
 
 
 class TimersManagerCommand(ManagerCommand):
-    def __init__(self, di_container) -> None:
+    def __init__(self, di_container: Any) -> None:
         super().__init__("timers", di_container)
 
     @classmethod
@@ -25,6 +25,9 @@ class TimersManagerCommand(ManagerCommand):
 
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         action = params.get("action")
+        if not isinstance(action, str):
+            return {"success": False, "error": "Invalid action"}
+
         try:
             mgr = self.get_manager("timer_manager")
             import asyncio

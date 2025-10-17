@@ -8,6 +8,7 @@ Ce module fournit une interface CLI pour g…rer les groupes multi-pi…ces :
 """
 
 import argparse
+from typing import Any, Dict, Iterable, List
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
@@ -211,7 +212,7 @@ class MultiroomCommand(BaseCommand):
                 return False
 
             # R…cup…rer les serials des appareils
-            device_serials = []
+            device_serials: List[str] = []
             for device_name in devices:
                 serial = self.get_device_serial(device_name)
                 if not serial:
@@ -290,29 +291,46 @@ class MultiroomCommand(BaseCommand):
             self.error(f"Erreur: {e}")
             return False
 
-    def _display_groups(self, groups: list, verbose: bool = False) -> None:
-        """Affiche la liste des groupes de mani…re format…e."""
-        print(f"\n?? Groupes Multiroom ({len(groups)}):")
+    def _display_groups(self, groups: Any, verbose: bool = False) -> None:
+        """Affiche la liste des groupes de manière formatée.
+
+        groups peut être soit un dict {normalized_name: group_data} soit une
+        liste de dicts. Nous normalisons l'itération pour mypy et pour
+        éviter les branches inaccessibles.
+        """
+        try:
+            count = len(groups)
+        except Exception:
+            count = 0
+
+        print(f"\n?? Groupes Multiroom ({count}):")
         print("=" * 80)
 
-        # groups est un dictionnaire {normalized_name: group_data}
+        # Normaliser l'itérable des groupes
         if isinstance(groups, dict):
-            for _key, group in groups.items():
-                group_name = group.get("name", "N/A")
-                devices = group.get("devices", [])
-                primary = group.get("primary_device", "N/A")
+            iterable: Iterable[Any] = groups.values()
+        elif isinstance(groups, list):
+            iterable = groups
+        else:
+            iterable = []
 
-                print(f"\n?? {group_name} ({len(devices)} appareil(s))")
+        for group in iterable:
+            if not isinstance(group, dict):
+                continue
+            group_name = group.get("name", "N/A")
+            devices = group.get("devices", [])
+            primary = group.get("primary_device", "N/A")
 
-                if verbose:
-                    print(f"   Principal: {primary}")
-                    print("   Appareils:")
-                    for device in devices:
-                        print(f"     - {device}")
-                else:
-                    print(f"   Appareils: {', '.join(devices)}")
+            print(f"\n?? {group_name} ({len(devices)} appareil(s))")
+            if verbose:
+                print(f"   Principal: {primary}")
+                print("   Appareils:")
+                for device in devices:
+                    print(f"     - {device}")
+            else:
+                print(f"   Appareils: {', '.join(devices)}")
 
-    def _display_group_details(self, group: dict) -> None:
+    def _display_group_details(self, group: Dict[str, Any]) -> None:
         """Affiche les d…tails d'un groupe de mani…re format…e."""
         group_name = group.get("name", "N/A")
         devices = group.get("devices", [])

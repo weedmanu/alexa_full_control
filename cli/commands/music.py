@@ -52,13 +52,16 @@ class MusicCommand(BaseCommand):
             # Router vers la bonne sous-commande
             if hasattr(self.library_cmds, args.action):
                 method = getattr(self.library_cmds, args.action)
-                return method(args)
+                result = method(args)
+                return bool(result)
             elif hasattr(self.playback_cmds, args.action):
                 method = getattr(self.playback_cmds, args.action)
-                return method(args)
+                result = method(args)
+                return bool(result)
             elif hasattr(self.tunein_cmds, args.action):
                 method = getattr(self.tunein_cmds, args.action)
-                return method(args)
+                result = method(args)
+                return bool(result)
             else:
                 self.error(f"Action inconnue: {args.action}")
                 return False

@@ -12,7 +12,7 @@ from pydantic import ValidationError
 try:
     from core.schemas.alarm_schemas import AlarmResponse
     from core.schemas.base import ResponseDTO
-    from core.schemas.communication_schemas import AnnounceCommandRequest, CommunicationResponse, SpeakCommandRequest
+    from core.schemas.communication_schemas import AnnounceCommandRequest, CommunicationResponse
     from core.schemas.device_schemas import GetDevicesResponse  # noqa: F401
     from core.schemas.dnd_schemas import DNDResponse
     from core.schemas.list_schemas import ListResponse
@@ -229,18 +229,19 @@ class AlexaAPIService:
             CommunicationResponse with command status
         """
         try:
-            # Create request DTO
-            request = SpeakCommandRequest(device_serial=device_serial, text_to_speak=text)
+            # Build request payload as plain dict to avoid constructor signature
+            # mismatches with pydantic in type-checking environments.
+            request_payload = {"deviceSerialNumber": device_serial, "textToSpeak": text}
 
             # Make API call
             if not hasattr(self, "_auth") or self._auth is None:
                 path = self.ENDPOINTS.get("speak", "/speak")
-                response_data = self.post(path, json=request.model_dump(by_alias=True), timeout=10)
+                response_data = self.post(path, json=request_payload, timeout=10)
             else:
                 path = self.ENDPOINTS.get("speak", "/speak")
                 domain = getattr(self._auth, "amazon_domain", "amazon.fr")
                 url = f"https://alexa.{domain}{path}"
-                resp = self._auth.post(url, data=request.model_dump(by_alias=True), timeout=10)
+                resp = self._auth.post(url, data=request_payload, timeout=10)
                 response_data = resp.json() if hasattr(resp, "json") else {"success": True}
 
             # Parse response DTO

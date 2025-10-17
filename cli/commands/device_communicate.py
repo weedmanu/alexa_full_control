@@ -12,6 +12,7 @@ Date: 17 octobre 2025
 """
 
 import argparse
+from typing import Any, Dict, List, cast
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
@@ -241,23 +242,36 @@ class DeviceCommunicateCommand(BaseCommand):
                 self.error("Le message est trop long (max 4096 caractères)")
                 return False
 
+            # Narrow context and services for mypy
+            ctx = self.require_context()
+            device_mgr = ctx.device_mgr
+            voice_svc = ctx.voice_service
+
+            if not device_mgr:
+                self.error("Gestionnaire d'appareils non disponible")
+                return False
+            if not voice_svc:
+                self.error("Service vocal non disponible")
+                return False
+
             # Vérifier que l'appareil existe
-            devices = self.device_mgr.get_devices()
+            devices = cast(List[Dict[str, Any]], device_mgr.get_devices() or [])
             if not any(d.get("accountName") == device for d in devices):
                 self.error(f"Appareil '{device}' non trouvé")
                 return False
 
             # Envoyer le message via VoiceCommandService
-            result = self.call_with_breaker(self.voice_svc.speak_as_voice, device, message)
+            result = self.call_with_breaker(voice_svc.speak_as_voice, device, message)
+            success = bool(result)
 
-            if result:
+            if success:
                 self.success(f"✅ Message envoyé à '{device}'")
                 if title:
                     self.info(f"Titre: {title}")
             else:
                 self.error("❌ Impossible d'envoyer le message")
 
-            return result
+            return success
 
         except Exception as e:
             self.logger.exception("Erreur lors de l'envoi du message")
@@ -284,8 +298,20 @@ class DeviceCommunicateCommand(BaseCommand):
                 self.error("L'annonce ne peut pas être vide")
                 return False
 
+            # Narrow context and services for mypy
+            ctx = self.require_context()
+            device_mgr = ctx.device_mgr
+            voice_svc = ctx.voice_service
+
+            if not device_mgr:
+                self.error("Gestionnaire d'appareils non disponible")
+                return False
+            if not voice_svc:
+                self.error("Service vocal non disponible")
+                return False
+
             # Vérifier que l'appareil existe
-            devices = self.device_mgr.get_devices()
+            devices = cast(List[Dict[str, Any]], device_mgr.get_devices() or [])
             if not any(d.get("accountName") == device for d in devices):
                 self.error(f"Appareil '{device}' non trouvé")
                 return False
@@ -296,29 +322,30 @@ class DeviceCommunicateCommand(BaseCommand):
                 if not (0 <= volume <= 100):
                     self.error("Le volume doit être entre 0 et 100")
                     return False
-                old_volume = self.device_mgr.get_volume(device)
-                self.device_mgr.set_volume(device, volume)
+                old_volume = device_mgr.get_volume(device)
+                device_mgr.set_volume(device, volume)
                 self.info(f"Volume temporaire: {volume}%")
 
             # Préparer le message
             announcement = message
 
             # Envoyer l'annonce
-            result = self.call_with_breaker(self.voice_svc.speak_as_voice, device, announcement)
+            result = self.call_with_breaker(voice_svc.speak_as_voice, device, announcement)
+            success = bool(result)
 
             # Restaurer volume si changé
             if old_volume is not None:
-                self.device_mgr.set_volume(device, old_volume)
+                device_mgr.set_volume(device, old_volume)
                 self.info(f"Volume restauré: {old_volume}%")
 
-            if result:
+            if success:
                 self.success(f"🔊 Annonce envoyée à '{device}'")
                 if is_ssml:
                     self.info("Format: SSML")
             else:
                 self.error("❌ Impossible d'envoyer l'annonce")
 
-            return result
+            return success
 
         except Exception as e:
             self.logger.exception("Erreur lors de l'annonce")
@@ -352,8 +379,20 @@ class DeviceCommunicateCommand(BaseCommand):
                 self.info("Utilisez: python alexa device communicate sound --list")
                 return False
 
+            # Narrow context and services for mypy
+            ctx = self.require_context()
+            device_mgr = ctx.device_mgr
+            voice_svc = ctx.voice_service
+
+            if not device_mgr:
+                self.error("Gestionnaire d'appareils non disponible")
+                return False
+            if not voice_svc:
+                self.error("Service vocal non disponible")
+                return False
+
             # Vérifier que l'appareil existe
-            devices = self.device_mgr.get_devices()
+            devices = cast(List[Dict[str, Any]], device_mgr.get_devices() or [])
             if not any(d.get("accountName") == device for d in devices):
                 self.error(f"Appareil '{device}' non trouvé")
                 return False
@@ -365,25 +404,26 @@ class DeviceCommunicateCommand(BaseCommand):
                 if not (0 <= volume <= 100):
                     self.error("Le volume doit être entre 0 et 100")
                     return False
-                old_volume = self.device_mgr.get_volume(device)
-                self.device_mgr.set_volume(device, volume)
+                old_volume = device_mgr.get_volume(device)
+                device_mgr.set_volume(device, volume)
                 self.info(f"Volume temporaire: {volume}%")
 
             # Jouer le son
             sound_id = CommunicationEffects.SOUNDS[effect]
-            result = self.call_with_breaker(self.voice_svc.play_sound, device, sound_id)
+            result = self.call_with_breaker(voice_svc.play_sound, device, sound_id)
+            success = bool(result)
 
             # Restaurer volume si changé
             if old_volume is not None:
-                self.device_mgr.set_volume(device, old_volume)
+                device_mgr.set_volume(device, old_volume)
                 self.info(f"Volume restauré: {old_volume}%")
 
-            if result:
+            if success:
                 self.success(f"🔊 Son '{effect}' joué sur '{device}'")
             else:
                 self.error("❌ Impossible de jouer le son")
 
-            return result
+            return success
 
         except Exception as e:
             self.logger.exception("Erreur lors de la lecture du son")
@@ -408,22 +448,35 @@ class DeviceCommunicateCommand(BaseCommand):
                 self.error("La commande ne peut pas être vide")
                 return False
 
+            # Narrow context and services for mypy
+            ctx = self.require_context()
+            device_mgr = ctx.device_mgr
+            voice_svc = ctx.voice_service
+
+            if not device_mgr:
+                self.error("Gestionnaire d'appareils non disponible")
+                return False
+            if not voice_svc:
+                self.error("Service vocal non disponible")
+                return False
+
             # Vérifier que l'appareil existe
-            devices = self.device_mgr.get_devices()
+            devices = cast(List[Dict[str, Any]], device_mgr.get_devices() or [])
             if not any(d.get("accountName") == device for d in devices):
                 self.error(f"Appareil '{device}' non trouvé")
                 return False
 
             # Exécuter la commande texte
-            result = self.call_with_breaker(self.voice_svc.execute_text_command, device, text)
+            result = self.call_with_breaker(voice_svc.execute_text_command, device, text)
+            success = bool(result)
 
-            if result:
+            if success:
                 self.success(f"✅ Commande exécutée sur '{device}'")
                 self.info(f"Commande: '{text}'")
             else:
                 self.error("❌ Impossible d'exécuter la commande")
 
-            return result
+            return success
 
         except Exception as e:
             self.logger.exception("Erreur lors de l'exécution de la commande")

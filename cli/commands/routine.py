@@ -386,9 +386,13 @@ class RoutineCommand(BaseCommand):
             if not routine_mgr:
                 return None
 
-            routines = self.call_with_breaker(routine_mgr.get_routines)
-            if not routines:
+            routines_any = self.call_with_breaker(routine_mgr.get_routines)
+            if not routines_any:
                 return None
+
+            from typing import cast
+
+            routines = cast(List[Dict[str, Any]], routines_any)
 
             # Recherche exacte (insensible à la casse)
             name_lower = name.lower().strip()

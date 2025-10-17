@@ -19,7 +19,7 @@ Usage:
 import importlib
 import logging
 import sys
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, cast
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +68,10 @@ class LazyCommandLoader:
 
     def __init__(self):
         """Initialise le chargeur paresseux."""
-        self._loaded_commands: Dict[str, Type] = {}
+        self._loaded_commands: Dict[str, Type[Any]] = {}
         self._import_times: Dict[str, float] = {}
 
-    def load_command(self, command_name: str) -> Optional[Type]:
+    def load_command(self, command_name: str) -> Optional[Type[Any]]:
         """
         Charge une commande de manière paresseuse.
 
@@ -111,8 +111,8 @@ class LazyCommandLoader:
             # Importer dynamiquement le module
             module = importlib.import_module(module_name)
 
-            # Obtenir la classe
-            command_class = getattr(module, class_name)
+            # Obtenir la classe (getattr retourne Any — forcer Type[Any])
+            command_class = cast(Type[Any], getattr(module, class_name))
 
             # Mettre en cache
             self._loaded_commands[command_name] = command_class
@@ -222,7 +222,7 @@ def get_command_loader() -> LazyCommandLoader:
     return _global_loader
 
 
-def load_command(command_name: str) -> Optional[Type]:
+def load_command(command_name: str) -> Optional[Type[Any]]:
     """
     Fonction utilitaire pour charger une commande.
 

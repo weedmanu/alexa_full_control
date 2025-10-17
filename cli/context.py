@@ -44,11 +44,7 @@ if TYPE_CHECKING:
     from core.routines import RoutineManager
     from core.scenario.scenario_manager import ScenarioManager
     from core.settings import DeviceSettingsManager
-    from core.smart_home import (
-        LightController,
-        SmartDeviceController,
-        ThermostatController,
-    )
+    from core.smart_home import LightController, SmartDeviceController, ThermostatController
     from core.timers import TimerManager
     from services.music_library import MusicLibraryService
     from services.sync_service import SyncService
@@ -157,7 +153,6 @@ class Context:
         # self._announcement_mgr: Optional["AnnouncementManager"] = None
         self._calendar_mgr: Optional[CalendarManager] = None
         self._routine_mgr: Optional[RoutineManager] = None
-        self._multiroom_mgr: Optional[MultiRoomManager] = None
         self._list_mgr: Optional[ListsManager] = None
         self._equalizer_mgr: Optional[EqualizerManager] = None
         self._bluetooth_mgr: Optional[BluetoothManager] = None
@@ -466,14 +461,14 @@ class Context:
     # MÉTHODES UTILITAIRES
     # ========================================================================
 
-    def initialize_auth(self, auth_instance):
+    def initialize_auth(self, auth_instance: "AlexaAuth") -> None:
         """
         Initialise l'authentification et lance la synchronisation initiale.
 
         Args:
             auth_instance: "AlexaAuth"
         """
-        self.auth: Optional["AlexaAuth"] = auth_instance
+        self.auth = auth_instance
         logger.info("Authentification initialisée dans le contexte")
 
         # Lancer synchronisation automatique
@@ -526,10 +521,12 @@ class Context:
         """Support context manager."""
         return self
 
-    def __exit__(self, _exc_type: Optional[type], _exc_val: Optional[BaseException], _exc_tb: Optional[Any]) -> bool:
+    def __exit__(self, _exc_type: Optional[type], _exc_val: Optional[BaseException], _exc_tb: Optional[Any]) -> None:
         """Support context manager (cleanup automatique)."""
         self.cleanup()
-        return False
+        # Return None to follow standard __exit__ signature; exceptions won't be suppressed
+        return None
+
 
 # Factory function
 def create_context(config_file: Optional[Path] = None) -> Context:

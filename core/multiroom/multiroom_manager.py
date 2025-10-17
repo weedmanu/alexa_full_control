@@ -209,7 +209,10 @@ class MultiRoomManager(BasePersistenceManager):
         if not group:
             return []
 
-        return group.get("devices", [])
+        from typing import List, cast
+
+        devices = cast(List[str], group.get("devices", []))
+        return devices
 
     def get_groups_sorted_by_creation(self) -> List[Dict[str, Any]]:
         """Retourne les groupes triés par date de création.

@@ -142,7 +142,7 @@ class FavoriteCommand(BaseCommand):
     def _list_favorites(self, args: argparse.Namespace) -> bool:
         """Liste les favoris."""
         favorites: List[Dict[str, Any]] = []
-        
+
         if hasattr(args, "type_filter") and args.type_filter:
             # Filtrer par type
             fs = self._fs()

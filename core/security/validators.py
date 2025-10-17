@@ -32,7 +32,7 @@ class InputValidator:
     # ===Device Serial Validation===
 
     @staticmethod
-    def validate_device_serial(serial: Any) -> str:
+    def validate_device_serial(serial: object) -> str:
         """
         Validate device serial number.
 
@@ -86,7 +86,7 @@ class InputValidator:
     }
 
     @staticmethod
-    def validate_device_type(device_type: Any) -> str:
+    def validate_device_type(device_type: object) -> str:
         """
         Validate device type.
 
@@ -111,7 +111,7 @@ class InputValidator:
     # === Alarm Time Validation ===
 
     @staticmethod
-    def validate_alarm_time(alarm_time: Any) -> str:
+    def validate_alarm_time(alarm_time: object) -> str:
         """
         Validate alarm time.
 
@@ -165,7 +165,7 @@ class InputValidator:
     # === Text Sanitization ===
 
     @staticmethod
-    def sanitize_text(text: Any, max_len: int = 500) -> str:
+    def sanitize_text(text: object, max_len: int = 500) -> str:
         """
         Sanitize text for JSON encoding (labels, descriptions, etc).
 

@@ -26,6 +26,7 @@ class TimerCommand(BaseCommand):
         """Initialise la commande."""
         super().__init__(context)
         # Charger les sous-commandes
+        # Charger les sous-commandes (instanciation historique)
         self.alarms_cmds = AlarmsCommands()
         self.reminder_cmds = RemindersCommands()
         self.timer_cmds = TimersCommands()
@@ -52,13 +53,16 @@ class TimerCommand(BaseCommand):
             # Router vers la bonne sous-commande
             if hasattr(self.alarms_cmds, args.action):
                 method = getattr(self.alarms_cmds, args.action)
-                return method(args)
+                result = method(args)
+                return bool(result)
             elif hasattr(self.reminder_cmds, args.action):
                 method = getattr(self.reminder_cmds, args.action)
-                return method(args)
+                result = method(args)
+                return bool(result)
             elif hasattr(self.timer_cmds, args.action):
                 method = getattr(self.timer_cmds, args.action)
-                return method(args)
+                result = method(args)
+                return bool(result)
             else:
                 self.error(f"Action inconnue: {args.action}")
                 return False

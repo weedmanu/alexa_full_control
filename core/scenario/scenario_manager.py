@@ -329,7 +329,7 @@ class ScenarioManager(BasePersistenceManager):
         """
         return list(self.get_all_items().values())
 
-    def import_scenario(self, scenario_dict: Dict[str, Any]) -> bool:
+    def import_scenario(self, scenario_dict: object) -> bool:
         """
         Importe un scénario depuis un dictionnaire.
 
@@ -343,8 +343,13 @@ class ScenarioManager(BasePersistenceManager):
             logger.warning("scenario_dict doit être un dictionnaire")
             return False
 
-        name = scenario_dict.get("name")
-        actions = scenario_dict.get("actions")
+        # mypy: scenario_dict was passed as object; cast to the expected dict
+        from typing import cast
+
+        scenario_dict_typed = cast(Dict[str, Any], scenario_dict)
+
+        name = scenario_dict_typed.get("name")
+        actions = scenario_dict_typed.get("actions")
 
         if not name or not actions:
             logger.warning("Scenario doit avoir 'name' et 'actions'")

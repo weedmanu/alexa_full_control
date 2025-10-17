@@ -185,7 +185,7 @@ class ListsCommand(BaseCommand):
                 return False
 
             # Utiliser les vraies commandes vocales
-            success = list_mgr.add_item(list_type, text, device_serial=device_serial)
+            success = bool(list_mgr.add_item(list_type, text, device_serial=device_serial))
 
             if success:
                 if list_type == "shopping":
@@ -238,7 +238,7 @@ class ListsCommand(BaseCommand):
                 return False
 
             # Utiliser les vraies commandes vocales
-            success = list_mgr.remove_item(list_type, text, device_serial=device_serial)
+            success = bool(list_mgr.remove_item(list_type, text, device_serial=device_serial))
 
             if success:
                 if list_type == "shopping":
@@ -337,8 +337,8 @@ class ListsCommand(BaseCommand):
                 sys.stdout.flush()
 
                 # Utiliser les vraies commandes vocales pour vider la liste
-                success = list_mgr.clear_list(
-                    list_type, completed_only=args.completed_only, device_serial=device_serial
+                success = bool(
+                    list_mgr.clear_list(list_type, completed_only=args.completed_only, device_serial=device_serial)
                 )
 
                 if success:
@@ -371,7 +371,9 @@ class ListsCommand(BaseCommand):
                     return False
 
             # Pour les tâches ou si completed_only, pas de confirmation spéciale
-            success = list_mgr.clear_list(list_type, completed_only=args.completed_only, device_serial=device_serial)
+            success = bool(
+                list_mgr.clear_list(list_type, completed_only=args.completed_only, device_serial=device_serial)
+            )
             if success:
                 if list_type == "shopping":
                     self.success("✅ Liste de courses vidée")
@@ -512,10 +514,13 @@ class ListsCommand(BaseCommand):
             # Essayer de récupérer la liste via l'API
             list_data = list_mgr.get_list(list_type)
             if list_data:
+                from typing import Any, Dict, List, cast
+
                 items = list_data.get("items", [])
                 if isinstance(items, list):
-                    is_empty = len(items) == 0
-                    self.logger.debug(f"Liste {list_type} contient {len(items)} élément(s)")
+                    items_typed = cast(List[Dict[str, Any]], items)
+                    is_empty = len(items_typed) == 0
+                    self.logger.debug(f"Liste {list_type} contient {len(items_typed)} élément(s)")
                     return is_empty
                 else:
                     # Si items n'est pas une liste, considérer comme non vide par sécurité

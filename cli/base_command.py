@@ -12,11 +12,22 @@ import argparse
 import json
 import sys
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import Any, Callable, Optional, Protocol, runtime_checkable
 
 from loguru import logger
 
 from utils.logger import SharedIcons
+
+
+@runtime_checkable
+class SubParsersActionProtocol(Protocol):
+    """Minimal protocol for argparse subparsers used by commands.
+
+    We only expose add_parser which is the part callers rely on.
+    """
+
+    def add_parser(self, name: str, **kwargs: Any) -> argparse.ArgumentParser:  # pragma: no cover - simple protocol
+        ...
 
 
 class BaseCommand(ABC):
@@ -129,7 +140,9 @@ class BaseCommand(ABC):
     # MÉTHODES UTILITAIRES COMMUNES
     # ========================================================================
 
-    def setup_common_parser_config(self, parser: argparse.ArgumentParser, description: str) -> Any:
+    def setup_common_parser_config(
+        self, parser: argparse.ArgumentParser, description: str
+    ) -> "SubParsersActionProtocol":
         """
         Configure les paramètres communs du parser pour une catégorie de commandes.
 
@@ -158,7 +171,9 @@ class BaseCommand(ABC):
             help="Action à exécuter",
             required=True,
         )
-
+        # Return the subparsers object. We expose a small Protocol type
+        # so that callers can use the returned object without importing
+        # argparse internals (and to avoid mypy warnings about returning Any).
         return subparsers
 
     def add_device_argument(self, parser: argparse.ArgumentParser, required: bool = True) -> None:
@@ -211,7 +226,7 @@ class BaseCommand(ABC):
 
     def create_action_parser(
         self,
-        subparsers: Any,
+        subparsers: "SubParsersActionProtocol",
         action_name: str,
         help_text: str,
         description: str = "",
@@ -469,7 +484,10 @@ class BaseCommand(ABC):
             devices = self.device_mgr.get_devices()
             for device in devices:
                 if device.get("accountName") == device_name:
-                    return device.get("serialNumber")
+                    serial = device.get("serialNumber")
+                    # Ensure we only return strings (avoid returning Any)
+                    if isinstance(serial, str):
+                        return serial
 
             self.error(f"Appareil '{device_name}' non trouvé")
             return None
@@ -498,7 +516,8 @@ class BaseCommand(ABC):
                 if device.get("accountName") == device_name:
                     serial = device.get("serialNumber")
                     device_type = device.get("deviceType")
-                    if serial and device_type:
+                    # Only return if both serial and device_type are strings
+                    if isinstance(serial, str) and isinstance(device_type, str):
                         return (serial, device_type)
 
             self.error(f"Appareil '{device_name}' non trouvé")
