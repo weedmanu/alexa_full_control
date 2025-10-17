@@ -41,7 +41,7 @@ Date: 17 octobre 2025
 from datetime import datetime
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 T = TypeVar('T')  # Generic type variable for APISuccessResponse
 
@@ -378,13 +378,14 @@ class ValidationErrorDetail(BaseDTOModel):
 
 
 # Utility type aliases for common DTO patterns
-EmptyRequest = type('EmptyRequest', (RequestDTO,), {})  # GET requests (no body)
-"""Utility: For GET requests that have no body"""
+class EmptyRequest(RequestDTO):
+    """Utility: For GET requests that have no body"""
+    pass
 
-SuccessResponse = type('SuccessResponse', (ResponseDTO,), {
-    'success': (bool, True)
-})  # Simple success responses
-"""Utility: For simple success-only responses"""
+
+class SimpleSuccessResponse(ResponseDTO):
+    """Utility: For simple success-only responses"""
+    success: bool = Field(default=True)
 
 
 __all__ = [
