@@ -185,3 +185,33 @@ markers = [
     "workflow: Workflow tests",
     "scenario: Real-world scenario tests",
 ]
+
+[project]
+name = "alexa_full_control"
+version = "0.0.0"
+readme = "README.md"
+authors = [ { name = "weedmanu" } ]
+
+
+[build-system]
+requires = ["setuptools>=65.5.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Explicit setuptools package discovery for editable installs
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "cli",
+    "core",
+    "services",
+    "config",
+    "models",
+    "install",
+    "alexa_auth",
+    "utils",
+    "data",
+    "logs",
+]
+
+[tool.setuptools]
+py-modules = ["alexa"]
