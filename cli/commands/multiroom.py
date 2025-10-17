@@ -1,8 +1,8 @@
-ï»¿"""Commande de gestion des groupes multiroom Alexa.
+"""Commande de gestion des groupes multiroom Alexa.
 
-Ce module fournit une interface CLI pour gÃ©rer les groupes multi-piÃ¨ces :
+Ce module fournit une interface CLI pour gérer les groupes multi-pièces :
 - Lister les groupes existants
-- CrÃ©er un nouveau groupe
+- Créer un nouveau groupe
 - Supprimer un groupe
 - Obtenir des informations sur un groupe
 """
@@ -12,9 +12,9 @@ import argparse
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
-# Constantes de description simplifiÃ©es
-MULTIROOM_DESCRIPTION = "GÃ©rer les groupes multiroom Alexa"
-CREATE_HELP = "CrÃ©er un nouveau groupe"
+# Constantes de description simplifiées
+MULTIROOM_DESCRIPTION = "Gérer les groupes multiroom Alexa"
+CREATE_HELP = "Créer un nouveau groupe"
 DELETE_HELP = "Supprimer un groupe"
 INFO_HELP = "Obtenir des informations sur un groupe"
 LIST_HELP = "Lister les groupes existants"
@@ -22,19 +22,19 @@ LIST_HELP = "Lister les groupes existants"
 
 class MultiroomCommand(BaseCommand):
     """
-    Commande pour gÃ©rer les groupes multiroom (multi-piÃ¨ces) Alexa.
+    Commande pour gérer les groupes multiroom (multi-pièces) Alexa.
 
     Les groupes multiroom permettent de synchroniser la lecture audio
-    sur plusieurs appareils Echo simultanÃ©ment.
+    sur plusieurs appareils Echo simultanément.
 
     Exemples:
         >>> # Lister tous les groupes
         >>> alexa multiroom list
 
-        >>> # CrÃ©er un groupe
+        >>> # Créer un groupe
         >>> alexa multiroom create --name "Maison" --devices "Salon,Chambre,Cuisine"
 
-        >>> # Voir dÃ©tails d'un groupe
+        >>> # Voir détails d'un groupe
         >>> alexa multiroom info --name "Maison"
 
         >>> # Supprimer un groupe
@@ -47,25 +47,25 @@ class MultiroomCommand(BaseCommand):
 
     def get_help(self) -> str:
         """Retourne l'aide de la commande."""
-        return "GÃ©rer les groupes multiroom (multi-piÃ¨ces)"
+        return "Gérer les groupes multiroom (multi-pièces)"
 
     def setup_parser(self, parser: argparse.ArgumentParser) -> None:
         """
         Configure le parser pour la commande multiroom.
 
         Args:
-            parser: Parser Ã  configurer
+            parser: Parser à configurer
         """
-        # Utiliser le formatter universel pour l'aide simplifiÃ©e
+        # Utiliser le formatter universel pour l'aide simplifiée
         parser.formatter_class = UniversalHelpFormatter
 
-        # Description simplifiÃ©e
+        # Description simplifiée
         parser.description = MULTIROOM_DESCRIPTION
 
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
-            help="Action Ã  exÃ©cuter",
+            help="Action à exécuter",
             required=True,
         )
 
@@ -81,26 +81,26 @@ class MultiroomCommand(BaseCommand):
         # Action: create
         create_parser = subparsers.add_parser(
             "create",
-            help="CrÃ©er groupe",
+            help="Créer groupe",
             description=CREATE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         create_parser.add_argument(
-            "--name", type=str, required=True, metavar="GROUP_NAME", help="Nom du groupe Ã  crÃ©er"
+            "--name", type=str, required=True, metavar="GROUP_NAME", help="Nom du groupe à créer"
         )
         create_parser.add_argument(
             "--devices",
             type=str,
             required=True,
             metavar="DEVICE1,DEVICE2,...",
-            help="Liste des appareils sÃ©parÃ©s par des virgules",
+            help="Liste des appareils séparés par des virgules",
         )
         create_parser.add_argument(
             "--primary",
             type=str,
             metavar="DEVICE_NAME",
-            help="Appareil principal (optionnel, par dÃ©faut le premier)",
+            help="Appareil principal (optionnel, par défaut le premier)",
         )
 
         # Action: delete
@@ -116,7 +116,7 @@ class MultiroomCommand(BaseCommand):
             type=str,
             required=True,
             metavar="GROUP_NAME",
-            help="Nom du groupe Ã  supprimer",
+            help="Nom du groupe à supprimer",
         )
         delete_parser.add_argument("--force", action="store_true", help="Supprimer sans confirmation")
 
@@ -132,13 +132,13 @@ class MultiroomCommand(BaseCommand):
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
-        ExÃ©cute la commande multiroom.
+        Exécute la commande multiroom.
 
         Args:
-            args: Arguments parsÃ©s
+            args: Arguments parsés
 
         Returns:
-            True si succÃ¨s, False sinon
+            True si succès, False sinon
         """
         # Validation connexion
         if not self.validate_connection():
@@ -161,7 +161,7 @@ class MultiroomCommand(BaseCommand):
         try:
             verbose = getattr(args, "verbose", False)
 
-            self.info("ðŸ”Š RÃ©cupÃ©ration des groupes multiroom...")
+            self.info("?? Récupération des groupes multiroom...")
 
             ctx = self.require_context()
             if not ctx.multiroom_mgr:
@@ -171,7 +171,7 @@ class MultiroomCommand(BaseCommand):
             groups = self.call_with_breaker(ctx.multiroom_mgr.get_groups)
 
             if not groups:
-                self.warning("Aucun groupe multiroom trouvÃ©")
+                self.warning("Aucun groupe multiroom trouvé")
                 return True
 
             # Afficher les groupes
@@ -179,12 +179,12 @@ class MultiroomCommand(BaseCommand):
             return True
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la rÃ©cupÃ©ration des groupes")
+            self.logger.exception("Erreur lors de la récupération des groupes")
             self.error(f"Erreur: {e}")
             return False
 
     def _create_group(self, args: argparse.Namespace) -> bool:
-        """CrÃ©er un nouveau groupe multiroom."""
+        """Créer un nouveau groupe multiroom."""
         try:
             # Parser la liste des appareils
             devices = [d.strip() for d in args.devices.split(",") if d.strip()]
@@ -197,33 +197,33 @@ class MultiroomCommand(BaseCommand):
             primary_device = getattr(args, "primary", None)
             if not primary_device:
                 primary_device = devices[0]
-                self.info(f"Appareil principal: {primary_device} (par dÃ©faut)")
+                self.info(f"Appareil principal: {primary_device} (par défaut)")
 
             if primary_device not in devices:
-                self.error(f"L'appareil principal '{primary_device}' doit Ãªtre dans la liste des appareils")
+                self.error(f"L'appareil principal '{primary_device}' doit être dans la liste des appareils")
                 return False
 
-            self.info(f"ðŸ”Š CrÃ©ation groupe '{args.name}' avec {len(devices)} appareil(s)...")
+            self.info(f"?? Création groupe '{args.name}' avec {len(devices)} appareil(s)...")
 
             ctx = self.require_context()
             if not ctx.multiroom_mgr:
                 self.error("MultiroomManager non disponible")
                 return False
 
-            # RÃ©cupÃ©rer les serials des appareils
+            # Récupérer les serials des appareils
             device_serials = []
             for device_name in devices:
                 serial = self.get_device_serial(device_name)
                 if not serial:
-                    self.error(f"Appareil '{device_name}' non trouvÃ©")
+                    self.error(f"Appareil '{device_name}' non trouvé")
                     return False
                 device_serials.append(serial)
 
-            # CrÃ©er le groupe (pas de device principal spÃ©cifique dans MultiRoomManager)
+            # Créer le groupe (pas de device principal spécifique dans MultiRoomManager)
             result = self.call_with_breaker(ctx.multiroom_mgr.create_group, args.name, device_serials)
 
             if result:
-                self.success(f"âœ… Groupe '{args.name}' crÃ©Ã© avec succÃ¨s")
+                self.success(f"? Groupe '{args.name}' créé avec succès")
                 self.info(f"   Appareils: {', '.join(devices)}")
                 self.info(f"   Principal: {primary_device}")
                 return True
@@ -231,7 +231,7 @@ class MultiroomCommand(BaseCommand):
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la crÃ©ation du groupe")
+            self.logger.exception("Erreur lors de la création du groupe")
             self.error(f"Erreur: {e}")
             return False
 
@@ -242,11 +242,11 @@ class MultiroomCommand(BaseCommand):
 
             # Confirmation si pas --force
             if not force:
-                self.warning(f"âš ï¸  Vous allez supprimer le groupe '{args.name}'")
+                self.warning(f"??  Vous allez supprimer le groupe '{args.name}'")
                 self.info("Utilisez --force pour supprimer sans confirmation")
                 return False
 
-            self.info(f"ðŸ—‘ï¸  Suppression groupe '{args.name}'...")
+            self.info(f"???  Suppression groupe '{args.name}'...")
 
             ctx = self.require_context()
             if not ctx.multiroom_mgr:
@@ -256,7 +256,7 @@ class MultiroomCommand(BaseCommand):
             result = self.call_with_breaker(ctx.multiroom_mgr.delete_group, args.name)
 
             if result:
-                self.success(f"âœ… Groupe '{args.name}' supprimÃ©")
+                self.success(f"? Groupe '{args.name}' supprimé")
                 return True
 
             return False
@@ -269,7 +269,7 @@ class MultiroomCommand(BaseCommand):
     def _show_group_info(self, args: argparse.Namespace) -> bool:
         """Afficher les informations d'un groupe."""
         try:
-            self.info(f"â„¹ï¸  RÃ©cupÃ©ration groupe '{args.name}'...")
+            self.info(f"??  Récupération groupe '{args.name}'...")
 
             ctx = self.require_context()
             if not ctx.multiroom_mgr:
@@ -282,17 +282,17 @@ class MultiroomCommand(BaseCommand):
                 self._display_group_details(group)
                 return True
 
-            self.error(f"Groupe '{args.name}' non trouvÃ©")
+            self.error(f"Groupe '{args.name}' non trouvé")
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la rÃ©cupÃ©ration du groupe")
+            self.logger.exception("Erreur lors de la récupération du groupe")
             self.error(f"Erreur: {e}")
             return False
 
     def _display_groups(self, groups: list, verbose: bool = False) -> None:
-        """Affiche la liste des groupes de maniÃ¨re formatÃ©e."""
-        print(f"\nðŸ”Š Groupes Multiroom ({len(groups)}):")
+        """Affiche la liste des groupes de manière formatée."""
+        print(f"\n?? Groupes Multiroom ({len(groups)}):")
         print("=" * 80)
 
         # groups est un dictionnaire {normalized_name: group_data}
@@ -302,7 +302,7 @@ class MultiroomCommand(BaseCommand):
                 devices = group.get("devices", [])
                 primary = group.get("primary_device", "N/A")
 
-                print(f"\nðŸ“ {group_name} ({len(devices)} appareil(s))")
+                print(f"\n?? {group_name} ({len(devices)} appareil(s))")
 
                 if verbose:
                     print(f"   Principal: {primary}")
@@ -313,11 +313,11 @@ class MultiroomCommand(BaseCommand):
                     print(f"   Appareils: {', '.join(devices)}")
 
     def _display_group_details(self, group: dict) -> None:
-        """Affiche les dÃ©tails d'un groupe de maniÃ¨re formatÃ©e."""
+        """Affiche les détails d'un groupe de manière formatée."""
         group_name = group.get("name", "N/A")
         devices = group.get("devices", [])
 
-        print(f"\nðŸ”Š Groupe Multiroom: {group_name}")
+        print(f"\n?? Groupe Multiroom: {group_name}")
         print("=" * 80)
         print(f"Nombre d'appareils: {len(devices)}")
 
@@ -329,6 +329,6 @@ class MultiroomCommand(BaseCommand):
         # Afficher les dates
         created = group.get("created", "N/A")
         modified = group.get("modified", "N/A")
-        print(f"\nCrÃ©Ã©: {created}")
+        print(f"\nCréé: {created}")
         if modified and modified != "N/A":
-            print(f"ModifiÃ©: {modified}")
+            print(f"Modifié: {modified}")

@@ -61,7 +61,6 @@ class DeviceCommand(BaseCommand):
             "list",
             help="Lister tous les appareils Alexa",
             formatter_class=ActionHelpFormatter,
-            add_help=False,
         )
         list_parser.add_argument(
             "--filter",
@@ -80,7 +79,6 @@ class DeviceCommand(BaseCommand):
             "info",
             help="Informations détaillées sur un appareil",
             formatter_class=ActionHelpFormatter,
-            add_help=False,
         )
         info_parser.add_argument(
             "-d",
@@ -97,7 +95,6 @@ class DeviceCommand(BaseCommand):
             "volume",
             help="Gérer le volume d'un appareil",
             formatter_class=ActionHelpFormatter,
-            add_help=False,
         )
         volume_subparsers = volume_parser.add_subparsers(
             dest="volume_action",
@@ -147,7 +144,6 @@ class DeviceCommand(BaseCommand):
             "send",
             help="Envoyer un message à un appareil",
             formatter_class=ActionHelpFormatter,
-            add_help=False,
         )
         send_parser.add_argument(
             "-d",

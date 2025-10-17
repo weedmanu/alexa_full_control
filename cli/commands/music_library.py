@@ -1,7 +1,7 @@
-ï»¿"""
-Commandes de gestion de bibliothÃ¨que musicale.
+"""
+Commandes de gestion de bibliothèque musicale.
 
-GÃ¨re: library (imported, purchased, playlists, prime-playlists, prime-stations)
+Gère: library (imported, purchased, playlists, prime-playlists, prime-stations)
       track (library track/album)
       playlist (library, prime-asin, prime-station, prime-queue)
 
@@ -15,23 +15,23 @@ import json
 from cli.command_parser import ActionHelpFormatter
 from cli.commands.base_subcommand import BaseSubCommand as MusicSubCommand
 
-# Constantes de description simplifiÃ©es
-LIBRARY_HELP = "GÃ©rer la bibliothÃ¨que musicale"
-PLAYLIST_HELP = "GÃ©rer les playlists"
-TRACK_HELP = "GÃ©rer les pistes musicales"
+# Constantes de description simplifiées
+LIBRARY_HELP = "Gérer la bibliothèque musicale"
+PLAYLIST_HELP = "Gérer les playlists"
+TRACK_HELP = "Gérer les pistes musicales"
 
 
 class LibraryCommands(MusicSubCommand):
-    """Commandes de bibliothÃ¨que musicale."""
+    """Commandes de bibliothèque musicale."""
 
     @staticmethod
     def setup_parsers(subparsers):
-        """Configure les parsers pour les commandes de bibliothÃ¨que."""
+        """Configure les parsers pour les commandes de bibliothèque."""
 
         # Action: track (library track/album)
         track_parser = subparsers.add_parser(
             "track",
-            help="Jouer un morceau de bibliothÃ¨que",
+            help="Jouer un morceau de bibliothèque",
             description=TRACK_HELP,
             formatter_class=ActionHelpFormatter,
         )
@@ -54,18 +54,18 @@ class LibraryCommands(MusicSubCommand):
             "--album",
             type=str,
             metavar="ALBUM",
-            help="Nom de l'album (nÃ©cessite --artist)",
+            help="Nom de l'album (nécessite --artist)",
         )
         track_parser.add_argument(
             "--artist",
             type=str,
             metavar="ARTIST",
-            help="Nom de l'artiste (si --album utilisÃ©)",
+            help="Nom de l'artiste (si --album utilisé)",
         )
         track_parser.add_argument(
             "--shuffle",
             action="store_true",
-            help="Lire en mode alÃ©atoire",
+            help="Lire en mode aléatoire",
         )
 
         # Action: playlist
@@ -89,21 +89,21 @@ class LibraryCommands(MusicSubCommand):
             type=str,
             choices=["library", "prime-asin", "prime-station", "prime-queue"],
             default="library",
-            help="Type de playlist (dÃ©faut: library)",
+            help="Type de playlist (défaut: library)",
         )
-        playlist_parser.add_argument("--shuffle", action="store_true", help="Lire en mode alÃ©atoire")
+        playlist_parser.add_argument("--shuffle", action="store_true", help="Lire en mode aléatoire")
 
         # Action: library
         library_parser = subparsers.add_parser(
             "library",
-            help="BibliothÃ¨que musicale",
+            help="Bibliothèque musicale",
             description=LIBRARY_HELP,
             formatter_class=ActionHelpFormatter,
         )
         library_group = library_parser.add_mutually_exclusive_group(required=True)
-        library_group.add_argument("--playlists", action="store_true", help="Lister les playlists bibliothÃ¨que")
+        library_group.add_argument("--playlists", action="store_true", help="Lister les playlists bibliothèque")
         library_group.add_argument("--purchases", action="store_true", help="Lister les achats")
-        library_group.add_argument("--imported", action="store_true", help="Lister les titres importÃ©s")
+        library_group.add_argument("--imported", action="store_true", help="Lister les titres importés")
         library_group.add_argument("--prime-playlists", action="store_true", help="Lister les playlists Prime Music")
         library_group.add_argument("--prime-stations", action="store_true", help="Lister les stations Prime Music")
         library_parser.add_argument(
@@ -120,7 +120,7 @@ class LibraryCommands(MusicSubCommand):
         )
 
     def track(self, args: argparse.Namespace) -> bool:
-        """Jouer un morceau de bibliothÃ¨que."""
+        """Jouer un morceau de bibliothèque."""
         try:
             device_info = self.get_device_info(args.device)
             if not device_info:
@@ -135,13 +135,13 @@ class LibraryCommands(MusicSubCommand):
 
             media_owner_id = self.get_media_owner_id()
 
-            # VÃ©rifier les arguments
+            # Vérifier les arguments
             if args.album and not args.artist:
                 self.error("--artist requis avec --album")
                 return False
 
             if args.track_id:
-                self.info(f"ðŸŽµ Lecture morceau {args.track_id} sur '{args.device}'...")
+                self.info(f"?? Lecture morceau {args.track_id} sur '{args.device}'...")
                 result = self.call_with_breaker(
                     ctx.music_library.play_library_track,
                     serial,
@@ -151,7 +151,7 @@ class LibraryCommands(MusicSubCommand):
                     shuffle=args.shuffle,
                 )
             else:
-                self.info(f"ðŸ’¿ Lecture album '{args.album}' de {args.artist} sur '{args.device}'...")
+                self.info(f"?? Lecture album '{args.album}' de {args.artist} sur '{args.device}'...")
                 result = self.call_with_breaker(
                     ctx.music_library.play_library_track,
                     serial,
@@ -163,13 +163,13 @@ class LibraryCommands(MusicSubCommand):
                 )
 
             if result:
-                self.success("âœ… Lecture lancÃ©e")
+                self.success("? Lecture lancée")
                 return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lecture bibliothÃ¨que")
+            self.logger.exception("Erreur lecture bibliothèque")
             self.error(f"Erreur: {e}")
             return False
 
@@ -188,11 +188,11 @@ class LibraryCommands(MusicSubCommand):
                 return False
 
             media_owner_id = self.get_media_owner_id()
-            shuffle_text = " (mode alÃ©atoire)" if args.shuffle else ""
+            shuffle_text = " (mode aléatoire)" if args.shuffle else ""
 
             # Library playlist
             if args.type == "library":
-                self.info(f"ðŸ“ Lecture playlist bibliothÃ¨que sur '{args.device}'{shuffle_text}...")
+                self.info(f"?? Lecture playlist bibliothèque sur '{args.device}'{shuffle_text}...")
                 result = self.call_with_breaker(
                     ctx.music_library.play_library_playlist,
                     serial,
@@ -204,7 +204,7 @@ class LibraryCommands(MusicSubCommand):
 
             # Prime playlist (ASIN)
             elif args.type == "prime-asin":
-                self.info(f"ðŸ“ Lecture playlist Prime (ASIN) sur '{args.device}'...")
+                self.info(f"?? Lecture playlist Prime (ASIN) sur '{args.device}'...")
                 result = self.call_with_breaker(
                     ctx.music_library.play_prime_playlist,
                     serial,
@@ -215,7 +215,7 @@ class LibraryCommands(MusicSubCommand):
 
             # Prime station (seedID)
             elif args.type == "prime-station":
-                self.info(f"ðŸ“» Lecture station Prime sur '{args.device}'...")
+                self.info(f"?? Lecture station Prime sur '{args.device}'...")
                 result = self.call_with_breaker(
                     ctx.music_library.play_prime_station,
                     serial,
@@ -226,7 +226,7 @@ class LibraryCommands(MusicSubCommand):
 
             # Prime historical queue
             elif args.type == "prime-queue":
-                self.info(f"ðŸ“œ Lecture queue historique Prime sur '{args.device}'...")
+                self.info(f"?? Lecture queue historique Prime sur '{args.device}'...")
                 result = self.call_with_breaker(
                     ctx.music_library.play_historical_queue,
                     serial,
@@ -240,7 +240,7 @@ class LibraryCommands(MusicSubCommand):
                 return False
 
             if result:
-                self.success("âœ… Lecture lancÃ©e")
+                self.success("? Lecture lancée")
                 return True
 
             return False
@@ -251,7 +251,7 @@ class LibraryCommands(MusicSubCommand):
             return False
 
     def library(self, args: argparse.Namespace) -> bool:
-        """Afficher la bibliothÃ¨que."""
+        """Afficher la bibliothèque."""
         try:
             ctx = getattr(self, "context", None)
             # Pour les options Prime, un appareil est requis
@@ -275,16 +275,16 @@ class LibraryCommands(MusicSubCommand):
 
                 media_owner_id = self.get_media_owner_id()
 
-                # DÃ©terminer le type de playlist
+                # Déterminer le type de playlist
                 if args.imported:
                     playlist_type = "imported"
-                    self.info("ðŸ“š Morceaux importÃ©s...")
+                    self.info("?? Morceaux importés...")
                 elif args.purchased:
                     playlist_type = "purchased"
-                    self.info("ðŸ“š Morceaux achetÃ©s...")
+                    self.info("?? Morceaux achetés...")
                 else:  # playlists
                     playlist_type = "cloudplayer"
-                    self.info("ðŸ“š Playlists bibliothÃ¨que...")
+                    self.info("?? Playlists bibliothèque...")
 
                 items = self.call_with_breaker(
                     ctx.music_library.get_library_playlists,
@@ -298,14 +298,14 @@ class LibraryCommands(MusicSubCommand):
                     if args.json:
                         print(json.dumps(items, indent=2, ensure_ascii=False))
                     else:
-                        self.success(f"âœ… {len(items)} Ã©lÃ©ments trouvÃ©s")
-                        for i, item in enumerate(items[:20], 1):  # Limiter Ã  20
+                        self.success(f"? {len(items)} éléments trouvés")
+                        for i, item in enumerate(items[:20], 1):  # Limiter à 20
                             print(f"  {i}. {item.get('title', 'Sans titre')}")
                         if len(items) > 20:
                             print(f"\n  ... et {len(items) - 20} autres")
                     return True
                 else:
-                    self.warning("Aucun Ã©lÃ©ment trouvÃ©")
+                    self.warning("Aucun élément trouvé")
                     return True
 
             # Prime playlists
@@ -317,7 +317,7 @@ class LibraryCommands(MusicSubCommand):
                 serial, device_type = device_info
                 media_owner_id = self.get_media_owner_id()
 
-                self.info("ðŸ“š Playlists Prime Music...")
+                self.info("?? Playlists Prime Music...")
 
                 if not ctx or not getattr(ctx, "music_library", None):
                     self.error("MusicLibraryService non disponible")
@@ -334,7 +334,7 @@ class LibraryCommands(MusicSubCommand):
                     if args.json:
                         print(json.dumps(playlists, indent=2, ensure_ascii=False))
                     else:
-                        self.success(f"âœ… {len(playlists)} playlists Prime trouvÃ©es")
+                        self.success(f"? {len(playlists)} playlists Prime trouvées")
                         for i, pl in enumerate(playlists[:20], 1):
                             name = pl.get("title", pl.get("name", "Sans titre"))
                             asin = pl.get("asin", "N/A")
@@ -343,7 +343,7 @@ class LibraryCommands(MusicSubCommand):
                             print(f"\n  ... et {len(playlists) - 20} autres")
                     return True
                 else:
-                    self.warning("Aucune playlist Prime trouvÃ©e")
+                    self.warning("Aucune playlist Prime trouvée")
                     return True
 
             # Prime stations
@@ -355,7 +355,7 @@ class LibraryCommands(MusicSubCommand):
                 serial, device_type = device_info
                 media_owner_id = self.get_media_owner_id()
 
-                self.info("ðŸ“» Stations Prime Music...")
+                self.info("?? Stations Prime Music...")
 
                 if not ctx or not getattr(ctx, "music_library", None):
                     self.error("MusicLibraryService non disponible")
@@ -372,7 +372,7 @@ class LibraryCommands(MusicSubCommand):
                     if args.json:
                         print(json.dumps(stations, indent=2, ensure_ascii=False))
                     else:
-                        self.success(f"âœ… {len(stations)} stations Prime trouvÃ©es")
+                        self.success(f"? {len(stations)} stations Prime trouvées")
                         for i, st in enumerate(stations[:20], 1):
                             name = st.get("title", st.get("name", "Sans titre"))
                             seed = st.get("seedId", "N/A")
@@ -381,12 +381,12 @@ class LibraryCommands(MusicSubCommand):
                             print(f"\n  ... et {len(stations) - 20} autres")
                     return True
                 else:
-                    self.warning("Aucune station Prime trouvÃ©e")
+                    self.warning("Aucune station Prime trouvée")
                     return True
 
             return False
 
         except Exception as e:
-            self.logger.exception("Erreur lors de l'affichage bibliothÃ¨que")
+            self.logger.exception("Erreur lors de l'affichage bibliothèque")
             self.error(f"Erreur: {e}")
             return False

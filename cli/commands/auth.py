@@ -1,10 +1,10 @@
-Ôªø"""
+"""
 Commandes d'authentification pour la CLI Alexa Voice Control.
 
-Ce module g√®re toutes les op√©rations li√©es √† l'authentification:
-- create: Cr√©er une nouvelle session d'authentification
+Ce module gËre toutes les opÈrations liÈes ‡ l'authentification:
+- create: CrÈer une nouvelle session d'authentification
 - delete: Supprimer les cookies d'authentification
-- status: V√©rifier l'√©tat de connexion
+- status: VÈrifier l'Ètat de connexion
 
 Auteur: M@nu
 Date: 7 octobre 2025
@@ -17,21 +17,21 @@ from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 from core.state_machine import ConnectionState
 
-# Constantes de description simplifi√©es
-AUTH_DESCRIPTION = "G√©rer l'authentification Alexa"
-CREATE_HELP = "Cr√©er une nouvelle session d'authentification"
-STATUS_HELP = "V√©rifier l'√©tat de connexion"
+# Constantes de description simplifiÈes
+AUTH_DESCRIPTION = "GÈrer l'authentification Alexa"
+CREATE_HELP = "CrÈer une nouvelle session d'authentification"
+STATUS_HELP = "VÈrifier l'Ètat de connexion"
 
 
 class AuthCommand(BaseCommand):
     """
     Commande d'authentification Alexa.
 
-    G√®re la cr√©ation et v√©rification de l'authentification.
+    GËre la crÈation et vÈrification de l'authentification.
 
     Actions:
-        - create: Cr√©er une nouvelle session d'authentification
-        - status: V√©rifier l'√©tat de connexion
+        - create: CrÈer une nouvelle session d'authentification
+        - status: VÈrifier l'Ètat de connexion
 
     Example:
         >>> python alexa.py auth create
@@ -43,13 +43,13 @@ class AuthCommand(BaseCommand):
         Configure le parser pour les commandes d'authentification.
 
         Args:
-            parser: Sous-parser pour la cat√©gorie 'auth'
+            parser: Sous-parser pour la catÈgorie 'auth'
         """
-        # Utiliser le formatter universel pour l'ordre exact demand√©
+        # Utiliser le formatter universel pour l'ordre exact demandÈ
         parser.formatter_class = UniversalHelpFormatter
 
-        # Description r√©organis√©e dans l'ordre demand√© :
-        # Titre ‚Üí Usage ‚Üí Options ‚Üí Actions ‚Üí Options d'action ‚Üí Exemples
+        # Description rÈorganisÈe dans l'ordre demandÈ :
+        # Titre ? Usage ? Options ? Actions ? Options d'action ? Exemples
         parser.description = AUTH_DESCRIPTION
 
         # Supprimer l'usage automatique d'argparse
@@ -59,14 +59,14 @@ class AuthCommand(BaseCommand):
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
-            help="Action √† ex√©cuter",
+            help="Action ‡ exÈcuter",
             required=True,
         )
 
         # Action: create
         create_parser = subparsers.add_parser(
             "create",
-            help="Cr√©er une nouvelle session d'authentification",
+            help="CrÈer une nouvelle session d'authentification",
             description=CREATE_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
@@ -74,25 +74,25 @@ class AuthCommand(BaseCommand):
         create_parser.add_argument(
             "--force",
             action="store_true",
-            help="Forcer une nouvelle connexion m√™me si d√©j√† connect√©",
+            help="Forcer une nouvelle connexion mÍme si dÈj‡ connectÈ",
         )
         create_parser.add_argument(
             "--amazon",
             type=str,
             default="amazon.fr",
-            help="Domaine Amazon √† utiliser (ex: amazon.fr, amazon.de)",
+            help="Domaine Amazon ‡ utiliser (ex: amazon.fr, amazon.de)",
         )
         create_parser.add_argument(
             "--language",
             type=str,
             default="fr-FR",
-            help="Langue √† utiliser (ex: fr-FR, de-DE)",
+            help="Langue ‡ utiliser (ex: fr-FR, de-DE)",
         )
 
         # Action: status
         subparsers.add_parser(
             "status",
-            help="V√©rifier l'√©tat de connexion",
+            help="VÈrifier l'Ètat de connexion",
             description=STATUS_HELP,
             formatter_class=ActionHelpFormatter,
             add_help=False,
@@ -100,13 +100,13 @@ class AuthCommand(BaseCommand):
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
-        Ex√©cute la commande d'authentification.
+        ExÈcute la commande d'authentification.
 
         Args:
-            args: Arguments pars√©s
+            args: Arguments parsÈs
 
         Returns:
-            True si succ√®s, False sinon
+            True si succËs, False sinon
         """
         if args.action == "create":
             return self._create(args)
@@ -118,52 +118,52 @@ class AuthCommand(BaseCommand):
 
     def _create(self, args: argparse.Namespace) -> bool:
         """
-        Cr√©e une nouvelle session d'authentification.
+        CrÈe une nouvelle session d'authentification.
 
         Args:
             args: Arguments (force)
 
         Returns:
-            True si succ√®s
+            True si succËs
         """
         try:
-            # G√©rer les cookies existants selon l'option --force
+            # GÈrer les cookies existants selon l'option --force
             force = getattr(args, "force", False)
             if force:
-                # Supprimer les cookies existants si --force est sp√©cifi√©
+                # Supprimer les cookies existants si --force est spÈcifiÈ
                 self._delete_existing_cookies()
             else:
-                # V√©rifier s'il y a des cookies valides sans --force
+                # VÈrifier s'il y a des cookies valides sans --force
                 if self._has_valid_cookies():
                     # Afficher le status d'abord
                     self._status(args)
                     # Puis le message d'avertissement
-                    print("\033[1;33m‚ö†Ô∏è  Session d'authentification d√©j√† active\033[0m")
+                    print("\033[1;33m??  Session d'authentification dÈj‡ active\033[0m")
                     print()
-                    print("\033[1;30müí° Pour forcer une nouvelle authentification:\033[0m")
+                    print("\033[1;30m?? Pour forcer une nouvelle authentification:\033[0m")
                     print("   \033[1;36malexa auth create --force\033[0m")
                     print()
                     return True  # Retourner True car ce n'est pas une erreur
 
-            # V√©rifications pr√©alables compl√®tes
+            # VÈrifications prÈalables complËtes
             if not self._check_prerequisites():
                 return False
 
-            # Import des modules d'auth (uniquement si n√©cessaire)
+            # Import des modules d'auth (uniquement si nÈcessaire)
             from alexa_auth.alexa_cookie_retriever import get_alexa_cookies
 
             # Obtenir le contexte requis (narrow Optional)
             ctx = self.require_context()
 
-            # Transition state machine seulement si pas d√©j√† connect√©
+            # Transition state machine seulement si pas dÈj‡ connectÈ
             if ctx.state_machine.state != ConnectionState.AUTHENTICATED:
                 ctx.state_machine.connect()
 
             # Lancer le processus d'authentification Node.js
-            self.logger.info("üîÑ D√©marrage du processus d'authentification...")
-            self.logger.info("üåê Connexion au service Amazon Alexa...")
+            self.logger.info("?? DÈmarrage du processus d'authentification...")
+            self.logger.info("?? Connexion au service Amazon Alexa...")
 
-            # R√©cup√©rer la configuration r√©gionale (arguments CLI avec valeurs par d√©faut)
+            # RÈcupÈrer la configuration rÈgionale (arguments CLI avec valeurs par dÈfaut)
             amazon_domain = args.amazon
             language = args.language
 
@@ -172,27 +172,27 @@ class AuthCommand(BaseCommand):
             if success:
                 if ctx.state_machine.state != ConnectionState.AUTHENTICATED:
                     ctx.state_machine.on_connected()
-                self.logger.success("‚úÖ Session cr√©√©e avec succ√®s !")
-                self.logger.info("üíæ Les cookies ont √©t√© sauvegard√©s dans alexa_auth/data/")
+                self.logger.success("? Session crÈÈe avec succËs !")
+                self.logger.info("?? Les cookies ont ÈtÈ sauvegardÈs dans alexa_auth/data/")
 
                 # Invalider le cache d'auth pour forcer rechargement
                 if ctx.cache_service:
                     ctx.cache_service.invalidate("auth_data")
-                    self.logger.debug("üóëÔ∏è Cache auth invalid√© apr√®s cr√©ation")
+                    self.logger.debug("??? Cache auth invalidÈ aprËs crÈation")
 
                 return True
             else:
                 if self.state_machine:
                     self.state_machine.error()
-                self.logger.error("‚ùå √âchec de la cr√©ation de session")
-                print("‚ùå √âchec de la cr√©ation de session")
+                self.logger.error("? …chec de la crÈation de session")
+                print("? …chec de la crÈation de session")
                 return False
 
         except Exception as e:
-            self.logger.exception("üí• Erreur lors de la cr√©ation de session")
+            self.logger.exception("?? Erreur lors de la crÈation de session")
             if self.state_machine:
                 self.state_machine.error()
-            self.logger.error(f"‚ùå Erreur: {e}")
+            self.logger.error(f"? Erreur: {e}")
             return False
 
     def _status(self, args: argparse.Namespace) -> bool:
@@ -200,50 +200,50 @@ class AuthCommand(BaseCommand):
         Affiche le statut de connexion.
 
         Args:
-            args: Arguments (utilise l'option globale verbose si d√©finie)
+            args: Arguments (utilise l'option globale verbose si dÈfinie)
 
         Returns:
-            True toujours (ne peut pas √©chouer)
+            True toujours (ne peut pas Èchouer)
         """
-        self.logger.info("‚ÑπÔ∏è  √âtat de connexion")
+        self.logger.info("??  …tat de connexion")
         print()
 
-        # Obtenir le contexte requis pour acc√©der aux services
+        # Obtenir le contexte requis pour accÈder aux services
         try:
             ctx = self.require_context()
         except RuntimeError:
-            # Si aucun contexte, afficher un √©tat g√©n√©rique
+            # Si aucun contexte, afficher un Ètat gÈnÈrique
             state_name = "UNKNOWN"
             can_execute = False
         else:
-            # √âtat de la state machine
+            # …tat de la state machine
             state_name = ctx.state_machine.state.name if ctx.state_machine else "UNKNOWN"
             can_execute = ctx.state_machine.can_execute_commands if ctx.state_machine else False
 
-        # Affichage avec couleurs et style am√©lior√©
-        print("\033[1;4;30müîê √âTAT DE CONNEXION\033[0m")  # Gris gras soulign√© avec emoji
+        # Affichage avec couleurs et style amÈliorÈ
+        print("\033[1;4;30m?? …TAT DE CONNEXION\033[0m")  # Gris gras soulignÈ avec emoji
         print()
 
-        # Colorer l'√©tat en vert si authentifi√©
+        # Colorer l'Ètat en vert si authentifiÈ
         state_display = "\033[32mAUTHENTICATED\033[0m" if state_name == "AUTHENTICATED" else state_name
         cmd_status = "\033[32mOui\033[0m" if can_execute else "\033[31mNon\033[0m"
-        print(f"\033[1;30m  √âtat\033[0m                         {state_display}")
-        print(f"\033[1;30m  Peut ex√©cuter commandes\033[0m      {cmd_status}")
+        print(f"\033[1;30m  …tat\033[0m                         {state_display}")
+        print(f"\033[1;30m  Peut exÈcuter commandes\033[0m      {cmd_status}")
 
-        # V√©rifier existence des fichiers
+        # VÈrifier existence des fichiers
         auth_data_dir = Path("alexa_auth/data")
         cookie_file = auth_data_dir / "cookie.txt"
         cookie_json = auth_data_dir / "cookie-resultat.json"
 
         cookie_txt_exists = cookie_file.exists()
-        cookie_txt_status = "\033[32mPr√©sent\033[0m" if cookie_txt_exists else "\033[31mManquant\033[0m"
+        cookie_txt_status = "\033[32mPrÈsent\033[0m" if cookie_txt_exists else "\033[31mManquant\033[0m"
         print(f"\033[1;30m  Fichier cookie.txt\033[0m           {cookie_txt_status}")
 
         cookie_json_exists = cookie_json.exists()
-        cookie_json_status = "\033[32mPr√©sent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
+        cookie_json_status = "\033[32mPrÈsent\033[0m" if cookie_json_exists else "\033[31mManquant\033[0m"
         print(f"\033[1;30m  Fichier cookie-resultat.json\033[0m {cookie_json_status}")
 
-        # Afficher les infos du cookie m√™me sans --verbose
+        # Afficher les infos du cookie mÍme sans --verbose
         if cookie_json_exists:
             try:
                 import json
@@ -262,7 +262,7 @@ class AuthCommand(BaseCommand):
                 if domain:
                     print(f"\033[1;30m  Domaine Amazon\033[0m               {domain}")
 
-                # Date de cr√©ation et √¢ge
+                # Date de crÈation et ‚ge
                 token_date = None
                 if "recapitulatif" in data and "tokenDate" in data["recapitulatif"]:
                     token_date = data["recapitulatif"]["tokenDate"]
@@ -273,7 +273,7 @@ class AuthCommand(BaseCommand):
                     dt = datetime.fromtimestamp(token_date / 1000)  # Convertir ms en s
                     date_str = dt.strftime("%d/%m/%Y %H:%M:%S")
 
-                    # Calculer l'√¢ge
+                    # Calculer l'‚ge
                     age_seconds = (datetime.now() - dt).total_seconds()
                     if age_seconds < 3600:
                         age_str = f"{int(age_seconds / 60)} minutes"
@@ -282,12 +282,12 @@ class AuthCommand(BaseCommand):
                     else:
                         age_str = f"{int(age_seconds / 86400)} jours"
 
-                    print(f"\033[1;30m  Date de cr√©ation\033[0m             {date_str}")
-                    print(f"\033[1;30m  √Çge du cookie\033[0m                {age_str}")
+                    print(f"\033[1;30m  Date de crÈation\033[0m             {date_str}")
+                    print(f"\033[1;30m  ¬ge du cookie\033[0m                {age_str}")
 
-                # CSRF token (juste indiquer pr√©sence)
+                # CSRF token (juste indiquer prÈsence)
                 if "recapitulatif" in data and "csrf" in data["recapitulatif"]:
-                    csrf_status = "\033[32mPr√©sent\033[0m"
+                    csrf_status = "\033[32mPrÈsent\033[0m"
                     print(f"\033[1;30m  CSRF token\033[0m                   {csrf_status}")
 
             except Exception as e:
@@ -297,7 +297,7 @@ class AuthCommand(BaseCommand):
         verbose = getattr(args, "verbose", False)
         if verbose:
             print()
-            print(f"\033[1;30m  R√©pertoire auth\033[0m              {auth_data_dir}")
+            print(f"\033[1;30m  RÈpertoire auth\033[0m              {auth_data_dir}")
 
             if cookie_file.exists():
                 size = cookie_file.stat().st_size
@@ -311,17 +311,17 @@ class AuthCommand(BaseCommand):
 
         # Recommandation
         if not can_execute:
-            print("\nüí° Utilisez 'alexa auth create' pour cr√©er une session")
+            print("\n?? Utilisez 'alexa auth create' pour crÈer une session")
 
         print()
         return True
 
     def _has_valid_cookies(self) -> bool:
         """
-        V√©rifie si des cookies valides existent d√©j√†.
+        VÈrifie si des cookies valides existent dÈj‡.
 
         Returns:
-            True si des cookies valides sont pr√©sents
+            True si des cookies valides sont prÈsents
         """
         import json
         from pathlib import Path
@@ -329,29 +329,29 @@ class AuthCommand(BaseCommand):
         cookie_file = Path("alexa_auth/data/cookie-resultat.json")
 
         if not cookie_file.exists():
-            self.logger.debug("üîç Aucun fichier de cookie trouv√©")
+            self.logger.debug("?? Aucun fichier de cookie trouvÈ")
             return False
 
         try:
             with open(cookie_file, encoding="utf-8") as f:
                 data = json.load(f)
 
-            # V√©rifier la pr√©sence des donn√©es essentielles
+            # VÈrifier la prÈsence des donnÈes essentielles
             recap = data.get("recapitulatif", {})
             if not recap.get("cookie") or not recap.get("csrf"):
-                self.logger.debug("‚ö†Ô∏è Cookie en cache incomplet")
+                self.logger.debug("?? Cookie en cache incomplet")
                 return False
 
-            self.logger.debug("‚úÖ Cookies valides trouv√©s")
+            self.logger.debug("? Cookies valides trouvÈs")
             return True
 
         except Exception as e:
-            self.logger.debug(f"‚ùå Erreur lors de la v√©rification du cache: {e}")
+            self.logger.debug(f"? Erreur lors de la vÈrification du cache: {e}")
             return False
 
     def _delete_existing_cookies(self) -> None:
         """
-        Supprime les cookies existants avant de cr√©er de nouveaux.
+        Supprime les cookies existants avant de crÈer de nouveaux.
         """
         auth_data_dir = Path("alexa_auth/data")
         files_to_delete = [
@@ -364,38 +364,38 @@ class AuthCommand(BaseCommand):
         for file_path in files_to_delete:
             if file_path.exists():
                 file_path.unlink()
-                self.logger.debug(f"üóëÔ∏è Cookie supprim√©: {file_path}")
+                self.logger.debug(f"??? Cookie supprimÈ: {file_path}")
                 deleted_count += 1
 
         if deleted_count > 0:
-            self.logger.info(f"üóëÔ∏è {deleted_count} cookie(s) existant(s) supprim√©(s)")
+            self.logger.info(f"??? {deleted_count} cookie(s) existant(s) supprimÈ(s)")
         else:
-            self.logger.debug("üîç Aucun cookie existant √† supprimer")
+            self.logger.debug("?? Aucun cookie existant ‡ supprimer")
 
     def _check_prerequisites(self) -> bool:
         """
-        V√©rifie tous les pr√©requis avant l'authentification.
+        VÈrifie tous les prÈrequis avant l'authentification.
 
         Returns:
-            True si tous les pr√©requis sont OK
+            True si tous les prÈrequis sont OK
         """
         from typing import List
 
         issues_found: List[str] = []
 
-        # 1. V√©rifier l'environnement virtuel Python
+        # 1. VÈrifier l'environnement virtuel Python
         if not self._check_python_venv():
             issues_found.append("python_venv")
 
-        # 2. V√©rifier Node.js
+        # 2. VÈrifier Node.js
         if not self._check_nodejs():
             issues_found.append("nodejs")
 
-        # 3. V√©rifier les d√©pendances npm
+        # 3. VÈrifier les dÈpendances npm
         if not self._check_npm_dependencies():
             issues_found.append("npm_deps")
 
-        # 4. V√©rifier les fichiers requis
+        # 4. VÈrifier les fichiers requis
         if not self._check_required_files():
             issues_found.append("required_files")
 
@@ -403,21 +403,21 @@ class AuthCommand(BaseCommand):
             self._show_installation_instructions(issues_found)
             return False
 
-        self.logger.success("‚úÖ Tous les pr√©requis v√©rifi√©s")
+        self.logger.success("? Tous les prÈrequis vÈrifiÈs")
         return True
 
     def _check_python_venv(self) -> bool:
-        """V√©rifie si l'environnement virtuel Python est activ√©"""
+        """VÈrifie si l'environnement virtuel Python est activÈ"""
         import sys
 
-        # V√©rifier si on est dans un venv
+        # VÈrifier si on est dans un venv
         in_venv = hasattr(sys, "real_prefix") or (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)
 
         if not in_venv:
             return False
 
-        # V√©rifier que les packages requis sont install√©s
-        # Tester la disponibilit√© des modules sans importer des symboles inutilis√©s
+        # VÈrifier que les packages requis sont installÈs
+        # Tester la disponibilitÈ des modules sans importer des symboles inutilisÈs
         import importlib.util
 
         nodeenv_spec = importlib.util.find_spec("nodeenv")
@@ -427,7 +427,7 @@ class AuthCommand(BaseCommand):
         return nodeenv_spec is not None and requests_spec is not None
 
     def _check_nodejs(self) -> bool:
-        """V√©rifie si Node.js est install√© via nodeenv"""
+        """VÈrifie si Node.js est installÈ via nodeenv"""
         from pathlib import Path
 
         from alexa_auth.alexa_cookie_retriever import NodeEnvironment
@@ -446,7 +446,7 @@ class AuthCommand(BaseCommand):
             return False
 
     def _check_npm_dependencies(self) -> bool:
-        """V√©rifie si les d√©pendances npm sont install√©es"""
+        """VÈrifie si les dÈpendances npm sont installÈes"""
         from pathlib import Path
 
         script_dir = Path("alexa_auth/nodejs")
@@ -455,12 +455,12 @@ class AuthCommand(BaseCommand):
         if not node_modules.exists():
             return False
 
-        # V√©rifier quelques packages cl√©s
+        # VÈrifier quelques packages clÈs
         required_packages = ["alexa-cookie2", "yargs"]
         return all((node_modules / package).exists() for package in required_packages)
 
     def _check_required_files(self) -> bool:
-        """V√©rifie si les fichiers requis existent"""
+        """VÈrifie si les fichiers requis existent"""
         from pathlib import Path
 
         required_files = [
@@ -472,20 +472,20 @@ class AuthCommand(BaseCommand):
         return all(Path(file_path).exists() for file_path in required_files)
 
     def _show_installation_instructions(self, issues):
-        """Affiche les instructions d'installation selon les probl√®mes d√©tect√©s"""
+        """Affiche les instructions d'installation selon les problËmes dÈtectÈs"""
         import sys
 
-        self.logger.error("‚ö†Ô∏è Pr√©requis manquants d√©tect√©s")
+        self.logger.error("?? PrÈrequis manquants dÈtectÈs")
         self.logger.info("")
-        self.logger.info("Probl√®mes identifi√©s:")
+        self.logger.info("ProblËmes identifiÈs:")
 
         for issue in issues:
             if issue == "python_venv":
-                self.logger.info("  Environnement virtuel Python non activ√© ou packages manquants")
+                self.logger.info("  Environnement virtuel Python non activÈ ou packages manquants")
             elif issue == "nodejs":
-                self.logger.info("  Node.js non install√© via nodeenv")
+                self.logger.info("  Node.js non installÈ via nodeenv")
             elif issue == "npm_deps":
-                self.logger.info("  D√©pendances npm non install√©es")
+                self.logger.info("  DÈpendances npm non installÈes")
             elif issue == "required_files":
                 self.logger.info("  Fichiers requis manquants")
 
@@ -495,32 +495,32 @@ class AuthCommand(BaseCommand):
         if sys.platform == "win32":
             # Instructions Windows
             self.logger.info("")
-            self.logger.info("  Installation compl√®te (recommand√©):")
+            self.logger.info("  Installation complËte (recommandÈ):")
             self.logger.info("     scripts\\install.ps1")
             self.logger.info("")
             self.logger.info("  Installation manuelle:")
-            self.logger.info("     1. Cr√©er/activer le venv Python:")
+            self.logger.info("     1. CrÈer/activer le venv Python:")
             self.logger.info("        scripts\\venv_manager.bat create")
             self.logger.info("        scripts\\venv_manager.bat activate")
             self.logger.info("")
-            self.logger.info("     2. Installer Node.js et d√©pendances:")
+            self.logger.info("     2. Installer Node.js et dÈpendances:")
             self.logger.info("        python scripts\\install.py")
         else:
             # Instructions Unix/Linux/macOS
             self.logger.info("")
-            self.logger.info("  Installation compl√®te (recommand√©):")
+            self.logger.info("  Installation complËte (recommandÈ):")
             self.logger.info("     bash scripts/install.sh")
             self.logger.info("")
             self.logger.info("  Installation manuelle:")
-            self.logger.info("     1. Cr√©er/activer le venv Python:")
+            self.logger.info("     1. CrÈer/activer le venv Python:")
             self.logger.info("        bash scripts/venv_manager.sh create")
             self.logger.info("        source scripts/venv_manager.sh activate")
             self.logger.info("")
-            self.logger.info("     2. Installer Node.js et d√©pendances:")
+            self.logger.info("     2. Installer Node.js et dÈpendances:")
             self.logger.info("        python scripts/install.py")
 
         self.logger.info("")
         self.logger.info("  Puis relancer l'authentification:")
         self.logger.info("     python alexa auth create")
         self.logger.info("")
-        self.logger.info("Conseil: Utilisez l'installation compl√®te pour √©viter les probl√®mes")
+        self.logger.info("Conseil: Utilisez l'installation complËte pour Èviter les problËmes")

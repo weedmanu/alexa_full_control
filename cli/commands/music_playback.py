@@ -1,7 +1,7 @@
-Ôªø"""
-Commandes de contr√¥le de lecture (playback).
+"""
+Commandes de contrÙle de lecture (playback).
 
-G√®re: play, pause, stop, control, shuffle, repeat
+GËre: play, pause, stop, control, shuffle, repeat
 
 Auteur: M@nu
 Date: 8 octobre 2025
@@ -12,16 +12,16 @@ import argparse
 from cli.command_parser import ActionHelpFormatter
 from cli.commands.base_subcommand import BaseSubCommand as MusicSubCommand
 
-# Constantes de description simplifi√©es
-CONTROL_HELP = "Contr√¥ler la lecture musicale"
+# Constantes de description simplifiÈes
+CONTROL_HELP = "ContrÙler la lecture musicale"
 PAUSE_HELP = "Mettre en pause la lecture"
-REPEAT_HELP = "G√©rer la r√©p√©tition"
-SHUFFLE_HELP = "G√©rer le mode al√©atoire"
-STOP_HELP = "Arr√™ter la lecture"
+REPEAT_HELP = "GÈrer la rÈpÈtition"
+SHUFFLE_HELP = "GÈrer le mode alÈatoire"
+STOP_HELP = "ArrÍter la lecture"
 
 
 class PlaybackCommands(MusicSubCommand):
-    """Commandes de contr√¥le de lecture."""
+    """Commandes de contrÙle de lecture."""
 
     @staticmethod
     def setup_parsers(subparsers):
@@ -46,7 +46,7 @@ class PlaybackCommands(MusicSubCommand):
         # Action: stop
         stop_parser = subparsers.add_parser(
             "stop",
-            help="Arr√™ter la lecture",
+            help="ArrÍter la lecture",
             description=STOP_HELP,
             formatter_class=ActionHelpFormatter,
         )
@@ -62,7 +62,7 @@ class PlaybackCommands(MusicSubCommand):
         # Action: control
         control_parser = subparsers.add_parser(
             "control",
-            help="Contr√¥ler la lecture",
+            help="ContrÙler la lecture",
             description=CONTROL_HELP,
             formatter_class=ActionHelpFormatter,
         )
@@ -78,13 +78,13 @@ class PlaybackCommands(MusicSubCommand):
             "action_type",
             type=str,
             choices=["play", "pause", "next", "prev", "stop"],
-            help="Action de contr√¥le",
+            help="Action de contrÙle",
         )
 
         # Action: shuffle
         shuffle_parser = subparsers.add_parser(
             "shuffle",
-            help="Mode al√©atoire",
+            help="Mode alÈatoire",
             description=SHUFFLE_HELP,
             formatter_class=ActionHelpFormatter,
         )
@@ -100,13 +100,13 @@ class PlaybackCommands(MusicSubCommand):
             "mode",
             type=str,
             choices=["on", "off", "enable", "disable"],
-            help="Activer (on/enable) ou d√©sactiver (off/disable)",
+            help="Activer (on/enable) ou dÈsactiver (off/disable)",
         )
 
         # Action: repeat
         repeat_parser = subparsers.add_parser(
             "repeat",
-            help="Mode r√©p√©tition",
+            help="Mode rÈpÈtition",
             description=REPEAT_HELP,
             formatter_class=ActionHelpFormatter,
         )
@@ -122,7 +122,7 @@ class PlaybackCommands(MusicSubCommand):
             "mode",
             type=str,
             choices=["off", "one", "all"],
-            help="Mode: off (d√©sactiv√©), one (r√©p√©ter 1), all (r√©p√©ter tout)",
+            help="Mode: off (dÈsactivÈ), one (rÈpÈter 1), all (rÈpÈter tout)",
         )
 
     def pause(self, args: argparse.Namespace) -> bool:
@@ -134,7 +134,7 @@ class PlaybackCommands(MusicSubCommand):
 
             serial, device_type = device_info
 
-            self.info(f"‚è∏Ô∏è  Pause sur '{args.device}'...")
+            self.info(f"??  Pause sur '{args.device}'...")
 
             ctx = getattr(self, "context", None)
             if not ctx or not getattr(ctx, "playback_mgr", None):
@@ -144,7 +144,7 @@ class PlaybackCommands(MusicSubCommand):
             result = ctx.playback_mgr.pause(serial, device_type)
 
             if result:
-                self.success("‚úÖ Lecture mise en pause")
+                self.success("? Lecture mise en pause")
                 return True
 
             return False
@@ -155,7 +155,7 @@ class PlaybackCommands(MusicSubCommand):
             return False
 
     def stop(self, args: argparse.Namespace) -> bool:
-        """Arr√™ter la lecture."""
+        """ArrÍter la lecture."""
         try:
             device_info = self.get_device_info(args.device)
             if not device_info:
@@ -163,7 +163,7 @@ class PlaybackCommands(MusicSubCommand):
 
             serial, device_type = device_info
 
-            self.info(f"‚èπÔ∏è  Arr√™t sur '{args.device}'...")
+            self.info(f"??  ArrÍt sur '{args.device}'...")
 
             ctx = getattr(self, "context", None)
             if not ctx or not getattr(ctx, "playback_mgr", None):
@@ -173,7 +173,7 @@ class PlaybackCommands(MusicSubCommand):
             result = ctx.playback_mgr.stop(serial, device_type)
 
             if result:
-                self.success("‚úÖ Lecture arr√™t√©e")
+                self.success("? Lecture arrÍtÈe")
                 return True
 
             return False
@@ -184,7 +184,7 @@ class PlaybackCommands(MusicSubCommand):
             return False
 
     def control(self, args: argparse.Namespace) -> bool:
-        """Contr√¥ler la lecture (play, pause, next, prev, stop)."""
+        """ContrÙler la lecture (play, pause, next, prev, stop)."""
         try:
             device_info = self.get_device_info(args.device)
             if not device_info:
@@ -193,14 +193,14 @@ class PlaybackCommands(MusicSubCommand):
             serial, device_type = device_info
 
             action_icons = {
-                "play": "‚ñ∂Ô∏è",
-                "pause": "‚è∏Ô∏è",
-                "next": "‚è≠Ô∏è",
-                "prev": "‚èÆÔ∏è",
-                "stop": "‚èπÔ∏è",
+                "play": "??",
+                "pause": "??",
+                "next": "??",
+                "prev": "??",
+                "stop": "??",
             }
 
-            icon = action_icons.get(args.action_type, "üéµ")
+            icon = action_icons.get(args.action_type, "??")
             self.info(f"{icon} {args.action_type.title()} sur '{args.device}'...")
 
             ctx = getattr(self, "context", None)
@@ -208,7 +208,7 @@ class PlaybackCommands(MusicSubCommand):
                 self.error("PlaybackManager non disponible")
                 return False
 
-            # Mapper l'action √† la m√©thode
+            # Mapper l'action ‡ la mÈthode
             method_map = {
                 "play": ctx.playback_mgr.play,
                 "pause": ctx.playback_mgr.pause,
@@ -220,7 +220,7 @@ class PlaybackCommands(MusicSubCommand):
             result = method_map[args.action_type](serial, device_type)
 
             if result:
-                self.success(f"‚úÖ {args.action_type.title()} ex√©cut√©")
+                self.success(f"? {args.action_type.title()} exÈcutÈ")
                 return True
 
             return False
@@ -231,7 +231,7 @@ class PlaybackCommands(MusicSubCommand):
             return False
 
     def shuffle(self, args: argparse.Namespace) -> bool:
-        """Activer/d√©sactiver le mode al√©atoire."""
+        """Activer/dÈsactiver le mode alÈatoire."""
         try:
             device_info = self.get_device_info(args.device)
             if not device_info:
@@ -240,9 +240,9 @@ class PlaybackCommands(MusicSubCommand):
             serial, device_type = device_info
 
             enabled = args.mode in ["on", "enable"]
-            mode_text = "activ√©" if enabled else "d√©sactiv√©"
+            mode_text = "activÈ" if enabled else "dÈsactivÈ"
 
-            self.info(f"üîÄ Mode al√©atoire {mode_text} sur '{args.device}'...")
+            self.info(f"?? Mode alÈatoire {mode_text} sur '{args.device}'...")
 
             ctx = getattr(self, "context", None)
             if not ctx or not getattr(ctx, "playback_mgr", None):
@@ -252,7 +252,7 @@ class PlaybackCommands(MusicSubCommand):
             result = ctx.playback_mgr.set_shuffle(serial, device_type, enabled)
 
             if result:
-                self.success(f"‚úÖ Mode al√©atoire {mode_text}")
+                self.success(f"? Mode alÈatoire {mode_text}")
                 return True
 
             return False
@@ -263,7 +263,7 @@ class PlaybackCommands(MusicSubCommand):
             return False
 
     def repeat(self, args: argparse.Namespace) -> bool:
-        """D√©finir le mode r√©p√©tition."""
+        """DÈfinir le mode rÈpÈtition."""
         try:
             device_info = self.get_device_info(args.device)
             if not device_info:
@@ -272,12 +272,12 @@ class PlaybackCommands(MusicSubCommand):
             serial, device_type = device_info
 
             mode_text = {
-                "off": "d√©sactiv√©",
-                "one": "r√©p√©ter 1 morceau",
-                "all": "r√©p√©ter tout",
+                "off": "dÈsactivÈ",
+                "one": "rÈpÈter 1 morceau",
+                "all": "rÈpÈter tout",
             }
 
-            self.info(f"üîÅ Mode r√©p√©tition: {mode_text[args.mode]} sur '{args.device}'...")
+            self.info(f"?? Mode rÈpÈtition: {mode_text[args.mode]} sur '{args.device}'...")
 
             ctx = getattr(self, "context", None)
             if not ctx or not getattr(ctx, "playback_mgr", None):
@@ -287,7 +287,7 @@ class PlaybackCommands(MusicSubCommand):
             result = ctx.playback_mgr.set_repeat(serial, device_type, args.mode.upper())
 
             if result:
-                self.success(f"‚úÖ Mode r√©p√©tition: {mode_text[args.mode]}")
+                self.success(f"? Mode rÈpÈtition: {mode_text[args.mode]}")
                 return True
 
             return False

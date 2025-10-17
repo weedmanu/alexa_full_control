@@ -1,7 +1,7 @@
-Ôªø"""
+"""
 Commandes de gestion des annonces Alexa.
 
-Ce module g√®re toutes les op√©rations li√©es aux annonces:
+Ce module gËre toutes les opÈrations liÈes aux annonces:
 - send: Envoyer une annonce
 - list: Lister les annonces
 - clear: Supprimer les annonces
@@ -23,16 +23,16 @@ class AnnouncementCommand(BaseCommand):
     """
     Commande de gestion des annonces Alexa.
 
-    G√®re send, list, clear, read.
+    GËre send, list, clear, read.
 
     Actions:
-        - send: Envoyer une annonce √† un appareil
+        - send: Envoyer une annonce ‡ un appareil
         - list: Lister toutes les annonces
         - clear: Supprimer les annonces
         - read: Marquer une annonce comme lue
 
     Example:
-        >>> alexa announcement send -d "Salon" --message "Rappel: R√©union √† 15h"
+        >>> alexa announcement send -d "Salon" --message "Rappel: RÈunion ‡ 15h"
         >>> alexa announcement send -d "Salon" --message "Alerte" --title "Important"
         >>> alexa announcement list
         >>> alexa announcement clear --device "Salon"
@@ -44,21 +44,21 @@ class AnnouncementCommand(BaseCommand):
         Configure le parser pour les commandes announcement.
 
         Args:
-            parser: Sous-parser pour la cat√©gorie 'announcement'
+            parser: Sous-parser pour la catÈgorie 'announcement'
         """
-        # Utiliser le formatter universel pour l'ordre exact demand√©
+        # Utiliser le formatter universel pour l'ordre exact demandÈ
         parser.formatter_class = UniversalHelpFormatter
 
         # Supprimer la ligne d'usage automatique
         parser.usage = argparse.SUPPRESS
 
-        # Description simplifi√©e
-        parser.description = "G√©rer les annonces audio sur les appareils Alexa"
+        # Description simplifiÈe
+        parser.description = "GÈrer les annonces audio sur les appareils Alexa"
 
         subparsers = parser.add_subparsers(
             dest="action",
             metavar="ACTION",
-            help="Action √† ex√©cuter",
+            help="Action ‡ exÈcuter",
             required=True,
         )
 
@@ -92,7 +92,7 @@ class AnnouncementCommand(BaseCommand):
             type=int,
             metavar="N",
             default=50,
-            help="Nombre maximum d'annonces (d√©faut: 50)",
+            help="Nombre maximum d'annonces (dÈfaut: 50)",
         )
         list_parser.add_argument("--device", type=str, metavar="DEVICE_NAME", help="Filtrer par appareil")
 
@@ -117,13 +117,13 @@ class AnnouncementCommand(BaseCommand):
 
     def execute(self, args: argparse.Namespace) -> bool:
         """
-        Ex√©cute la commande announcement.
+        ExÈcute la commande announcement.
 
         Args:
-            args: Arguments pars√©s
+            args: Arguments parsÈs
 
         Returns:
-            True si succ√®s, False sinon
+            True si succËs, False sinon
         """
         # Validation connexion
         if not self.validate_connection():
@@ -145,20 +145,20 @@ class AnnouncementCommand(BaseCommand):
         """Envoyer une annonce."""
         try:
             # TODO: ANNOUNCEMENT n'est pas fonctionnel - API endpoint retourne 403 Forbidden
-            # L'endpoint /api/notifications/createReminder est utilis√© √† la place d'annonces
+            # L'endpoint /api/notifications/createReminder est utilisÈ ‡ la place d'annonces
             # Besoin d'investiguer le bon endpoint pour les annonces Alexa
-            self.error("‚ö†Ô∏è  ANNOUNCEMENT n'est pas encore fonctionnel (403 Forbidden sur l'endpoint API)")
+            self.error("??  ANNOUNCEMENT n'est pas encore fonctionnel (403 Forbidden sur l'endpoint API)")
             self.info("   TODO: Investiguer le bon endpoint pour les annonces")
             return False
 
-            # R√©cup√©rer le serial de l'appareil
+            # RÈcupÈrer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:
                 return False
 
             title = getattr(args, "title", None) or "Annonce"
 
-            self.info(f"ÔøΩ Envoi annonce √† '{args.device}'...")
+            self.info(f"? Envoi annonce ‡ '{args.device}'...")
 
             ctx = self.require_context()
             if not ctx.notification_mgr:
@@ -168,7 +168,7 @@ class AnnouncementCommand(BaseCommand):
             result = self.call_with_breaker(ctx.notification_mgr.send_notification, serial, args.message, title)
 
             if result:
-                self.success(f"‚úÖ Annonce envoy√©e √† '{args.device}'")
+                self.success(f"? Annonce envoyÈe ‡ '{args.device}'")
                 return True
 
             return False
@@ -181,17 +181,17 @@ class AnnouncementCommand(BaseCommand):
     def _list_announcements(self, args: argparse.Namespace) -> bool:
         """Lister les annonces."""
         try:
-            self.info("ÔøΩ R√©cup√©ration des annonces...")
+            self.info("? RÈcupÈration des annonces...")
 
             ctx = self.require_context()
             if not ctx.notification_mgr:
                 self.error("Gestionnaire d'annonces non disponible")
                 return False
 
-            # R√©cup√©rer toutes les annonces
+            # RÈcupÈrer toutes les annonces
             announcements = self.call_with_breaker(ctx.notification_mgr.list_notifications, args.limit)
 
-            # Filtrer par appareil si sp√©cifi√©
+            # Filtrer par appareil si spÈcifiÈ
             if hasattr(args, "device") and args.device:
                 device_serial = self.get_device_serial(args.device)
                 if device_serial and announcements:
@@ -205,23 +205,23 @@ class AnnouncementCommand(BaseCommand):
 
                 return True
 
-            self.warning("Aucune annonce trouv√©e")
+            self.warning("Aucune annonce trouvÈe")
             return True
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la r√©cup√©ration des annonces")
+            self.logger.exception("Erreur lors de la rÈcupÈration des annonces")
             self.error(f"Erreur: {e}")
             return False
 
     def _clear_announcements(self, args: argparse.Namespace) -> bool:
         """Supprimer les annonces."""
         try:
-            # R√©cup√©rer le serial de l'appareil
+            # RÈcupÈrer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:
                 return False
 
-            self.info(f"üóëÔ∏è  Suppression annonces de '{args.device}'...")
+            self.info(f"???  Suppression annonces de '{args.device}'...")
 
             ctx = self.require_context()
             if not ctx.notification_mgr:
@@ -231,7 +231,7 @@ class AnnouncementCommand(BaseCommand):
             result = self.call_with_breaker(ctx.notification_mgr.clear_notifications, serial)
 
             if result:
-                self.success(f"‚úÖ Annonces supprim√©es de '{args.device}'")
+                self.success(f"? Annonces supprimÈes de '{args.device}'")
                 return True
 
             return False
@@ -244,7 +244,7 @@ class AnnouncementCommand(BaseCommand):
     def _mark_as_read(self, args: argparse.Namespace) -> bool:
         """Marquer comme lu."""
         try:
-            self.info(f"‚úì Marquage annonce '{args.id}' comme lue...")
+            self.info(f"? Marquage annonce '{args.id}' comme lue...")
 
             ctx = self.require_context()
             if not ctx.notification_mgr:
@@ -254,7 +254,7 @@ class AnnouncementCommand(BaseCommand):
             result = self.call_with_breaker(ctx.notification_mgr.mark_as_read, args.id)
 
             if result:
-                self.success("‚úÖ Annonce marqu√©e comme lue")
+                self.success("? Annonce marquÈe comme lue")
                 return True
 
             return False
@@ -270,7 +270,7 @@ class AnnouncementCommand(BaseCommand):
 
     def _display_announcements(self, announcements: List[Dict[str, Any]]) -> None:
         """Affiche les annonces."""
-        print(f"\nÔøΩ {len(announcements)} annonce(s):\n")
+        print(f"\n? {len(announcements)} annonce(s):\n")
 
         for announce in announcements:
             announce_id = announce.get("id", "N/A")
@@ -280,7 +280,7 @@ class AnnouncementCommand(BaseCommand):
             timestamp = announce.get("timestamp", "N/A")
             read = announce.get("read", False)
 
-            read_icon = "‚úì" if read else "‚óè"
+            read_icon = "?" if read else "?"
 
             print(f"  {read_icon} {title}")
             print(f"     ID: {announce_id}")
