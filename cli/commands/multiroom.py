@@ -325,7 +325,7 @@ class MultiroomCommand(BaseCommand):
         for device_serial in devices:
             # Les devices sont juste des serials (strings)
             print(f"  - {device_serial}")
-        
+
         # Afficher les dates
         created = group.get("created", "N/A")
         modified = group.get("modified", "N/A")

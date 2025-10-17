@@ -44,6 +44,7 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
         http_client: Optional[Any] = None,
+        api_service: Optional[Any] = None,
     ) -> None:
         """
         Initialise le gestionnaire d'alarmes.
@@ -71,6 +72,9 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
         # Keep legacy attribute for compatibility
         self.auth = auth
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
+
+        # Optional centralized AlexaAPIService
+        self._api_service: Optional[Any] = api_service
 
         # Backwards-compatible in-memory cache attributes used by existing methods
         self._alarms_cache: Optional[List[Dict[str, Any]]] = None
@@ -143,7 +147,10 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
 
             logger.debug(f"Création alarme: {payload}")
 
-            result = self._api_call("post", "/api/alarms", json=payload)
+            if self._api_service is not None:
+                result = self._api_service.post("/api/alarms", json=payload)
+            else:
+                result = self._api_call("post", "/api/alarms", json=payload)
 
             if result is not None:
                 logger.success(f"Alarme créée pour {device_serial}")
@@ -201,7 +208,10 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
         """
         logger.debug("🌐 Récupération de toutes les alarmes depuis l'API notifications")
 
-        result = self._api_call("get", "/api/notifications")
+        if self._api_service is not None:
+            result = self._api_service.get("/api/notifications")
+        else:
+            result = self._api_call("get", "/api/notifications")
 
         if result is None:
             return []
@@ -294,7 +304,10 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
                 logger.warning("Aucune modification spécifiée pour l'alarme")
                 return False
 
-            result = self._api_call("put", f"/api/alarms/{alarm_id}", json=payload)
+            if self._api_service is not None:
+                result = self._api_service.put(f"/api/alarms/{alarm_id}", json=payload)
+            else:
+                result = self._api_call("put", f"/api/alarms/{alarm_id}", json=payload)
 
             if result is not None:
                 logger.success(f"Alarme {alarm_id} modifiée")
@@ -313,7 +326,10 @@ class AlarmManager(BaseManager[Dict[str, Any]]):
 
             payload = {"enabled": enabled}
 
-            result = self._api_call("put", f"/api/alarms/{alarm_id}", json=payload)
+            if self._api_service is not None:
+                result = self._api_service.put(f"/api/alarms/{alarm_id}", json=payload)
+            else:
+                result = self._api_call("put", f"/api/alarms/{alarm_id}", json=payload)
 
             if result is not None:
                 action = "activée" if enabled else "désactivée"

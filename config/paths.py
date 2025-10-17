@@ -87,8 +87,8 @@ class AppPaths:
         Returns:
             Path: /tmp/.alexa/ sur Unix, %TEMP%\\.alexa\\ sur Windows
         """
-        import tempfile
         import platform
+        import tempfile
 
         if platform.system() == "Windows":
             temp_base = Path(tempfile.gettempdir())

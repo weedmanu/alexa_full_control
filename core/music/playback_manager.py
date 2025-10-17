@@ -29,16 +29,18 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
     Pas de fallback VoiceCommand - plus rapide mais moins tolérant aux erreurs.
     """
 
-    def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None, api_service: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        auth: Any,
+        config: Any,
+        state_machine: Optional[AlexaStateMachine] = None,
+        api_service: Optional[Any] = None,
+    ) -> None:
         http_client = create_http_client_from_auth(auth)
         if state_machine is None:
             state_machine = AlexaStateMachine()
         super().__init__(
-            http_client=http_client,
-            config=config,
-            state_machine=state_machine,
-            cache_service=None,
-            cache_ttl=300
+            http_client=http_client, config=config, state_machine=state_machine, cache_service=None, cache_ttl=300
         )
         self.auth = auth  # Keep for backward compatibility
         # Optional AlexaAPIService for future centralized API calls
@@ -54,13 +56,30 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
         """Envoie une commande directe à /api/np/command (comme le script shell)."""
         try:
             with self._lock:
-                self._api_call(
-                    "post",
-                    "/api/np/command",
-                    params={"deviceSerialNumber": device_serial, "deviceType": device_type},
-                    json=command_data,
-                    timeout=10,
-                )
+                # Prefer centralized AlexaAPIService if injected
+                if getattr(self, "_api_service", None) is not None:
+                    try:
+                        self._api_service.post(
+                            "/api/np/command",
+                            payload={"deviceSerialNumber": device_serial, "deviceType": device_type, **command_data},
+                        )
+                    except Exception:
+                        # fallback to legacy call
+                        self._api_call(
+                            "post",
+                            "/api/np/command",
+                            params={"deviceSerialNumber": device_serial, "deviceType": device_type},
+                            json=command_data,
+                            timeout=10,
+                        )
+                else:
+                    self._api_call(
+                        "post",
+                        "/api/np/command",
+                        params={"deviceSerialNumber": device_serial, "deviceType": device_type},
+                        json=command_data,
+                        timeout=10,
+                    )
                 logger.debug(f"Commande NP réussie: {command_data}")
                 return True
         except Exception as e:
@@ -167,12 +186,23 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
                     "deviceType": device_type,
                     "mediaPosition": position_ms,
                 }
-                _ = self._api_call(
-                    "put",
-                    "/api/np/command",
-                    json=payload,
-                    timeout=10,
-                )
+                if getattr(self, "_api_service", None) is not None:
+                    try:
+                        self._api_service.post("/api/np/command", payload=payload)
+                    except Exception:
+                        _ = self._api_call(
+                            "put",
+                            "/api/np/command",
+                            json=payload,
+                            timeout=10,
+                        )
+                else:
+                    _ = self._api_call(
+                        "put",
+                        "/api/np/command",
+                        json=payload,
+                        timeout=10,
+                    )
                 logger.success(f"Position: {position_ms}ms")
                 return True
             except Exception as e:
@@ -185,12 +215,23 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
             if not self.state_machine.can_execute_commands:
                 return []
             try:
-                response = self._api_call(
-                    "get",
-                    "/api/media/history",
-                    params={"size": limit},
-                    timeout=10,
-                )
+                if getattr(self, "_api_service", None) is not None:
+                    try:
+                        response = self._api_service.get("/api/media/history", params={"size": limit})
+                    except Exception:
+                        response = self._api_call(
+                            "get",
+                            "/api/media/history",
+                            params={"size": limit},
+                            timeout=10,
+                        )
+                else:
+                    response = self._api_call(
+                        "get",
+                        "/api/media/history",
+                        params={"size": limit},
+                        timeout=10,
+                    )
                 if isinstance(response, dict):
                     return response.get("history", [])  # type: ignore
                 return []
@@ -246,31 +287,64 @@ class PlaybackManager(BaseManager[Dict[str, Any]]):
 
                 # 1. État du player (comme show_queue() du shell)
                 logger.debug(f"Récupération état player pour {device_serial}")
-                player_data = self._api_call(
-                    "get",
-                    "/api/np/player",
-                    params=params,
-                    timeout=10,
-                )
+                if getattr(self, "_api_service", None) is not None:
+                    try:
+                        player_data = self._api_service.get("/api/np/player", params=params)
+                    except Exception:
+                        player_data = self._api_call(
+                            "get",
+                            "/api/np/player",
+                            params=params,
+                            timeout=10,
+                        )
+                else:
+                    player_data = self._api_call(
+                        "get",
+                        "/api/np/player",
+                        params=params,
+                        timeout=10,
+                    )
 
                 # 2. État média
                 logger.debug(f"Récupération état média pour {device_serial}")
                 media_params: Dict[str, Any] = {"deviceSerialNumber": device_serial, "deviceType": device_type}
-                media_data = self._api_call(
-                    "get",
-                    "/api/media/state",
-                    params=media_params,
-                    timeout=10,
-                )
+                if getattr(self, "_api_service", None) is not None:
+                    try:
+                        media_data = self._api_service.get("/api/media/state", params=media_params)
+                    except Exception:
+                        media_data = self._api_call(
+                            "get",
+                            "/api/media/state",
+                            params=media_params,
+                            timeout=10,
+                        )
+                else:
+                    media_data = self._api_call(
+                        "get",
+                        "/api/media/state",
+                        params=media_params,
+                        timeout=10,
+                    )
 
                 # 3. Queue complète
                 logger.debug(f"Récupération queue pour {device_serial}")
-                queue_data = self._api_call(
-                    "get",
-                    "/api/np/queue",
-                    params=media_params,
-                    timeout=10,
-                )
+                if getattr(self, "_api_service", None) is not None:
+                    try:
+                        queue_data = self._api_service.get("/api/np/queue", params=media_params)
+                    except Exception:
+                        queue_data = self._api_call(
+                            "get",
+                            "/api/np/queue",
+                            params=media_params,
+                            timeout=10,
+                        )
+                else:
+                    queue_data = self._api_call(
+                        "get",
+                        "/api/np/queue",
+                        params=media_params,
+                        timeout=10,
+                    )
 
                 # Combiner les 3 réponses (comme le script shell)
                 result: Dict[str, Any] = {"player": player_data, "media": media_data, "queue": queue_data}

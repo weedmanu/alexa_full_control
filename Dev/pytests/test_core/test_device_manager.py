@@ -1,7 +1,4 @@
-import time
 from typing import Any, Dict, List
-
-import pytest
 
 from core.device_manager import DeviceManager
 

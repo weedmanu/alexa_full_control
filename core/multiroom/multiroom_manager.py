@@ -133,9 +133,7 @@ class MultiRoomManager(BasePersistenceManager):
 
         # Vérifier que l'appareil n'est pas déjà dans le groupe
         if device_serial in group["devices"]:
-            logger.warning(
-                f"Appareil '{device_serial}' est déjà dans le groupe '{group_name}'"
-            )
+            logger.warning(f"Appareil '{device_serial}' est déjà dans le groupe '{group_name}'")
             return False
 
         # Ajouter l'appareil
@@ -161,9 +159,7 @@ class MultiRoomManager(BasePersistenceManager):
 
         # Vérifier que l'appareil est dans le groupe
         if device_serial not in group["devices"]:
-            logger.warning(
-                f"Appareil '{device_serial}' n'est pas dans le groupe '{group_name}'"
-            )
+            logger.warning(f"Appareil '{device_serial}' n'est pas dans le groupe '{group_name}'")
             return False
 
         # Retirer l'appareil
@@ -227,3 +223,11 @@ class MultiRoomManager(BasePersistenceManager):
         groups = list(self.get_all_items().values())
         groups.sort(key=lambda x: x.get("created", ""), reverse=True)
         return groups
+
+    def save_groups(self) -> bool:
+        """Sauvegarde explicitement les groupes sur le stockage JSON.
+
+        Cette méthode expose l'opération de sauvegarde pour les cas de test
+        ou d'utilisation où l'on souhaite forcer l'écriture immédiatement.
+        """
+        return self._save_data()

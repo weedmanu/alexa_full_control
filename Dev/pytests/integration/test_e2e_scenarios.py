@@ -6,10 +6,12 @@ Tests real-world usage scenarios with complete user workflows.
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 
 class TestMorningRoutineScenario:
@@ -20,19 +22,17 @@ class TestMorningRoutineScenario:
         alarm_manager = Mock()
         device_manager = Mock()
         playback_manager = Mock()
-        
+
         # Step 1: Alarm fires
-        alarm_manager.get_triggered_alarms.return_value = [
-            {"alarm_id": "morning", "time": "07:00"}
-        ]
+        alarm_manager.get_triggered_alarms.return_value = [{"alarm_id": "morning", "time": "07:00"}]
         alarms = alarm_manager.get_triggered_alarms()
         assert len(alarms) > 0
-        
+
         # Step 2: Enable lights
         device_manager.send_command.return_value = {"status": "ok"}
         result = device_manager.send_command("light", "on")
         assert result["status"] == "ok"
-        
+
         # Step 3: Play news or music
         playback_manager.play_station.return_value = {"status": "playing"}
         result = playback_manager.play_station("news")
@@ -44,7 +44,7 @@ class TestMorningRoutineScenario:
         weather = {"temp": 72, "condition": "sunny"}
         news = {"headlines": 5}
         calendar = {"events": 2}
-        
+
         assert weather["temp"] > 0
         assert news["headlines"] > 0
         assert calendar["events"] >= 0
@@ -58,17 +58,17 @@ class TestEnertainmentScenario:
         device_manager = Mock()
         playback_manager = Mock()
         dnd_manager = Mock()
-        
+
         # Dim lights
         device_manager.set_brightness.return_value = {"brightness": 20}
         result = device_manager.set_brightness("lights", 20)
         assert result["brightness"] == 20
-        
+
         # Pause music
         playback_manager.pause.return_value = {"status": "paused"}
         result = playback_manager.pause()
         assert result["status"] == "paused"
-        
+
         # Enable DND
         dnd_manager.enable_dnd.return_value = {"enabled": True}
         result = dnd_manager.enable_dnd()
@@ -78,12 +78,12 @@ class TestEnertainmentScenario:
         """Test scenario: Party mode - multiroom sync + volume up."""
         multiroom = Mock()
         playback_manager = Mock()
-        
+
         # Sync devices
         multiroom.create_group.return_value = {"group_created": True}
         result = multiroom.create_group("party", ["dev1", "dev2", "dev3"])
         assert result["group_created"] is True
-        
+
         # Play same music on all
         playback_manager.play_on_group.return_value = {"devices": 3}
         result = playback_manager.play_on_group("party")
@@ -96,17 +96,17 @@ class TestSmartHomeScenario:
     def test_leaving_home_routine(self) -> None:
         """Test scenario: Leaving home - close locks, arm security, lights off."""
         smart_home = Mock()
-        
+
         # Lock doors
         smart_home.lock_door.return_value = {"locked": True}
         result = smart_home.lock_door("front_door")
         assert result["locked"] is True
-        
+
         # Arm security system
         smart_home.arm_security.return_value = {"armed": True}
         result = smart_home.arm_security()
         assert result["armed"] is True
-        
+
         # Turn off lights
         smart_home.turn_off_lights.return_value = {"lights_off": True}
         result = smart_home.turn_off_lights()
@@ -115,17 +115,17 @@ class TestSmartHomeScenario:
     def test_coming_home_routine(self) -> None:
         """Test scenario: Coming home - unlock door, arm off, lights on."""
         smart_home = Mock()
-        
+
         # Unlock door
         smart_home.unlock_door.return_value = {"unlocked": True}
         result = smart_home.unlock_door("front_door")
         assert result["unlocked"] is True
-        
+
         # Disarm security
         smart_home.disarm_security.return_value = {"armed": False}
         result = smart_home.disarm_security()
         assert result["armed"] is False
-        
+
         # Turn on lights
         smart_home.turn_on_lights.return_value = {"lights_on": True}
         result = smart_home.turn_on_lights()
@@ -139,16 +139,16 @@ class TestOfficeWorkScenario:
         """Test scenario: Start workday - enable do not disturb, set calendar."""
         dnd_manager = Mock()
         calendar_manager = Mock()
-        
+
         # Enable DND
         dnd_manager.enable_dnd.return_value = {"enabled": True}
         result = dnd_manager.enable_dnd()
         assert result["enabled"] is True
-        
+
         # Check calendar
         calendar_manager.get_events.return_value = [
             {"title": "Team meeting", "time": "09:00"},
-            {"title": "Project review", "time": "14:00"}
+            {"title": "Project review", "time": "14:00"},
         ]
         events = calendar_manager.get_events()
         assert len(events) > 0
@@ -157,12 +157,12 @@ class TestOfficeWorkScenario:
         """Test scenario: End workday - disable DND, play relaxing music."""
         dnd_manager = Mock()
         playback_manager = Mock()
-        
+
         # Disable DND
         dnd_manager.disable_dnd.return_value = {"enabled": False}
         result = dnd_manager.disable_dnd()
         assert result["enabled"] is False
-        
+
         # Play relaxing music
         playback_manager.play_station.return_value = {"station": "chill"}
         result = playback_manager.play_station("chill")
@@ -177,17 +177,17 @@ class TestHealthAndWellnessScenario:
         alarm_manager = Mock()
         device_manager = Mock()
         playback_manager = Mock()
-        
+
         # Set wake-up alarm
         alarm_manager.add_alarm.return_value = {"alarm_id": "wake123"}
         result = alarm_manager.add_alarm("07:00")
         assert result["alarm_id"] is not None
-        
+
         # Dim lights
         device_manager.set_brightness.return_value = {"brightness": 5}
         result = device_manager.set_brightness("lights", 5)
         assert result["brightness"] == 5
-        
+
         # Play sleep sounds
         playback_manager.play_station.return_value = {"station": "sleep"}
         result = playback_manager.play_station("sleep")
@@ -197,12 +197,12 @@ class TestHealthAndWellnessScenario:
         """Test scenario: Exercise - play energetic music, track time."""
         playback_manager = Mock()
         timers_manager = Mock()
-        
+
         # Play energetic music
         playback_manager.play_genre.return_value = {"genre": "workout"}
         result = playback_manager.play_genre("workout")
         assert result["genre"] == "workout"
-        
+
         # Set timer for 30 min
         timers_manager.add_timer.return_value = {"duration": 30}
         result = timers_manager.add_timer(30)
@@ -215,19 +215,19 @@ class TestShoppingScenario:
     def test_create_and_manage_shopping_list(self) -> None:
         """Test scenario: Create list → add items → check off items → delete."""
         lists_manager = Mock()
-        
+
         # Create list
         lists_manager.create_list.return_value = {"list_id": "shop123"}
         result = lists_manager.create_list("Shopping")
         assert result["list_id"] is not None
-        
+
         # Add items
         items_to_add = ["milk", "bread", "eggs", "butter"]
         for item in items_to_add:
             lists_manager.add_item.return_value = {"added": True}
             result = lists_manager.add_item("shop123", item)
             assert result["added"] is True
-        
+
         # Check off items
         lists_manager.update_item.return_value = {"checked": True}
         result = lists_manager.update_item("shop123", "milk", completed=True)
@@ -241,31 +241,26 @@ class TestFamilyCoordinationScenario:
         """Test scenario: Send announcement to all devices."""
         announcement_manager = Mock()
         device_manager = Mock()
-        
+
         # Get all devices
         device_manager.get_devices.return_value = [
             {"serial": "dev1", "name": "Living Room"},
             {"serial": "dev2", "name": "Kitchen"},
-            {"serial": "dev3", "name": "Bedroom"}
+            {"serial": "dev3", "name": "Bedroom"},
         ]
         devices = device_manager.get_devices()
-        
+
         # Send announcement
-        announcement_manager.announce.return_value = {
-            "devices_notified": len(devices)
-        }
+        announcement_manager.announce.return_value = {"devices_notified": len(devices)}
         result = announcement_manager.announce("Dinner is ready!", devices)
         assert result["devices_notified"] == 3
 
     def test_shared_reminder(self) -> None:
         """Test scenario: Set shared family reminder."""
         reminder_manager = Mock()
-        
-        reminder_manager.add_reminder.return_value = {
-            "reminder_id": "shared123",
-            "recipients": ["family"]
-        }
-        
+
+        reminder_manager.add_reminder.return_value = {"reminder_id": "shared123", "recipients": ["family"]}
+
         result = reminder_manager.add_reminder("Pick up kids at 3pm", recipients=["family"])
         assert result["reminder_id"] is not None
 
@@ -292,21 +287,16 @@ class TestErrorScenarios:
     def test_device_becomes_unreachable(self) -> None:
         """Test scenario: Device becomes unreachable mid-operation."""
         playback_manager = Mock()
-        
+
         playback_manager.play.side_effect = ConnectionError("Device offline")
-        
+
         with pytest.raises(ConnectionError):
             playback_manager.play()
 
     def test_partial_command_failure(self) -> None:
         """Test scenario: Command partially succeeds."""
-        result = {
-            "partial_success": True,
-            "succeeded": 2,
-            "failed": 1,
-            "message": "2 of 3 devices completed"
-        }
-        
+        result = {"partial_success": True, "succeeded": 2, "failed": 1, "message": "2 of 3 devices completed"}
+
         assert result["partial_success"] is True
         assert result["succeeded"] > 0
 
@@ -329,22 +319,22 @@ class TestComplexMultiStepScenario:
         timers_manager = Mock()
         playback_manager = Mock()
         device_manager = Mock()
-        
+
         # Step 1: Set timer for coffee
         timers_manager.add_timer.return_value = {"timer_id": "coffee"}
         coffee_timer = timers_manager.add_timer(10)
         assert coffee_timer["timer_id"] is not None
-        
+
         # Step 2: Start news briefing
         playback_manager.play_station.return_value = {"status": "playing"}
         news = playback_manager.play_station("news")
         assert news["status"] == "playing"
-        
+
         # Step 3: Set lights to morning brightness
         device_manager.set_brightness.return_value = {"brightness": 100}
         lights = device_manager.set_brightness("lights", 100)
         assert lights["brightness"] == 100
-        
+
         # Step 4: Read calendar
         # Step 5: Check weather
         # All working together
@@ -354,17 +344,17 @@ class TestComplexMultiStepScenario:
         smart_home = Mock()
         announcement = Mock()
         device_manager = Mock()
-        
+
         # Unlock front door
         smart_home.unlock_door.return_value = {"unlocked": True}
         door = smart_home.unlock_door("front_door")
         assert door["unlocked"] is True
-        
+
         # Make announcement
         announcement.announce.return_value = {"announced": True}
         result = announcement.announce("Welcome guest!", ["entryway"])
         assert result["announced"] is True
-        
+
         # Turn on entry lights
         device_manager.turn_on.return_value = {"on": True}
         lights = device_manager.turn_on("entry_lights")
@@ -375,7 +365,7 @@ class TestComplexMultiStepScenario:
         # Step 1: Execute morning routine daily
         # Step 2: System recognizes pattern
         # Step 3: System offers to automate
-        
+
         pattern_recognized = True
         assert pattern_recognized
 
@@ -386,12 +376,12 @@ class TestMultiDeviceScenario:
     def test_synchronized_music_throughout_home(self) -> None:
         """Test scenario: Play same music in multiple rooms."""
         multiroom = Mock()
-        
+
         # Create multiroom group
         multiroom.create_group.return_value = {"group_id": "house"}
         group = multiroom.create_group("house", ["room1", "room2", "room3"])
         assert group["group_id"] is not None
-        
+
         # Play music
         multiroom.play_on_group.return_value = {"playing": True}
         result = multiroom.play_on_group("house", "jazz")
@@ -400,12 +390,12 @@ class TestMultiDeviceScenario:
     def test_different_content_per_room(self) -> None:
         """Test scenario: Different content on different devices."""
         playback_manager = Mock()
-        
+
         # Living room: news
         playback_manager.play_station.return_value = {"station": "news"}
         result1 = playback_manager.play_station("news", device="room1")
         assert result1["station"] == "news"
-        
+
         # Kitchen: music
         playback_manager.play_genre.return_value = {"genre": "jazz"}
         result2 = playback_manager.play_genre("jazz", device="room2")

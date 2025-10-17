@@ -179,6 +179,7 @@ def setup_di_container(
 
     # Register cache service used by AlexaAPIService and managers
     from services.cache_service import CacheService
+
     cache_service = CacheService()
     container.register_singleton("cache_service", cache_service)
 

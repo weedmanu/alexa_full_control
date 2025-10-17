@@ -8,18 +8,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from Dev.pytests.core.scenario.test_scenario_manager import (
-    TestScenarioManagerInit,
     TestScenarioCreation,
-    TestScenarioRetrieval,
     TestScenarioDeletion,
+    TestScenarioEditing,
     TestScenarioExecution,
+    TestScenarioExportImport,
+    TestScenarioManagerInit,
     TestScenarioPersistence,
     TestScenarioRenaming,
-    TestScenarioEditing,
-    TestScenarioValidation,
+    TestScenarioRetrieval,
     TestScenarioSearch,
-    TestScenarioExportImport,
+    TestScenarioValidation,
 )
+
 
 def run_all_tests():
     """Run all test classes."""
@@ -36,28 +37,28 @@ def run_all_tests():
         ("Search", TestScenarioSearch),
         ("Export/Import", TestScenarioExportImport),
     ]
-    
+
     total_tests = 0
     total_passed = 0
     total_failed = 0
-    
+
     print("=" * 70)
     print("🎬 SCENARIO MANAGER - COMPREHENSIVE TEST SUITE")
     print("=" * 70)
-    
+
     for name, test_class in test_classes:
         print(f"\n▶️  {name} Tests:")
         print("-" * 70)
-        
+
         try:
             instance = test_class()
-            
+
             # Get all test methods
-            test_methods = [m for m in dir(instance) if m.startswith('test_')]
-            
+            test_methods = [m for m in dir(instance) if m.startswith("test_")]
+
             class_passed = 0
             class_failed = 0
-            
+
             for method_name in test_methods:
                 total_tests += 1
                 try:
@@ -70,12 +71,12 @@ def run_all_tests():
                     print(f"  ❌ {method_name}: {e}")
                     class_failed += 1
                     total_failed += 1
-            
+
             print(f"  Result: {class_passed}/{class_passed + class_failed} passed")
         except Exception as e:
             print(f"  ❌ Setup error: {e}")
-            total_failed += len([m for m in dir(test_class) if m.startswith('test_')])
-    
+            total_failed += len([m for m in dir(test_class) if m.startswith("test_")])
+
     print("\n" + "=" * 70)
     print(f"📊 FINAL RESULTS: {total_passed}/{total_tests} tests passed")
     if total_failed == 0:
@@ -83,9 +84,10 @@ def run_all_tests():
     else:
         print(f"❌ {total_failed} tests failed")
     print("=" * 70)
-    
+
     return total_failed == 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)

@@ -495,7 +495,7 @@ class DeviceCommand(BaseCommand):
             self.info(f"📬 Envoi message à '{args.device}'...")
 
             ctx = self.require_context()
-            
+
             # Utiliser VoiceCommandService pour envoyer le message
             # via /api/behaviors/preview avec Alexa.Speak
             voice_service = ctx.voice_service

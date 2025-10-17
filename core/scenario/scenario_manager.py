@@ -91,7 +91,7 @@ class ScenarioManager(BasePersistenceManager):
             "name": name,
             "actions": actions,
             "created": datetime.now().isoformat(),
-            "modified": datetime.now().isoformat()
+            "modified": datetime.now().isoformat(),
         }
 
     def _validate_action(self, action: Dict[str, Any]) -> bool:
@@ -294,9 +294,7 @@ class ScenarioManager(BasePersistenceManager):
         """
         query_lower = query.lower()
         results = [
-            scenario
-            for scenario in self.get_all_items().values()
-            if query_lower in scenario.get("name", "").lower()
+            scenario for scenario in self.get_all_items().values() if query_lower in scenario.get("name", "").lower()
         ]
         logger.debug(f"Recherche '{query}': {len(results)} résultat(s)")
         return results

@@ -35,6 +35,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
         config: Any,
         state_machine: Optional[AlexaStateMachine] = None,
         cache_service: Optional[CacheService] = None,
+        api_service: Optional[Any] = None,
     ) -> None:
         """
         Initialise le gestionnaire de timers.
@@ -60,6 +61,9 @@ class TimerManager(BaseManager[Dict[str, Any]]):
 
         self.auth = auth
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
+
+        # Optional centralized AlexaAPIService
+        self._api_service: Optional[Any] = api_service
 
         # compatibility memory cache attrs
         self._timers_cache: Optional[List[Dict[str, Any]]] = None
@@ -210,11 +214,15 @@ class TimerManager(BaseManager[Dict[str, Any]]):
         try:
             logger.debug("🌐 Récupération de tous les timers depuis l'API notifications")
 
-            data = self._api_call(
-                "GET",
-                f"https://{self.config.alexa_domain}/api/notifications",
-                timeout=10,
-            )
+            # Prefer injected AlexaAPIService when available
+            if self._api_service is not None:
+                data = self._api_service.get("/api/notifications", timeout=10)
+            else:
+                data = self._api_call(
+                    "GET",
+                    f"https://{self.config.alexa_domain}/api/notifications",
+                    timeout=10,
+                )
 
             if data is None:
                 logger.warning("Réponse vide pour les timers")
@@ -295,11 +303,14 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 return False
 
             try:
-                self._api_call(
-                    "DELETE",
-                    f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                    timeout=10,
-                )
+                if self._api_service is not None:
+                    self._api_service.delete(f"/api/timers/{timer_id}", timeout=10)
+                else:
+                    self._api_call(
+                        "DELETE",
+                        f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
+                        timeout=10,
+                    )
 
                 logger.success(f"Timer {timer_id} annulé")
                 return True
@@ -325,12 +336,15 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             try:
                 payload = {"status": "PAUSED"}
 
-                self._api_call(
-                    "PUT",
-                    f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                    json=payload,
-                    timeout=10,
-                )
+                if self._api_service is not None:
+                    self._api_service.put(f"/api/timers/{timer_id}", json=payload, timeout=10)
+                else:
+                    self._api_call(
+                        "PUT",
+                        f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
+                        json=payload,
+                        timeout=10,
+                    )
 
                 logger.success(f"Timer {timer_id} mis en pause")
                 return True
@@ -356,12 +370,15 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             try:
                 payload = {"status": "ON"}
 
-                self._api_call(
-                    "PUT",
-                    f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                    json=payload,
-                    timeout=10,
-                )
+                if self._api_service is not None:
+                    self._api_service.put(f"/api/timers/{timer_id}", json=payload, timeout=10)
+                else:
+                    self._api_call(
+                        "PUT",
+                        f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
+                        json=payload,
+                        timeout=10,
+                    )
 
                 logger.success(f"Timer {timer_id} repris")
                 return True

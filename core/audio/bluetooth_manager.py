@@ -12,7 +12,6 @@ from ..state_machine import AlexaStateMachine
 
 
 class BluetoothManager(BaseManager[Dict[str, Any]]):
-
     """Gestionnaire thread-safe Bluetooth."""
 
     def __init__(self, auth: Any, config: Any, state_machine: Optional[AlexaStateMachine] = None) -> None:
@@ -32,7 +31,9 @@ class BluetoothManager(BaseManager[Dict[str, Any]]):
         if not self.state_machine.can_execute_commands:
             return []
         try:
-            response = self._api_call("get", r"/api/bluetooth",
+            response = self._api_call(
+                "get",
+                r"/api/bluetooth",
                 params={"deviceSerialNumber": device_serial, "deviceType": device_type},
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
@@ -52,7 +53,9 @@ class BluetoothManager(BaseManager[Dict[str, Any]]):
                 "deviceType": device_type,
                 "bluetoothDeviceAddress": bt_address,
             }
-            self._api_call("post", r"/api/bluetooth/pair-sink/{device_type}/{device_serial}",
+            self._api_call(
+                "post",
+                r"/api/bluetooth/pair-sink/{device_type}/{device_serial}",
                 json=payload,
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
@@ -68,7 +71,9 @@ class BluetoothManager(BaseManager[Dict[str, Any]]):
         if not self.state_machine.can_execute_commands:
             return False
         try:
-            self._api_call("post", r"/api/bluetooth/disconnect-sink/{device_type}/{device_serial}",
+            self._api_call(
+                "post",
+                r"/api/bluetooth/disconnect-sink/{device_type}/{device_serial}",
                 headers={"csrf": getattr(self.http_client, "csrf", getattr(self.auth, "csrf", ""))},
                 timeout=10,
             )

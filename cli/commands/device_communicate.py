@@ -12,7 +12,6 @@ Date: 17 octobre 2025
 """
 
 import argparse
-from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
@@ -20,6 +19,7 @@ from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
 class CommunicationEffects:
     """Sons disponibles pour device.sound"""
+
     SOUNDS = {
         "airhorn": "amzn1.ask.skillId.airhorn",
         "knock": "amzn1.ask.skillId.knock",
@@ -248,16 +248,14 @@ class DeviceCommunicateCommand(BaseCommand):
                 return False
 
             # Envoyer le message via VoiceCommandService
-            result = self.call_with_breaker(
-                self.voice_svc.speak_as_voice, device, message
-            )
+            result = self.call_with_breaker(self.voice_svc.speak_as_voice, device, message)
 
             if result:
                 self.success(f"✅ Message envoyé à '{device}'")
                 if title:
                     self.info(f"Titre: {title}")
             else:
-                self.error(f"❌ Impossible d'envoyer le message")
+                self.error("❌ Impossible d'envoyer le message")
 
             return result
 
@@ -310,9 +308,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 announcement = message
 
             # Envoyer l'annonce
-            result = self.call_with_breaker(
-                self.voice_svc.speak_as_voice, device, announcement
-            )
+            result = self.call_with_breaker(self.voice_svc.speak_as_voice, device, announcement)
 
             # Restaurer volume si changé
             if old_volume is not None:
@@ -324,7 +320,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 if is_ssml:
                     self.info("Format: SSML")
             else:
-                self.error(f"❌ Impossible d'envoyer l'annonce")
+                self.error("❌ Impossible d'envoyer l'annonce")
 
             return result
 
@@ -379,9 +375,7 @@ class DeviceCommunicateCommand(BaseCommand):
 
             # Jouer le son
             sound_id = CommunicationEffects.SOUNDS[effect]
-            result = self.call_with_breaker(
-                self.voice_svc.play_sound, device, sound_id
-            )
+            result = self.call_with_breaker(self.voice_svc.play_sound, device, sound_id)
 
             # Restaurer volume si changé
             if old_volume is not None:
@@ -391,7 +385,7 @@ class DeviceCommunicateCommand(BaseCommand):
             if result:
                 self.success(f"🔊 Son '{effect}' joué sur '{device}'")
             else:
-                self.error(f"❌ Impossible de jouer le son")
+                self.error("❌ Impossible de jouer le son")
 
             return result
 
@@ -425,15 +419,13 @@ class DeviceCommunicateCommand(BaseCommand):
                 return False
 
             # Exécuter la commande texte
-            result = self.call_with_breaker(
-                self.voice_svc.execute_text_command, device, text
-            )
+            result = self.call_with_breaker(self.voice_svc.execute_text_command, device, text)
 
             if result:
                 self.success(f"✅ Commande exécutée sur '{device}'")
                 self.info(f"Commande: '{text}'")
             else:
-                self.error(f"❌ Impossible d'exécuter la commande")
+                self.error("❌ Impossible d'exécuter la commande")
 
             return result
 

@@ -87,7 +87,9 @@ class VoiceCommandService:
 
         logger.info(f"{SharedIcons.GEAR} VoiceCommandService initialisé")
 
-    def speak(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:  # pylint: disable=unused-argument
+    def speak(
+        self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
+    ) -> bool:  # pylint: disable=unused-argument
         """
         Fait parler Alexa et exécute la commande vocale.
 
@@ -157,34 +159,28 @@ class VoiceCommandService:
                     logger.debug(f"🔊 Device: {default_device['name']} (serial={dsn}, type={dtype})")
 
                 # Construire le payload - FORMAT DEV EXACT
-                sequence_json_content = cast(
-                    Dict[str, Any],
-                    {
-                        "@type": "com.amazon.alexa.behaviors.model.Sequence",
-                        "startNode": {
-                            "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
-                            "type": "Alexa.TextCommand",  # ← TextCommand pour EXÉCUTER
-                            "skillId": "amzn1.ask.1p.tellalexa",  # ← ESSENTIEL !
-                            "operationPayload": {
-                                "deviceType": dtype,
-                                "deviceSerialNumber": dsn,
-                                "locale": "fr-FR",
-                                "customerId": self._customer_id,
-                                "text": text_clean,
-                            },
+                _sequence_json_content = {
+                    "@type": "com.amazon.alexa.behaviors.model.Sequence",
+                    "startNode": {
+                        "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
+                        "type": "Alexa.TextCommand",
+                        "skillId": "amzn1.ask.1p.tellalexa",
+                        "operationPayload": {
+                            "deviceType": dtype,
+                            "deviceSerialNumber": dsn,
+                            "locale": "fr-FR",
+                            "customerId": self._customer_id,
+                            "text": text_clean,
                         },
                     },
-                )
+                }
 
-                # ← IMPORTANT : sequenceJson doit être une STRING (json.dumps) !
-                payload = cast(
-                    Dict[str, Any],
-                    {
-                        "behaviorId": "PREVIEW",
-                        "sequenceJson": json.dumps(sequence_json_content),
-                        "status": "ENABLED",
-                    },
-                )
+                # sequenceJson doit être une STRING (json.dumps)
+                payload = {
+                    "behaviorId": "PREVIEW",
+                    "sequenceJson": json.dumps(_sequence_json_content),
+                    "status": "ENABLED",
+                }
 
                 logger.debug(f"📤 Envoi commande vocale: '{text_clean}'")
                 logger.debug(f"📦 Device: {dtype} / {dsn}")
@@ -224,7 +220,9 @@ class VoiceCommandService:
                 logger.error(f"❌ Erreur commande vocale: {e}")
                 return False
 
-    def speak_as_voice(self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO") -> bool:  # pylint: disable=unused-argument
+    def speak_as_voice(
+        self, text: str, device_serial: Optional[str] = None, device_type: str = "ECHO"
+    ) -> bool:  # pylint: disable=unused-argument
         """
         Simule une commande vocale avec Alexa.Speak (comme si on parlait au micro).
 
@@ -288,24 +286,24 @@ class VoiceCommandService:
 
                 # Construire le payload avec Alexa.Speak au lieu de TextCommand
                 # Cela simule une VRAIE commande vocale (comme si on parlait au micro)
-                sequence_json_content = {
+                _sequence_json_content = {
                     "@type": "com.amazon.alexa.behaviors.model.Sequence",
                     "startNode": {
                         "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
-                        "type": "Alexa.Speak",  # ← Alexa.Speak pour simuler la VOIX
+                        "type": "Alexa.Speak",
                         "operationPayload": {
                             "deviceType": dtype,
                             "deviceSerialNumber": device_serial,
                             "locale": "fr-FR",
                             "customerId": self._customer_id,
-                            "textToSpeak": text_clean,  # ← PAS de "Alexa," prefix (comme shell script)
+                            "textToSpeak": text_clean,
                         },
                     },
                 }
 
                 payload = {
                     "behaviorId": "PREVIEW",
-                    "sequenceJson": json.dumps(sequence_json_content),
+                    "sequenceJson": json.dumps(_sequence_json_content),
                     "status": "ENABLED",
                 }
 
@@ -713,8 +711,8 @@ class VoiceCommandService:
 
                 logger.debug(f"🔊 Device trouvé: {device_name} (serial={device_serial})")
 
-                # Construire le payload pour jouer le son
-                sequence_json_content = {
+                # Construire le payload pour jouer le son (non nécessaire stocker variable si non réutilisée)
+                _sequence_json_content = {
                     "@type": "com.amazon.alexa.behaviors.model.Sequence",
                     "startNode": {
                         "@type": "com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode",
@@ -818,4 +816,3 @@ class VoiceCommandService:
             except Exception as e:
                 logger.exception(f"❌ Erreur lors de l'exécution du textcommand: {e}")
                 return False
-

@@ -33,16 +33,19 @@ from cli.commands.cache import CacheCommand
 from cli.commands.calendar import CalendarCommand
 from cli.commands.device import DeviceCommand
 from cli.commands.device_communicate import DeviceCommunicateCommand
+from cli.commands.device_manager import DeviceManagerCommand
 from cli.commands.dnd import DNDCommand
 from cli.commands.favorite import FavoriteCommand
 from cli.commands.lists import ListsCommand
 from cli.commands.multiroom import MultiroomCommand
 from cli.commands.music import MusicCommand
+from cli.commands.music_playback_manager import MusicPlaybackManagerCommand
 from cli.commands.reminder import ReminderCommand
 from cli.commands.routine import RoutineCommand
 from cli.commands.scenario import ScenarioCommand
 from cli.commands.smarthome import SmartHomeCommand
 from cli.commands.timers import TimerCommand
+from cli.commands.timers_manager import TimersManagerCommand
 
 __all__ = [
     "ActivityCommand",
@@ -51,15 +54,18 @@ __all__ = [
     "CacheCommand",
     "CalendarCommand",
     "DeviceCommand",
+    "DeviceManagerCommand",
     "DeviceCommunicateCommand",
     "DNDCommand",
     "FavoriteCommand",
     "ListsCommand",
     "MultiroomCommand",
     "MusicCommand",
+    "MusicPlaybackManagerCommand",
     "ReminderCommand",
     "RoutineCommand",
     "ScenarioCommand",
     "SmartHomeCommand",
     "TimerCommand",
+    "TimersManagerCommand",
 ]

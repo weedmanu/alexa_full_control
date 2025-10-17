@@ -345,9 +345,7 @@ class PlaybackRepeatCommand(BaseCommand):
                 "all": "répéter tout",
             }
 
-            self.info(
-                f"🔁 Mode répétition: {mode_text.get(args.mode, args.mode)} sur '{args.device}'..."
-            )
+            self.info(f"🔁 Mode répétition: {mode_text.get(args.mode, args.mode)} sur '{args.device}'...")
 
             if not self.playback_mgr:
                 self.playback_mgr = self.adapter.get_manager("PlaybackManager")

@@ -10,8 +10,8 @@ Auteur: M@nu
 Date: 17 octobre 2025
 """
 
-from typing import Any, Optional
 import argparse
+from typing import Any, Optional
 
 from cli.base_command import BaseCommand
 from cli.commands.music_library import LibraryCommands

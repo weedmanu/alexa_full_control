@@ -150,7 +150,7 @@ class AnnouncementCommand(BaseCommand):
             self.error("⚠️  ANNOUNCEMENT n'est pas encore fonctionnel (403 Forbidden sur l'endpoint API)")
             self.info("   TODO: Investiguer le bon endpoint pour les annonces")
             return False
-            
+
             # Récupérer le serial de l'appareil
             serial = self.get_device_serial(args.device)
             if not serial:

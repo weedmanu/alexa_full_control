@@ -64,17 +64,10 @@ class PlaybackPlayCommand(ManagerCommand):
 
             result = await manager.play(device_serial=device)
 
-            return {
-                "success": True,
-                "data": result,
-                "formatted": f"Playing on device {device}"
-            }
+            return {"success": True, "data": result, "formatted": f"Playing on device {device}"}
         except Exception as e:
             self.logger.error(f"Failed to play: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def help(self) -> Dict[str, Any]:
         """Generate help text for playback play command."""
@@ -84,17 +77,14 @@ class PlaybackPlayCommand(ManagerCommand):
             "usage": "playback play --device DEVICE_SERIAL",
             "parameters": {
                 "device": "Device serial number (required)",
-                "resume": "Resume from pause point (optional, bool)"
+                "resume": "Resume from pause point (optional, bool)",
             },
-            "examples": [
-                "playback play --device ABCD1234",
-                "playback play --device LIVING_ROOM"
-            ],
+            "examples": ["playback play --device ABCD1234", "playback play --device LIVING_ROOM"],
             "errors": {
                 "Device serial is required": "Use --device parameter",
                 "Device not found": "Check device serial with 'device list'",
-                "API Error": "Ensure device is online and connected"
-            }
+                "API Error": "Ensure device is online and connected",
+            },
         }
 
 
@@ -140,22 +130,12 @@ class DeviceListCommand(ManagerCommand):
 
             formatted = f"Found {len(devices)} device(s):\n"
             for device in devices:
-                formatted += (
-                    f"  - {device.get('name', 'Unknown')} "
-                    f"({device.get('serial', 'N/A')})\n"
-                )
+                formatted += f"  - {device.get('name', 'Unknown')} " f"({device.get('serial', 'N/A')})\n"
 
-            return {
-                "success": True,
-                "data": devices,
-                "formatted": formatted
-            }
+            return {"success": True, "data": devices, "formatted": formatted}
         except Exception as e:
             self.logger.error(f"Failed to list devices: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def help(self) -> Dict[str, Any]:
         """Generate help text for device list command."""
@@ -164,12 +144,8 @@ class DeviceListCommand(ManagerCommand):
             "description": "List all available Alexa devices",
             "usage": "device list",
             "parameters": {},
-            "examples": [
-                "device list"
-            ],
-            "errors": {
-                "API Error": "Check your authentication or internet connection"
-            }
+            "examples": ["device list"],
+            "errors": {"API Error": "Check your authentication or internet connection"},
         }
 
 
@@ -214,9 +190,7 @@ class AlarmAddCommand(ManagerCommand):
         if "recurring" in params:
             valid_patterns = ["daily", "weekdays", "weekends", "weekly", "once"]
             if params["recurring"] not in valid_patterns:
-                raise ValidationError(
-                    f"Invalid recurring pattern. Valid: {', '.join(valid_patterns)}"
-                )
+                raise ValidationError(f"Invalid recurring pattern. Valid: {', '.join(valid_patterns)}")
 
         return True
 
@@ -236,7 +210,7 @@ class AlarmAddCommand(ManagerCommand):
             alarm_data = {
                 "time": params["time"],
                 "recurring": params.get("recurring", "once"),
-                "label": params.get("label", "Alarm")
+                "label": params.get("label", "Alarm"),
             }
 
             result = await manager.add_alarm(**alarm_data)
@@ -244,14 +218,11 @@ class AlarmAddCommand(ManagerCommand):
             return {
                 "success": True,
                 "data": result,
-                "formatted": f"Alarm set for {params['time']} ({alarm_data['recurring']})"
+                "formatted": f"Alarm set for {params['time']} ({alarm_data['recurring']})",
             }
         except Exception as e:
             self.logger.error(f"Failed to add alarm: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def help(self) -> Dict[str, Any]:
         """Generate help text for alarm add command."""
@@ -262,15 +233,15 @@ class AlarmAddCommand(ManagerCommand):
             "parameters": {
                 "time": "Alarm time in HH:MM format (required)",
                 "recurring": "Pattern: daily, weekdays, weekends, weekly, once (default: once)",
-                "label": "Alarm label/description (optional)"
+                "label": "Alarm label/description (optional)",
             },
             "examples": [
                 "alarm add 07:30",
                 "alarm add 07:30 --recurring daily",
-                "alarm add 22:00 --label Bedtime --recurring daily"
+                "alarm add 22:00 --label Bedtime --recurring daily",
             ],
             "errors": {
                 "Invalid time format": "Use HH:MM format (e.g., 07:30)",
-                "Invalid recurring pattern": "Valid patterns: daily, weekdays, weekends, weekly, once"
-            }
+                "Invalid recurring pattern": "Valid patterns: daily, weekdays, weekends, weekly, once",
+            },
         }

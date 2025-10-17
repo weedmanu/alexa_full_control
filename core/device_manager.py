@@ -56,7 +56,7 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         self,
         auth: "AlexaAuth",
         state_machine: "AlexaStateMachine",
-        api_service: Optional["AlexaAPIService"] = None,
+        api_service: "AlexaAPIService",
         cache_ttl: int = 300,
         cache_service: Optional[CacheService] = None,
     ) -> None:
@@ -66,16 +66,19 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         Args:
             auth: Instance AlexaAuth pour les appels API
             state_machine: Instance AlexaStateMachine pour gérer l'état
+            api_service: Instance AlexaAPIService (OBLIGATOIRE)
             cache_ttl: Durée de vie du cache mémoire en secondes (défaut: 300)
             cache_service: Service de cache persistant (créé si None)
 
         Raises:
-            ValueError: Si auth ou state_machine est None
+            ValueError: Si auth, state_machine ou api_service est None
         """
         if not auth:
             raise ValueError("auth ne peut pas être None")
         if not state_machine:
             raise ValueError("state_machine ne peut pas être None")
+        if not api_service:
+            raise ValueError("api_service ne peut pas être None (Phase 1: AlexaAPIService obligatoire)")
 
         # Créer le client HTTP depuis auth
         http_client = create_http_client_from_auth(auth)
@@ -90,9 +93,9 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         )
 
         # Attributs spécifiques à DeviceManager
-        self.auth: "AlexaAuth" = auth
-        # Optional AlexaAPIService for centralized API calls
-        self._api_service: Optional["AlexaAPIService"] = api_service
+        self.auth: AlexaAuth = auth
+        # AlexaAPIService for centralized API calls (REQUIRED)
+        self._api_service: "AlexaAPIService" = api_service
 
         # Pré-calcul de l'URL de base pour optimisation
         self._base_url = f"https://{self.config.amazon_domain}"
@@ -172,22 +175,12 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         try:
             logger.debug("🌐 Récupération de la liste des appareils depuis l'API")
 
-            # If an AlexaAPIService is injected, use it (preferred)
-            if getattr(self, '_api_service', None) is not None:
-                try:
-                    devices = self._api_service.get_devices()
-                except Exception:
-                    logger.exception("Erreur via AlexaAPIService lors de la récupération des appareils")
-                    return None
-            else:
-                # Appel API unifié via BaseManager (legacy)
-                response_data = self._api_call("get", "/api/devices-v2/device", params={"cached": "false"}, timeout=10)
-
-                if response_data is None:
-                    logger.error("Échec de récupération des appareils (réponse None)")
-                    return None
-
-                devices: List[Dict[str, Any]] = response_data.get("devices", [])
+            # Use AlexaAPIService
+            try:
+                devices = self._api_service.get_devices()
+            except Exception:
+                logger.exception("Erreur lors de la récupération des appareils via AlexaAPIService")
+                return None
 
             # Mise à jour cache mémoire (Niveau 1)
             self._cache = devices

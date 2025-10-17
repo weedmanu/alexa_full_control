@@ -24,7 +24,7 @@ Usage:
 
 from config.constants import AlexaAPI, AmazonRegions, AppConstants
 from config.paths import AppPaths
-from config.settings import AppSettings, get_settings, set_settings, reset_settings
+from config.settings import AppSettings, get_settings, reset_settings, set_settings
 
 __all__ = [
     # Constantes

@@ -23,7 +23,7 @@ class TuneInManager(BaseManager[Dict[str, Any]]):
             config=config,
             state_machine=state_machine or AlexaStateMachine(),
             cache_service=None,
-            cache_ttl=300
+            cache_ttl=300,
         )
 
         # Keep auth reference for backward compatibility

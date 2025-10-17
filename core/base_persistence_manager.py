@@ -27,12 +27,7 @@ class BasePersistenceManager(ABC):
     - Pattern load/save standardisé
     """
 
-    def __init__(
-        self,
-        storage_key: str,
-        config_dir: Optional[Path] = None,
-        lock: Optional[RLock] = None
-    ) -> None:
+    def __init__(self, storage_key: str, config_dir: Optional[Path] = None, lock: Optional[RLock] = None) -> None:
         """
         Initialise le manager de persistance.
 

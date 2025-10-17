@@ -11,7 +11,6 @@ Ce module fournit une interface CLI pour créer et gérer des séquences de comm
 
 import argparse
 import json
-from typing import Any, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter

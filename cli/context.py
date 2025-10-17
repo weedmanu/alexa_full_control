@@ -42,6 +42,7 @@ from loguru import logger
 
 from core.circuit_breaker import CircuitBreaker
 from core.config import Config
+from core.di_container import get_di_container
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 from services.favorite_service import FavoriteService
@@ -114,17 +115,23 @@ class Context:
         # Services centraux
         self.cache_service = CacheService()
 
+        # DI container exposure for gradual migration
+        try:
+            self.di_container = get_di_container()
+        except Exception:
+            self.di_container = None
+
         # Auth et device manager (initialisés à None, créés au login)
         self.auth: Optional[AlexaAuth] = None
         self._device_mgr_instance: Optional[DeviceManager] = None
         self._sync_service: Optional[SyncService] = None
-        
+
         # Services additionnels
         self.favorite_service = FavoriteService()  # Service de gestion des favoris
 
         # Managers de fonctionnalités (lazy-loaded)
         self._multiroom_mgr: Optional[MultiRoomManager] = None
-        self._scenario_mgr: Optional["ScenarioManager"] = None
+        self._scenario_mgr: Optional[ScenarioManager] = None
         self._timer_mgr: Optional[TimerManager] = None
         self._alarm_mgr: Optional[AlarmManager] = None
         self._reminder_mgr: Optional[ReminderManager] = None
@@ -161,9 +168,12 @@ class Context:
         """Gestionnaire d'appareils (lazy-loaded)."""
         if self._device_mgr_instance is None and self.auth:
             from core.device_manager import DeviceManager
+            from services.alexa_api_service import AlexaAPIService
 
-            self._device_mgr_instance = DeviceManager(self.auth, self.state_machine)
-            logger.debug("DeviceManager chargé")
+            # Phase 1: Create AlexaAPIService and inject it (mandatory)
+            api_service = AlexaAPIService(self.auth, self.cache_service)
+            self._device_mgr_instance = DeviceManager(self.auth, self.state_machine, api_service)
+            logger.debug("DeviceManager chargé avec AlexaAPIService")
         return self._device_mgr_instance
 
     @property

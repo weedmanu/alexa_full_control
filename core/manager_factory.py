@@ -62,8 +62,8 @@ class ManagerFactory:
             from core.lists.lists_manager import ListsManager
             from core.music.library_manager import LibraryManager
             from core.music.playback_manager import PlaybackManager
-            from core.reminders.reminder_manager import ReminderManager
             from core.music.tunein_manager import TuneInManager
+            from core.reminders.reminder_manager import ReminderManager
             from core.routines.routine_manager import RoutineManager
             from core.settings.device_settings_manager import DeviceSettingsManager
 
@@ -91,7 +91,7 @@ class ManagerFactory:
                 ManagerConfig(
                     name="device_manager",
                     manager_class=DeviceManager,
-                    dependencies={"auth": "auth", "config": "config"},
+                    dependencies={"auth": "auth", "state_machine": "state_machine"},
                     optional_params={"api_service": "alexa_api_service"},
                     cache_ttl=600,
                 )
@@ -246,8 +246,7 @@ class ManagerFactory:
         missing_deps = set(config.dependencies.values()) - set(dependencies.keys())
         if missing_deps:
             raise ValueError(
-                f"Missing dependencies for '{name}': {missing_deps}. "
-                f"Provided: {list(dependencies.keys())}"
+                f"Missing dependencies for '{name}': {missing_deps}. " f"Provided: {list(dependencies.keys())}"
             )
 
         # Build kwargs for manager initialization

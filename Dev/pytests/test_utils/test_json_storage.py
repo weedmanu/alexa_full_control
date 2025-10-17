@@ -9,7 +9,6 @@ Couvre:
 """
 
 import json
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -76,7 +75,7 @@ class TestJsonStorage:
         backup_file = temp_dir / "backup.json.bak"
         assert backup_file.exists()
 
-        with open(backup_file, 'r', encoding='utf-8') as f:
+        with open(backup_file, encoding="utf-8") as f:
             backup_data = json.load(f)
         assert backup_data == initial_data
 
@@ -98,7 +97,7 @@ class TestJsonStorage:
         """Test gestion des fichiers JSON corrompus."""
         # Créer un fichier corrompu
         corrupted_file = temp_dir / "corrupted.json"
-        corrupted_file.write_text("{invalid json", encoding='utf-8')
+        corrupted_file.write_text("{invalid json", encoding="utf-8")
 
         # Tenter de charger
         data = storage.load("corrupted.json", default={"fallback": True})
@@ -177,18 +176,13 @@ class TestJsonStorage:
 
     def test_unicode_support(self, storage: JsonStorage):
         """Test support Unicode."""
-        unicode_data = {
-            "french": "café",
-            "chinese": "中文",
-            "emoji": "🚀",
-            "accented": "naïve résumé"
-        }
+        unicode_data = {"french": "café", "chinese": "中文", "emoji": "🚀", "accented": "naïve résumé"}
 
         storage.save("unicode.json", unicode_data)
         loaded = storage.load("unicode.json")
         assert loaded == unicode_data
 
-    @patch('utils.json_storage.os.fsync')
+    @patch("utils.json_storage.os.fsync")
     def test_fsync_called(self, mock_fsync, storage: JsonStorage):
         """Test que fsync est appelé pour forcer l'écriture."""
         test_data = {"test": "fsync"}
@@ -200,7 +194,7 @@ class TestJsonStorage:
     def test_save_failure_cleanup(self, storage: JsonStorage, temp_dir: Path):
         """Test nettoyage en cas d'échec de sauvegarde."""
         # Simuler une erreur pendant l'écriture
-        with patch('json.dump', side_effect=OSError("Disk full")):
+        with patch("json.dump", side_effect=OSError("Disk full")):
             result = storage.save("failure.json", {"test": "data"})
             assert result is False
 

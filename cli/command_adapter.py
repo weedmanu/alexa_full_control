@@ -68,6 +68,7 @@ class CommandAdapter:
             # Attach DI container to context if available
             if command.context is None:
                 command.context = type("Context", (), {})()
+            # Use setattr to avoid static typing issues on Context
             command.context.di_container = self.di_container
         else:
             # Direct injection as attribute
@@ -77,7 +78,7 @@ class CommandAdapter:
         self,
         command_class: Type[ManagerCommand],
         command_name: Optional[str] = None,
-        args: Optional[Dict[str, Any]] = None
+        args: Optional[Dict[str, Any]] = None,
     ) -> ManagerCommand:
         """
         Create and initialize a ManagerCommand instance.
@@ -98,11 +99,7 @@ class CommandAdapter:
             self.logger.error(f"Failed to create command {command_class.__name__}: {e}")
             raise
 
-    def execute_command(
-        self,
-        command: Any,
-        args: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    def execute_command(self, command: Any, args: Optional[Dict[str, Any]] = None) -> Any:
         """
         Execute command with error handling and logging.
 
@@ -119,9 +116,31 @@ class CommandAdapter:
 
             # Execute
             if isinstance(command, ManagerCommand):
-                return command.execute(args or {})
+                # ManagerCommand defines an async execute() and provides a
+                # synchronous helper validate_and_execute() which runs the
+                # coroutine in an event loop. Use that wrapper to remain
+                # compatible with sync callers.
+                try:
+                    return command.validate_and_execute(args or {})
+                except AttributeError:
+                    # Fallback: if the ManagerCommand implementation does not
+                    # provide validate_and_execute for some reason, try to
+                    # run the coroutine safely.
+                    import asyncio
+
+                    coro = command.execute(args or {})
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        loop = None
+
+                    if loop and loop.is_running():
+                        # Running event loop (rare in CLI). Schedule and wait.
+                        return asyncio.run(coro)
+                    else:
+                        return asyncio.get_event_loop().run_until_complete(coro)
             else:
-                # Old BaseCommand pattern
+                # Old BaseCommand pattern (synchronous execute)
                 return command.execute(args or {})
 
         except Exception as e:
@@ -187,11 +206,7 @@ class CommandFactory:
         self.adapter = CommandAdapter()
         self.logger = logger
 
-    def create_base_command(
-        self,
-        command_class: Type[Any],
-        context: Optional[CommandContext] = None
-    ) -> Any:
+    def create_base_command(self, command_class: Type[Any], context: Optional[CommandContext] = None) -> Any:
         """
         Create BaseCommand instance with context.
 
@@ -213,10 +228,7 @@ class CommandFactory:
             self.logger.error(f"Failed to create command {command_class.__name__}: {e}")
             raise
 
-    def create_manager_command(
-        self,
-        command_class: Type[ManagerCommand]
-    ) -> ManagerCommand:
+    def create_manager_command(self, command_class: Type[ManagerCommand]) -> ManagerCommand:
         """
         Create ManagerCommand instance with DI container.
 
@@ -228,11 +240,7 @@ class CommandFactory:
         """
         return self.adapter.create_manager_command(command_class)
 
-    def create_command(
-        self,
-        command_class: Type[Any],
-        context: Optional[CommandContext] = None
-    ) -> Any:
+    def create_command(self, command_class: Type[Any], context: Optional[CommandContext] = None) -> Any:
         """
         Create command (auto-detects type).
 

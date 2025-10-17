@@ -1,4 +1,4 @@
-from core.di_container import setup_di_container, reset_di_container
+from core.di_container import reset_di_container, setup_di_container
 
 
 class DummyAuth:
