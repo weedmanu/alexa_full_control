@@ -9,8 +9,8 @@ class DeviceManagerCommand(ManagerCommand):
     DI container to get the device_manager.
     """
 
-    def __init__(self, di_container) -> None:
-        super().__init__("device", di_container)
+    def __init__(self, name: str, di_container: Any) -> None:
+        super().__init__(name, di_container)
 
     @classmethod
     def setup_parser(cls, parser: Any) -> None:

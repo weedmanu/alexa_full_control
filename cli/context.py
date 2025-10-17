@@ -168,9 +168,12 @@ class Context:
         """Gestionnaire d'appareils (lazy-loaded)."""
         if self._device_mgr_instance is None and self.auth:
             from core.device_manager import DeviceManager
+            from services.alexa_api_service import AlexaAPIService
 
-            self._device_mgr_instance = DeviceManager(self.auth, self.state_machine)
-            logger.debug("DeviceManager chargé")
+            # Phase 1: Create AlexaAPIService and inject it (mandatory)
+            api_service = AlexaAPIService(self.auth, self.cache_service)
+            self._device_mgr_instance = DeviceManager(self.auth, self.state_machine, api_service)
+            logger.debug("DeviceManager chargé avec AlexaAPIService")
         return self._device_mgr_instance
 
     @property

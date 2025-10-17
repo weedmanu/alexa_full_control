@@ -266,6 +266,15 @@ def main() -> int:
                 print(f"❌ Erreur: Catégorie '{args.category}' non reconnue", file=sys.stderr)
             return 1
 
+        # Phase 1: Initialize DI Container if auth is available
+        if context.auth:
+            try:
+                from core.di_container import setup_di_container
+                setup_di_container(context.auth, context.config, context.state_machine)
+                logger.debug("✅ DI Container initialisé avec context.auth")
+            except Exception as e:
+                logger.warning(f"⚠️  Erreur initialisation DI Container: {e}")
+
         # Créer / exécuter la commande
         adapter = get_command_adapter()
 
