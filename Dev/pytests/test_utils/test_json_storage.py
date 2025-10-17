@@ -9,7 +9,6 @@ Couvre:
 """
 
 import json
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -76,7 +75,7 @@ class TestJsonStorage:
         backup_file = temp_dir / "backup.json.bak"
         assert backup_file.exists()
 
-        with open(backup_file, 'r', encoding='utf-8') as f:
+        with open(backup_file, encoding='utf-8') as f:
             backup_data = json.load(f)
         assert backup_data == initial_data
 

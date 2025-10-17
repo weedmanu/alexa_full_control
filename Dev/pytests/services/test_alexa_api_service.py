@@ -1,7 +1,9 @@
-import pytest
 from unittest.mock import Mock
-from services.alexa_api_service import AlexaAPIService
+
+import pytest
+
 from core.exceptions import APIError
+from services.alexa_api_service import AlexaAPIService
 
 
 class TestAlexaAPIServiceInitialization:

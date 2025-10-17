@@ -90,9 +90,9 @@ class DeviceManager(BaseManager[Dict[str, Any]]):
         )
 
         # Attributs spécifiques à DeviceManager
-        self.auth: "AlexaAuth" = auth
+        self.auth: AlexaAuth = auth
         # Optional AlexaAPIService for centralized API calls
-        self._api_service: Optional["AlexaAPIService"] = api_service
+        self._api_service: Optional[AlexaAPIService] = api_service
 
         # Pré-calcul de l'URL de base pour optimisation
         self._base_url = f"https://{self.config.amazon_domain}"

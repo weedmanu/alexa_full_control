@@ -216,7 +216,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
 
             # Prefer injected AlexaAPIService when available
             if self._api_service is not None:
-                data = self._api_service.get(f"/api/notifications", timeout=10)
+                data = self._api_service.get("/api/notifications", timeout=10)
             else:
                 data = self._api_call(
                     "GET",

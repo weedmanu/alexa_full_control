@@ -4,10 +4,8 @@ Tests pour Multiroom Manager - TDD Approach
 Permet de grouper les appareils et exécuter commandes sur le groupe.
 """
 
-import json
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 import pytest
 

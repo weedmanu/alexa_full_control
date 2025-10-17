@@ -10,13 +10,13 @@ Auteur: M@nu
 Date: 17 octobre 2025
 """
 
-from typing import Any, Optional
 import argparse
+from typing import Any, Optional
 
 from cli.base_command import BaseCommand
 from cli.commands.timers_alarm import AlarmsCommands
-from cli.commands.timers_reminder import RemindersCommands
 from cli.commands.timers_countdown import TimersCommands
+from cli.commands.timers_reminder import RemindersCommands
 
 
 class TimerCommand(BaseCommand):

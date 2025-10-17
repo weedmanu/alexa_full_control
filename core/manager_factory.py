@@ -62,8 +62,8 @@ class ManagerFactory:
             from core.lists.lists_manager import ListsManager
             from core.music.library_manager import LibraryManager
             from core.music.playback_manager import PlaybackManager
-            from core.reminders.reminder_manager import ReminderManager
             from core.music.tunein_manager import TuneInManager
+            from core.reminders.reminder_manager import ReminderManager
             from core.routines.routine_manager import RoutineManager
             from core.settings.device_settings_manager import DeviceSettingsManager
 

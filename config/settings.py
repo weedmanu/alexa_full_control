@@ -11,8 +11,8 @@ Fournit une interface unifiée pour accéder aux paramètres.
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 from .constants import AmazonRegions, AppConstants
 

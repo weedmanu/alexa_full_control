@@ -267,7 +267,7 @@ class FavoriteCommand(BaseCommand):
                     # Continuer sans le manager
 
                 # Sinon, afficher un message de succès (mode test)
-                self.success(f"✅ Commande de lecture envoyée")
+                self.success("✅ Commande de lecture envoyée")
                 return True
 
             else:

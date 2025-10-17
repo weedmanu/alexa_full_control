@@ -7,11 +7,13 @@ BEFORE implementation.
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from typing import List
+from unittest.mock import Mock
+
 import pytest
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock, MagicMock, patch
 
 
 class TestCommandParser:
@@ -159,7 +161,7 @@ class TestCommandTemplate:
         # Command should receive di_container as parameter
         di_container = Mock()
         di_container.get_manager.return_value = Mock()
-        
+
         # Should be able to get managers from container
         manager = di_container.get_manager("playback_manager")
         assert manager is not None
@@ -246,7 +248,7 @@ class TestCommandExecution:
         di_container = Mock()
         playback_mgr = Mock()
         di_container.get_manager.return_value = playback_mgr
-        
+
         # Should be able to use injected manager
         manager = di_container.get_manager("playback_manager")
         assert manager is not None
@@ -263,10 +265,10 @@ class TestCommandExecution:
         """Test executing multiple commands in sequence."""
         commands = ["playback play", "playback next", "playback pause"]
         results = []
-        
+
         for cmd in commands:
             results.append({"command": cmd, "success": True})
-        
+
         assert len(results) == len(commands)
 
 
@@ -277,7 +279,7 @@ class TestCommandIntegration:
         """Test command integration with PlaybackManager."""
         manager = Mock()
         manager.play.return_value = True
-        
+
         result = manager.play()
         assert result is True
 
@@ -285,7 +287,7 @@ class TestCommandIntegration:
         """Test command integration with DeviceManager."""
         manager = Mock()
         manager.get_devices.return_value = [{"serial": "dev1"}]
-        
+
         devices = manager.get_devices()
         assert len(devices) > 0
 
@@ -293,7 +295,7 @@ class TestCommandIntegration:
         """Test command handles manager errors gracefully."""
         manager = Mock()
         manager.play.side_effect = Exception("API Error")
-        
+
         with pytest.raises(Exception):
             manager.play()
 
@@ -301,14 +303,14 @@ class TestCommandIntegration:
         """Test command respects state machine."""
         state_machine = Mock()
         state_machine.can_execute_commands = True
-        
+
         assert state_machine.can_execute_commands
 
     def test_command_with_authentication_check(self) -> None:
         """Test command verifies authentication."""
         auth = Mock()
         auth.is_authenticated.return_value = True
-        
+
         assert auth.is_authenticated()
 
     def test_command_caches_results(self) -> None:
@@ -316,7 +318,7 @@ class TestCommandIntegration:
         cache = {}
         cache_key = "playback_state"
         cache[cache_key] = {"state": "playing"}
-        
+
         assert cache_key in cache
 
 
@@ -383,10 +385,10 @@ class TestCLIWorkflow:
         """Test workflow handles retries on failure."""
         attempts = 0
         max_attempts = 3
-        
+
         while attempts < max_attempts:
             attempts += 1
             if attempts >= 2:  # Succeed on second attempt
                 break
-        
+
         assert attempts <= max_attempts

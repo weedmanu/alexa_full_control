@@ -32,8 +32,8 @@ from cli.commands.auth import AuthCommand
 from cli.commands.cache import CacheCommand
 from cli.commands.calendar import CalendarCommand
 from cli.commands.device import DeviceCommand
-from cli.commands.device_manager import DeviceManagerCommand
 from cli.commands.device_communicate import DeviceCommunicateCommand
+from cli.commands.device_manager import DeviceManagerCommand
 from cli.commands.dnd import DNDCommand
 from cli.commands.favorite import FavoriteCommand
 from cli.commands.lists import ListsCommand

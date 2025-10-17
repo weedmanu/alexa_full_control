@@ -12,7 +12,6 @@ Date: 17 octobre 2025
 """
 
 import argparse
-from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
 from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
@@ -257,7 +256,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 if title:
                     self.info(f"Titre: {title}")
             else:
-                self.error(f"❌ Impossible d'envoyer le message")
+                self.error("❌ Impossible d'envoyer le message")
 
             return result
 
@@ -324,7 +323,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 if is_ssml:
                     self.info("Format: SSML")
             else:
-                self.error(f"❌ Impossible d'envoyer l'annonce")
+                self.error("❌ Impossible d'envoyer l'annonce")
 
             return result
 
@@ -391,7 +390,7 @@ class DeviceCommunicateCommand(BaseCommand):
             if result:
                 self.success(f"🔊 Son '{effect}' joué sur '{device}'")
             else:
-                self.error(f"❌ Impossible de jouer le son")
+                self.error("❌ Impossible de jouer le son")
 
             return result
 
@@ -433,7 +432,7 @@ class DeviceCommunicateCommand(BaseCommand):
                 self.success(f"✅ Commande exécutée sur '{device}'")
                 self.info(f"Commande: '{text}'")
             else:
-                self.error(f"❌ Impossible d'exécuter la commande")
+                self.error("❌ Impossible d'exécuter la commande")
 
             return result
 

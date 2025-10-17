@@ -8,8 +8,8 @@ Comportement minimal :
 
 Ce fichier est volontairement simple pour permettre TDD initial.
 """
-from typing import Any, Dict, List, Optional
 import uuid
+from typing import Any, Dict, List, Optional
 
 try:
     from loguru import logger
@@ -28,7 +28,7 @@ except Exception:
         def call(self, fn, *args, **kwargs):
             return fn(*args, **kwargs)
 
-from core.exceptions import APIError, AuthenticationError
+from core.exceptions import APIError
 
 
 class AlexaAPIService:
@@ -66,7 +66,7 @@ class AlexaAPIService:
         """Wrapper around HTTP calls (uses circuit breaker)."""
         try:
             return self._circuit_breaker.call(method_fn, *args, **kwargs)
-        except Exception as e:
+        except Exception:
             # bubble up, higher-level methods will convert to APIError
             raise
 

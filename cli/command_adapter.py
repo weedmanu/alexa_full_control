@@ -69,7 +69,7 @@ class CommandAdapter:
             if command.context is None:
                 command.context = type("Context", (), {})()
             # Use setattr to avoid static typing issues on Context
-            setattr(command.context, "di_container", self.di_container)
+            command.context.di_container = self.di_container
         else:
             # Direct injection as attribute
             command.di_container = self.di_container

@@ -1,10 +1,10 @@
 """Shared pytest fixtures and mocks for all tests."""
 
-import pytest
-from unittest.mock import MagicMock, Mock
-from typing import Dict, Any, Optional
 import threading
+from typing import Any, Dict
+from unittest.mock import MagicMock
 
+import pytest
 
 # ==============================================================================
 # AUTH FIXTURES
@@ -32,23 +32,23 @@ def mock_auth():
 def mock_http_client():
     """Mock HTTP client for API calls."""
     client = MagicMock()
-    
+
     # Default success responses
     client.get = MagicMock(return_value={"status": "ok", "data": []})
     client.post = MagicMock(return_value={"status": "ok"})
     client.put = MagicMock(return_value={"status": "ok"})
     client.delete = MagicMock(return_value={"status": "ok"})
-    
+
     # Headers always present
     client.headers = {
         "User-Agent": "AmazonAlexa/2.0",
         "X-Csrf-Token": "mock_csrf_token_12345"
     }
-    
+
     # Session management
     client.session = MagicMock()
     client.session.headers = client.headers
-    
+
     return client
 
 
@@ -102,23 +102,23 @@ def mock_cache_service() -> MagicMock:
     """Mock cache service."""
     cache: MagicMock = MagicMock()
     cache_dict: Dict[str, Any] = {}
-    
+
     def get_side_effect(key: str, default: Any = None) -> Any:
         return cache_dict.get(key, default)
-    
+
     def set_side_effect(key: str, value: Any) -> bool:
         cache_dict[key] = value
         return True
-    
+
     def clear_side_effect() -> bool:
         cache_dict.clear()
         return True
-    
+
     cache.get = MagicMock(side_effect=get_side_effect)
     cache.set = MagicMock(side_effect=set_side_effect)
     cache.clear = MagicMock(side_effect=clear_side_effect)
     cache.get_lock = MagicMock(return_value=threading.RLock())
-    
+
     return cache
 
 

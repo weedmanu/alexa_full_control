@@ -42,10 +42,10 @@ from loguru import logger
 
 from core.circuit_breaker import CircuitBreaker
 from core.config import Config
+from core.di_container import get_di_container
 from core.state_machine import AlexaStateMachine
 from services.cache_service import CacheService
 from services.favorite_service import FavoriteService
-from core.di_container import get_di_container
 
 if TYPE_CHECKING:
     from core.multiroom.multiroom_manager import MultiRoomManager
@@ -125,13 +125,13 @@ class Context:
         self.auth: Optional[AlexaAuth] = None
         self._device_mgr_instance: Optional[DeviceManager] = None
         self._sync_service: Optional[SyncService] = None
-        
+
         # Services additionnels
         self.favorite_service = FavoriteService()  # Service de gestion des favoris
 
         # Managers de fonctionnalités (lazy-loaded)
         self._multiroom_mgr: Optional[MultiRoomManager] = None
-        self._scenario_mgr: Optional["ScenarioManager"] = None
+        self._scenario_mgr: Optional[ScenarioManager] = None
         self._timer_mgr: Optional[TimerManager] = None
         self._alarm_mgr: Optional[AlarmManager] = None
         self._reminder_mgr: Optional[ReminderManager] = None

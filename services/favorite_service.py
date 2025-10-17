@@ -5,7 +5,6 @@ Permet de sauvegarder et réutiliser des stations radio, scènes, etc.
 """
 
 import json
-import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -24,14 +23,14 @@ class FavoriteService:
         # Déterminer le répertoire de config
         if config_dir is None:
             config_dir = Path.home() / ".alexa"
-        
+
         self.config_dir = Path(config_dir)
         self.config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.favorites_file = self.config_dir / "favorites.json"
         self._storage = JsonStorage(self.config_dir)
         self._favorites: Dict[str, Dict[str, Any]] = {}
-        
+
         # Charger les favoris existants
         self._load_favorites()
 
@@ -72,17 +71,17 @@ class FavoriteService:
         if not name or not name.strip():
             logger.warning("Nom du favori manquant")
             return False
-        
+
         if not favorite_type or not favorite_type.strip():
             logger.warning("Type du favori manquant")
             return False
-        
+
         # Vérifier s'il existe déjà
         key = self._normalize_name(name)
         if key in self._favorites:
             logger.warning(f"Favori '{name}' existe déjà")
             return False
-        
+
         # Ajouter le favori
         self._favorites[key] = {
             "name": name,
@@ -91,9 +90,9 @@ class FavoriteService:
             "created": datetime.now().isoformat(),
             "last_used": None,
         }
-        
+
         logger.info(f"Favori '{name}' ajouté")
-        
+
         # Sauvegarder
         return self.save_favorites()
 
@@ -107,14 +106,14 @@ class FavoriteService:
             True si succès, False sinon
         """
         key = self._normalize_name(name)
-        
+
         if key not in self._favorites:
             logger.warning(f"Favori '{name}' introuvable")
             return False
-        
+
         del self._favorites[key]
         logger.info(f"Favori '{name}' supprimé")
-        
+
         return self.save_favorites()
 
     def get_favorite(self, name: str) -> Optional[Dict[str, Any]]:
@@ -162,12 +161,12 @@ class FavoriteService:
         """
         query_lower = query.lower()
         results = []
-        
+
         for fav in self._favorites.values():
             if (query_lower in fav["name"].lower() or
                 query_lower in fav["type"].lower()):
                 results.append(fav)
-        
+
         return results
 
     def update_favorite(
@@ -187,21 +186,21 @@ class FavoriteService:
             True si succès, False sinon
         """
         key = self._normalize_name(name)
-        
+
         if key not in self._favorites:
             logger.warning(f"Favori '{name}' introuvable")
             return False
-        
+
         if params is not None:
             self._favorites[key]["params"] = params
-        
+
         if favorite_type is not None:
             self._favorites[key]["type"] = favorite_type
-        
+
         self._favorites[key]["last_updated"] = datetime.now().isoformat()
-        
+
         logger.info(f"Favori '{name}' mis à jour")
-        
+
         return self.save_favorites()
 
     def mark_as_used(self, name: str) -> bool:
@@ -214,12 +213,12 @@ class FavoriteService:
             True si succès, False sinon
         """
         key = self._normalize_name(name)
-        
+
         if key not in self._favorites:
             return False
-        
+
         self._favorites[key]["last_used"] = datetime.now().isoformat()
-        
+
         return self.save_favorites()
 
     def export_to_json(self) -> str:
@@ -241,22 +240,22 @@ class FavoriteService:
         """
         try:
             imported = json.loads(json_data)
-            
+
             # Valider chaque favori
             for key, fav in imported.items():
                 if not isinstance(fav, dict):
                     logger.warning(f"Favori '{key}' invalide")
                     return False
-                
+
                 if "name" not in fav or "type" not in fav:
                     logger.warning(f"Favori '{key}' manque des champs requis")
                     return False
-            
+
             # Fusionner avec les favoris existants
             self._favorites.update(imported)
-            
+
             return self.save_favorites()
-        
+
         except json.JSONDecodeError as e:
             logger.error(f"JSON invalide: {e}")
             return False
@@ -268,11 +267,11 @@ class FavoriteService:
             Liste des favoris triés
         """
         favorites = list(self._favorites.values())
-        
+
         # Trier par last_used (les plus récents d'abord)
         favorites.sort(
             key=lambda x: x.get("last_used") or "",
             reverse=True
         )
-        
+
         return favorites
