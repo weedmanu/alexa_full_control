@@ -32,46 +32,59 @@ class TimerManager(BaseManager[Dict[str, Any]]):
     def __init__(
         self,
         auth: Any,
-        config: Any,
-        state_machine: Optional[AlexaStateMachine] = None,
+        state_machine: AlexaStateMachine,
+        api_service: Any,
         cache_service: Optional[CacheService] = None,
-        api_service: Optional[Any] = None,
+        cache_ttl: int = 60,
     ) -> None:
         """
-        Initialise le gestionnaire de timers.
+        Initialise le gestionnaire de timers avec injection obligatoire.
 
         Args:
             auth: Instance AlexaAuth avec session authentifiée
-            config: Instance Config avec paramètres
-            state_machine: Machine à états optionnelle (créée si None)
+            state_machine: Machine à états pour gestion d'état
+            api_service: Service API centralisé (MANDATORY, jamais None)
             cache_service: Service de cache optionnel (créé si None)
+            cache_ttl: Durée de vie du cache en secondes (défaut: 60)
+
+        Raises:
+            ValueError: Si api_service est None (injection obligatoire)
         """
-        # Use central factory to obtain an http_client from legacy auth or return auth
+        if api_service is None:
+            raise ValueError("api_service is mandatory and cannot be None")
+
+        # Use central factory to obtain an http_client from legacy auth
         from core.base_manager import create_http_client_from_auth
 
         http_client = create_http_client_from_auth(auth)
 
+        # Phase 2: Create minimal config for BaseManager (only needs amazon_domain)
+        # In Phase 2+, config is not needed for operations, only for headers
+        class _MinimalConfig:
+            amazon_domain = "amazon.com"
+        
+        minimal_config = _MinimalConfig()
+
+        # Phase 2: Mandatory API Service (no fallback)
         super().__init__(
             http_client=http_client,
-            config=config,
-            state_machine=state_machine or AlexaStateMachine(),
+            config=minimal_config,  # Minimal config just for BaseManager initialization
+            state_machine=state_machine,
             cache_service=cache_service,
-            cache_ttl=60,
+            cache_ttl=cache_ttl,
         )
 
         self.auth = auth
+        self._api_service = api_service
         self.breaker = CircuitBreaker(failure_threshold=3, timeout=30, half_open_max_calls=1)
 
-        # Optional centralized AlexaAPIService
-        self._api_service: Optional[Any] = api_service
-
-        # compatibility memory cache attrs
+        # Compatibility memory cache attrs
         self._timers_cache: Optional[List[Dict[str, Any]]] = None
         self._cache_timestamp: float = 0.0
-        self._cache_ttl: int = 60
+        self._cache_ttl: int = cache_ttl
         self._lock = threading.RLock()
 
-        logger.info("TimerManager initialisé")
+        logger.info("✅ TimerManager initialisé avec api_service obligatoire")
 
     def _is_cache_valid(self) -> bool:
         """
@@ -107,7 +120,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
         self, device_serial: str, device_type: str, duration_minutes: int, label: str = "Timer"
     ) -> Optional[Dict[str, Any]]:
         """
-        Crée un nouveau timer sur un appareil Alexa.
+        Crée un nouveau timer sur un appareil Alexa via AlexaAPIService.
 
         Args:
             device_serial: Numéro de série de l'appareil
@@ -138,9 +151,9 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                     "deviceType": device_type,
                 }
 
-                timer_data = self._api_call(
-                    "POST",
-                    f"https://{self.config.alexa_domain}/api/timers",
+                # Phase 2: Use api_service directly (no fallback)
+                timer_data = self._api_service.post(
+                    "/api/timers",
                     json=payload,
                     timeout=10,
                 )
@@ -148,11 +161,11 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 from typing import cast
 
                 timer_data = cast(Dict[str, Any], timer_data)
-                logger.success(f"Timer '{label}' créé ({duration_minutes} min)")
+                logger.success(f"✅ Timer '{label}' créé ({duration_minutes} min)")
                 return timer_data
 
             except Exception as e:
-                logger.error(f"Erreur lors de la création du timer: {e}")
+                logger.error(f"❌ Erreur lors de la création du timer: {e}")
                 return None
 
     def list_timers(self, device_serial: Optional[str] = None, force_refresh: bool = False) -> List[Dict[str, Any]]:
@@ -204,7 +217,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
 
     def _refresh_timers_cache(self) -> List[Dict[str, Any]]:
         """
-        Rafraîchit le cache des timers en effectuant un appel API.
+        Rafraîchit le cache des timers via AlexaAPIService.
 
         Les timers sont récupérés depuis /api/notifications et filtrés par type "Timer" et status "ON".
 
@@ -214,18 +227,11 @@ class TimerManager(BaseManager[Dict[str, Any]]):
         try:
             logger.debug("🌐 Récupération de tous les timers depuis l'API notifications")
 
-            # Prefer injected AlexaAPIService when available
-            if self._api_service is not None:
-                data = self._api_service.get("/api/notifications", timeout=10)
-            else:
-                data = self._api_call(
-                    "GET",
-                    f"https://{self.config.alexa_domain}/api/notifications",
-                    timeout=10,
-                )
+            # Phase 2: Use api_service directly (mandatory, no fallback)
+            data = self._api_service.get("/api/notifications", timeout=10)
 
             if data is None:
-                logger.warning("Réponse vide pour les timers")
+                logger.warning("⚠️  Réponse vide pour les timers")
                 timers = []
             else:
                 # Les timers sont dans la liste des notifications
@@ -245,11 +251,11 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             # Mise à jour cache disque (Niveau 2) - TTL 5min
             self.cache_service.set("timers", {"timers": timers}, ttl_seconds=300)
 
-            logger.info(f"✅ {len(timers)} timer(s) actif(s) récupéré(s) et mis en cache (mémoire + disque)")
+            logger.info(f"✅ {len(timers)} timer(s) actif(s) récupéré(s) et mis en cache")
             return timers
 
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des timers: {e}")
+            logger.error(f"❌ Erreur lors de la récupération des timers: {e}")
             return []
 
     def cancel_all_timers(self, device_serial: str, device_type: str) -> bool:
@@ -290,7 +296,7 @@ class TimerManager(BaseManager[Dict[str, Any]]):
 
     def cancel_timer(self, timer_id: str) -> bool:
         """
-        Annule un timer existant.
+        Annule un timer existant via AlexaAPIService.
 
         Args:
             timer_id: ID du timer à annuler
@@ -303,25 +309,18 @@ class TimerManager(BaseManager[Dict[str, Any]]):
                 return False
 
             try:
-                if self._api_service is not None:
-                    self._api_service.delete(f"/api/timers/{timer_id}", timeout=10)
-                else:
-                    self._api_call(
-                        "DELETE",
-                        f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                        timeout=10,
-                    )
-
-                logger.success(f"Timer {timer_id} annulé")
+                # Phase 2: Use api_service directly (no fallback)
+                self._api_service.delete(f"/api/timers/{timer_id}", timeout=10)
+                logger.success(f"✅ Timer {timer_id} annulé")
                 return True
 
             except Exception as e:
-                logger.error(f"Erreur lors de l'annulation du timer: {e}")
+                logger.error(f"❌ Erreur lors de l'annulation du timer: {e}")
                 return False
 
     def pause_timer(self, timer_id: str) -> bool:
         """
-        Met en pause un timer.
+        Met en pause un timer via AlexaAPIService.
 
         Args:
             timer_id: ID du timer à mettre en pause
@@ -336,26 +335,18 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             try:
                 payload = {"status": "PAUSED"}
 
-                if self._api_service is not None:
-                    self._api_service.put(f"/api/timers/{timer_id}", json=payload, timeout=10)
-                else:
-                    self._api_call(
-                        "PUT",
-                        f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                        json=payload,
-                        timeout=10,
-                    )
-
-                logger.success(f"Timer {timer_id} mis en pause")
+                # Phase 2: Use api_service directly (no fallback)
+                self._api_service.put(f"/api/timers/{timer_id}", json=payload, timeout=10)
+                logger.success(f"✅ Timer {timer_id} mis en pause")
                 return True
 
             except Exception as e:
-                logger.error(f"Erreur lors de la mise en pause du timer: {e}")
+                logger.error(f"❌ Erreur lors de la mise en pause du timer: {e}")
                 return False
 
     def resume_timer(self, timer_id: str) -> bool:
         """
-        Reprend un timer en pause.
+        Reprend un timer en pause via AlexaAPIService.
 
         Args:
             timer_id: ID du timer à reprendre
@@ -370,19 +361,11 @@ class TimerManager(BaseManager[Dict[str, Any]]):
             try:
                 payload = {"status": "ON"}
 
-                if self._api_service is not None:
-                    self._api_service.put(f"/api/timers/{timer_id}", json=payload, timeout=10)
-                else:
-                    self._api_call(
-                        "PUT",
-                        f"https://{self.config.alexa_domain}/api/timers/{timer_id}",
-                        json=payload,
-                        timeout=10,
-                    )
-
-                logger.success(f"Timer {timer_id} repris")
+                # Phase 2: Use api_service directly (no fallback)
+                self._api_service.put(f"/api/timers/{timer_id}", json=payload, timeout=10)
+                logger.success(f"✅ Timer {timer_id} repris")
                 return True
 
             except Exception as e:
-                logger.error(f"Erreur lors de la reprise du timer: {e}")
+                logger.error(f"❌ Erreur lors de la reprise du timer: {e}")
                 return False
