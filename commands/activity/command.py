@@ -1,0 +1,453 @@
+﻿"""Commande de consultation de l'historique d'activit� Alexa.
+
+Ce module fournit une interface CLI pour consulter l'historique :
+- Voir les activit�s r�centes
+- Filtrer par appareil
+- Filtrer par type d'activit�
+- Afficher les d�tails d'une activit�
+"""
+
+import argparse
+
+from utils.cli.base_command import BaseCommand
+from utils.cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+
+# Constantes de description simplifi�es
+ACTIVITY_DESCRIPTION = "Consulter l'historique d'activit� Alexa"
+LIST_HELP = "Lister les activit�s r�centes"
+
+
+class ActivityCommand(BaseCommand):
+    """
+    Commande pour consulter l'historique d'activit� Alexa.
+
+    L'historique permet de voir toutes les interactions vocales,
+    commandes ex�cut�es et �v�nements survenus sur vos appareils.
+
+    Exemples:
+        >>> # Voir les activit�s r�centes
+        >>> alexa activity list
+
+        >>> # Filtrer par appareil
+        >>> alexa activity list -d "Salon Echo"
+
+        >>> # Filtrer par type
+        >>> alexa activity list --type voice
+
+        >>> # Limiter le nombre de r�sultats
+        >>> alexa activity list --limit 20
+
+        >>> # Voir les d�tails d'une activit�
+        >>> alexa activity info --id "abc123"
+    """
+
+    def get_name(self) -> str:
+        """Retourne le nom de la commande."""
+        return "activity"
+
+    def get_help(self) -> str:
+        """Retourne l'aide de la commande."""
+        return "Consulter l'historique d'activit�"
+
+    def setup_parser(self, parser: argparse.ArgumentParser) -> None:
+        """
+        Configure le parser pour la commande activity.
+
+        Args:
+            parser: Parser � configurer
+        """
+        # Utiliser le formatter universel pour l'ordre exact demand�
+        parser.formatter_class = UniversalHelpFormatter
+
+        # Supprimer la ligne d'usage automatique
+        parser.usage = argparse.SUPPRESS
+
+        # Description centralis�e
+        parser.description = ACTIVITY_DESCRIPTION
+
+        subparsers = parser.add_subparsers(
+            dest="action",
+            metavar="ACTION",
+            help="Action � ex�cuter",
+            required=True,
+        )
+
+        # Action: list
+        list_parser = subparsers.add_parser(
+            "list",
+            help="Lister activit�s",
+            description=LIST_HELP,
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
+        list_parser.add_argument(
+            "--type",
+            type=str,
+            choices=["voice", "music", "alarm", "timer", "reminder", "smart_home", "all"],
+            default="all",
+            help="Type d'activit� � filtrer",
+        )
+        list_parser.add_argument(
+            "--limit",
+            type=int,
+            default=10,
+            metavar="N",
+            help="Nombre maximum d'activit�s � afficher (d�faut: 10)",
+        )
+
+        # Action: lastdevice
+        subparsers.add_parser(
+            "lastdevice",
+            help="Dernier appareil utilis�",
+            description="Affiche le nom du dernier appareil qui a eu une interaction avec Alexa",
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
+
+        # Action: lastcommand
+        lastcommand_parser = subparsers.add_parser(
+            "lastcommand",
+            help="Derni�re commande vocale",
+            description="Affiche la derni�re commande vocale prononc�e",
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
+        lastcommand_parser.add_argument(
+            "-d",
+            "--device",
+            metavar="DEVICE_NAME",
+            help="Filtrer par nom d'appareil (optionnel)",
+        )
+
+        # Action: lastresponse
+        lastresponse_parser = subparsers.add_parser(
+            "lastresponse",
+            help="Derni�re r�ponse d'Alexa",
+            description="Affiche la derni�re r�ponse vocale d'Alexa",
+            formatter_class=ActionHelpFormatter,
+            add_help=False,
+        )
+        lastresponse_parser.add_argument(
+            "-d",
+            "--device",
+            metavar="DEVICE_NAME",
+            help="Filtrer par nom d'appareil (optionnel)",
+        )
+
+    def execute(self, args: argparse.Namespace) -> bool:
+        """
+        Ex�cute la commande activity.
+
+        Args:
+            args: Arguments pars�s
+
+        Returns:
+            True si succ�s, False sinon
+        """
+        # Validation connexion
+        if not self.validate_connection():
+            return False
+
+        if args.action == "list":
+            return self._list_activities(args)
+        elif args.action == "info":
+            return self._show_activity_info(args)
+        elif args.action == "lastdevice":
+            return self._show_last_device(args)
+        elif args.action == "lastcommand":
+            return self._show_last_command(args)
+        elif args.action == "lastresponse":
+            return self._show_last_response(args)
+        else:
+            self.error(f"Action '{args.action}' non reconnue")
+            return False
+
+    def _list_activities(self, args: argparse.Namespace) -> bool:
+        """Lister les activit�s."""
+        try:
+            device_name = getattr(args, "device", None)
+            activity_type = getattr(args, "type", "all")
+            limit = getattr(args, "limit", 10)
+            verbose = getattr(args, "verbose", False)
+
+            if device_name:
+                self.info(f"?? R�cup�ration des activit�s pour '{device_name}'...")
+                serial = self.get_device_serial(device_name)
+                if not serial:
+                    return False
+            else:
+                self.info("?? R�cup�ration de toutes les activit�s...")
+                serial = None
+
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
+                self.error("ActivityManager non disponible")
+                return False
+
+            # L'API Alexa ne filtre pas par serial ou type c�t� serveur
+            # On r�cup�re toutes les activit�s puis on filtre localement
+            activities = self.call_with_breaker(
+                ctx.activity_mgr.get_activities,
+                limit,
+            )
+
+            if not activities:
+                self.warning("Aucune activit� trouv�e")
+                return True
+
+            # Filtrage local par appareil si sp�cifi�
+            if serial:
+                activities = [a for a in activities if a.get("deviceSerialNumber") == serial]
+
+            # Filtrage local par type si sp�cifi�
+            if activity_type and activity_type != "all":
+                activities = [a for a in activities if a.get("activityType") == activity_type]
+
+            # Afficher les activit�s
+            self._display_activities(activities, verbose)
+            return True
+
+        except Exception as e:
+            self.logger.exception("Erreur lors de la r�cup�ration des activit�s")
+            self.error(f"Erreur: {e}")
+            return False
+
+    def _show_activity_info(self, args: argparse.Namespace) -> bool:
+        """Afficher les d�tails d'une activit�."""
+        try:
+            self.info(f"??  R�cup�ration activit� '{args.id}'...")
+
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
+                self.error("ActivityManager non disponible")
+                return False
+
+            activity = self.call_with_breaker(ctx.activity_mgr.get_activity, args.id)
+
+            if activity:
+                self._display_activity_details(activity)
+                return True
+
+            self.error(f"Activit� '{args.id}' non trouv�e")
+            return False
+
+        except Exception as e:
+            self.logger.exception("Erreur lors de la r�cup�ration de l'activit�")
+            self.error(f"Erreur: {e}")
+            return False
+
+    def _display_activities(self, activities: list, verbose: bool = False) -> None:
+        """Affiche la liste des activit�s de mani�re format�e."""
+        print(f"\n?? Activit�s ({len(activities)}):")
+        print("=" * 80)
+        for activity in activities:
+            activity_id = activity.get("id", "N/A")
+            activity_type = activity.get("type", "N/A")
+            timestamp = activity.get("timestamp", "N/A")
+            device_name = activity.get("deviceName", "N/A")
+            description = activity.get("description", "N/A")
+
+            # Ic�ne selon le type
+            icon = self._get_activity_icon(activity_type)
+
+            print(f"\n{icon} {description}")
+            print(f"   Type: {activity_type} | Appareil: {device_name}")
+            print(f"   Date: {timestamp}")
+
+            if verbose:
+                print(f"   ID: {activity_id}")
+
+                # D�tails suppl�mentaires selon le type
+                if activity_type == "voice":
+                    utterance = activity.get("utterance", "N/A")
+                    alexa_response = activity.get("alexaResponse", "N/A")
+                    print(f'   Commande vocale: "{utterance}"')
+                    if alexa_response and alexa_response != "N/A":
+                        print(f'   R�ponse Alexa: "{alexa_response}"')
+
+                elif activity_type == "music":
+                    song = activity.get("song", "N/A")
+                    artist = activity.get("artist", "N/A")
+                    print(f"   Musique: {song} - {artist}")
+
+                elif activity_type == "smart_home":
+                    entity = activity.get("entity", "N/A")
+                    action = activity.get("action", "N/A")
+                    print(f"   Appareil: {entity} | Action: {action}")
+
+    def _display_activity_details(self, activity: dict) -> None:
+        """Affiche les d�tails d'une activit� de mani�re format�e."""
+        activity_id = activity.get("id", "N/A")
+        activity_type = activity.get("type", "N/A")
+        timestamp = activity.get("timestamp", "N/A")
+        device_name = activity.get("deviceName", "N/A")
+        description = activity.get("description", "N/A")
+
+        icon = self._get_activity_icon(activity_type)
+
+        print(f"\n{icon} D�tails de l'activit�")
+        print("=" * 80)
+        print(f"ID: {activity_id}")
+        print(f"Type: {activity_type}")
+        print(f"Appareil: {device_name}")
+        print(f"Date: {timestamp}")
+        print(f"Description: {description}")
+
+        # D�tails sp�cifiques au type
+        print("\nD�tails:")
+
+        if activity_type == "voice":
+            utterance = activity.get("utterance", "N/A")
+            intent = activity.get("intent", "N/A")
+            print(f'  Commande vocale: "{utterance}"')
+            print(f"  Intention: {intent}")
+
+        elif activity_type == "music":
+            song = activity.get("song", "N/A")
+            artist = activity.get("artist", "N/A")
+            album = activity.get("album", "N/A")
+            provider = activity.get("provider", "N/A")
+            print(f"  Titre: {song}")
+            print(f"  Artiste: {artist}")
+            print(f"  Album: {album}")
+            print(f"  Service: {provider}")
+
+        elif activity_type == "alarm":
+            label = activity.get("label", "N/A")
+            action = activity.get("action", "N/A")
+            print(f"  Alarme: {label}")
+            print(f"  Action: {action}")
+
+        elif activity_type == "timer":
+            label = activity.get("label", "N/A")
+            duration = activity.get("duration", "N/A")
+            action = activity.get("action", "N/A")
+            print(f"  Timer: {label}")
+            print(f"  Dur�e: {duration}")
+            print(f"  Action: {action}")
+
+        elif activity_type == "reminder":
+            label = activity.get("label", "N/A")
+            action = activity.get("action", "N/A")
+            print(f"  Rappel: {label}")
+            print(f"  Action: {action}")
+
+        elif activity_type == "smart_home":
+            entity = activity.get("entity", "N/A")
+            action = activity.get("action", "N/A")
+            value = activity.get("value", "N/A")
+            print(f"  Appareil: {entity}")
+            print(f"  Action: {action}")
+            print(f"  Valeur: {value}")
+
+    def _get_activity_icon(self, activity_type: str) -> str:
+        """Retourne l'ic�ne correspondant au type d'activit�."""
+        icons = {
+            "voice": "??",
+            "music": "??",
+            "alarm": "?",
+            "timer": "??",
+            "reminder": "??",
+            "smart_home": "??",
+            "announcement": "??",
+            "routine": "??",
+        }
+        return icons.get(activity_type, "??")
+
+    def _show_last_device(self, args: argparse.Namespace) -> bool:
+        """Affiche le dernier appareil utilis�."""
+        try:
+            self.info("?? R�cup�ration du dernier appareil utilis�...")
+
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
+                self.error("ActivityManager non disponible")
+                return False
+
+            device_name = self.call_with_breaker(ctx.activity_mgr.get_last_device)
+
+            if device_name:
+                print(f"\n?? Dernier appareil utilis� : {device_name}")
+                return True
+            else:
+                self.warning("Aucun appareil trouv� dans l'historique r�cent")
+                return True
+
+        except Exception as e:
+            self.logger.exception("Erreur lors de la r�cup�ration du dernier appareil")
+            self.error(f"Erreur: {e}")
+            return False
+
+    def _show_last_command(self, args: argparse.Namespace) -> bool:
+        """Affiche la derni�re commande vocale."""
+        try:
+            device_filter = getattr(args, "device", None)
+
+            if device_filter:
+                self.info(f"?? R�cup�ration de la derni�re commande pour '{device_filter}'...")
+            else:
+                self.info("?? R�cup�ration de la derni�re commande...")
+
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
+                self.error("ActivityManager non disponible")
+                return False
+
+            last_command = self.call_with_breaker(ctx.activity_mgr.get_last_command, device_filter)
+
+            if last_command:
+                if device_filter:
+                    print(f"\n?? Derni�re commande sur '{device_filter}' : \"{last_command}\"")
+                else:
+                    print(f'\n?? Derni�re commande : "{last_command}"')
+                return True
+            else:
+                if device_filter:
+                    self.warning(f"Aucune commande trouv�e pour l'appareil '{device_filter}'")
+                else:
+                    self.warning("Aucune commande trouv�e dans l'historique r�cent")
+                return True
+
+        except Exception as e:
+            self.logger.exception("Erreur lors de la r�cup�ration de la derni�re commande")
+            self.error(f"Erreur: {e}")
+            return False
+
+    def _show_last_response(self, args: argparse.Namespace) -> bool:
+        """Affiche la derni�re r�ponse d'Alexa."""
+        try:
+            device_filter = getattr(args, "device", None)
+
+            if device_filter:
+                self.info(f"?? R�cup�ration de la derni�re r�ponse Alexa pour '{device_filter}'...")
+            else:
+                self.info("?? R�cup�ration de la derni�re r�ponse Alexa...")
+
+            ctx = self.require_context()
+            if not ctx.activity_mgr:
+                self.error("ActivityManager non disponible")
+                return False
+
+            last_response = self.call_with_breaker(ctx.activity_mgr.get_last_response, device_filter)
+
+            if last_response:
+                if device_filter:
+                    print(f"\n???  Derni�re r�ponse Alexa sur '{device_filter}' : \"{last_response}\"")
+                else:
+                    print(f'\n???  Derni�re r�ponse Alexa : "{last_response}"')
+                return True
+            else:
+                if device_filter:
+                    self.warning(f"Aucune r�ponse trouv�e pour l'appareil '{device_filter}'")
+                else:
+                    self.warning("Aucune r�ponse trouv�e dans l'historique r�cent")
+                return True
+
+        except Exception as e:
+            self.logger.exception("Erreur lors de la r�cup�ration de la derni�re r�ponse Alexa")
+            self.error(f"Erreur: {e}")
+            return False
+
+
+
+

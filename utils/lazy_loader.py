@@ -193,7 +193,7 @@ class LazyCommandLoader:
             "loaded_commands": loaded_count,
             "total_commands": total_count,
             "loaded_percentage": (loaded_count / total_count * 100) if total_count > 0 else 0,
-            "modules_loaded": len([m for m in sys.modules if m.startswith("cli.commands")]),
+            "modules_loaded": len([m for m in sys.modules if m.startswith("commands")]),
         }
 
     def clear_cache(self) -> None:

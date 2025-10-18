@@ -27,7 +27,9 @@ from .smart_home import LightController, SmartDeviceController, ThermostatContro
 from .state_machine import AlexaStateMachine, ConnectionState, StateTransitionError
 
 # Timers package
-from .timers import AlarmManager, ReminderManager, TimerManager
+from .alarms import AlarmManager
+from .reminders import ReminderManager
+from .timers import TimerManager
 
 __all__ = [
     # Core infrastructure

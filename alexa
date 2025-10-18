@@ -60,22 +60,25 @@ try:
 except Exception:
     pass
 
-from cli import create_context, create_parser
-from cli.command_adapter import get_command_adapter
-from cli.commands import (
+from utils.cli import create_context, create_parser
+from utils.cli.command_adapter import get_command_adapter
+from commands import (
     ActivityCommand,
+    AlarmCommand,
+    AnnouncementCommand,
     AuthCommand,
     CacheCommand,
     CalendarCommand,
-    DeviceCommunicateCommand,
-    DeviceManagerCommand,
+    CountdownCommand,
+    DeviceCommand,
     DNDCommand,
     FavoriteCommand,
+    LibraryCommand,
     ListsCommand,
     MultiroomCommand,
-    MusicLibraryCommand,
-    MusicPlaybackCommand,
-    MusicRadioCommand,
+    PlaybackCommand,
+    RadioCommand,
+    ReminderCommand,
     RoutineCommand,
     ScenarioCommand,
     SmartHomeCommand,
@@ -124,12 +127,7 @@ def register_all_commands(parser: Any) -> None:
     """
     # Phase 1 - Sprint 1 ✅
     parser.register_command("auth", AuthCommand)
-    parser.register_command("device", DeviceManagerCommand)
-
-    # Phase 1.5 - Communication ✅ NEW
-    parser.register_command("device communicate", DeviceCommunicateCommand)
-    # Alias plat (sans espace) pour éviter les sous-catégories
-    parser.register_command("device-communicate", DeviceCommunicateCommand)
+    parser.register_command("device", DeviceCommand)
 
     # Phase 1.6 - Favorites ✅ NEW
     parser.register_command("favorite", FavoriteCommand)
@@ -139,23 +137,20 @@ def register_all_commands(parser: Any) -> None:
 
     # Phase 1.8 - Scenarios ✅ NEW
     parser.register_command("scenario", ScenarioCommand)
+    parser.register_command("announcement", AnnouncementCommand)
 
     # Phase 2 - Sprint 2 ✅ (musique scindée en sous-catégories)
     # Register only short music category names (no 'music' prefix)
-    parser.register_command("library", MusicLibraryCommand)
-    parser.register_command("playback", MusicPlaybackCommand)
-    parser.register_command("radio", MusicRadioCommand)
-    # 'timers' category removed: functionality moved to timers_* modules and integrated into device
-    # alarm et reminder sont maintenant des sous-catégories de timers
+    parser.register_command("library", LibraryCommand)
+    parser.register_command("playback", PlaybackCommand)
+    parser.register_command("radio", RadioCommand)
 
     # Phase 3 - Sprint 3 ✅
     parser.register_command("smarthome", SmartHomeCommand)
 
     # Timers split into explicit top-level categories: alarms, reminders, countdown
-    from cli.commands import AlarmCommand, RemindersCommand, CountdownCommand
-
     parser.register_command("alarms", AlarmCommand)
-    parser.register_command("reminders", RemindersCommand)
+    parser.register_command("reminders", ReminderCommand)
     parser.register_command("countdown", CountdownCommand)
 
     # Phase 4 - Sprint 4 ✅
@@ -304,7 +299,7 @@ def main() -> int:
 
         # If it's a ManagerCommand, use the adapter factory to create and execute
         try:
-            from cli.command_template import ManagerCommand
+            from utils.cli.command_template import ManagerCommand
 
             if issubclass(command_class, ManagerCommand):
                 command = adapter.create_manager_command(command_class)
