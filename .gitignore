@@ -199,6 +199,9 @@ test_*.tmp
 # Environnements virtuels locaux
 .venv/
 venv/
+Dev/
+Dev/pytests/
+Dev/pytests/pytests_real_user_api/data/
 env/
 ENV/
 env.bak/
@@ -257,3 +260,20 @@ htmlcov/
 
 # Dossier Dev (tests et développement)
 Dev/
+
+# Prevent committing real-user test data
+Dev/pytests/pytests_real_user_api/data/
+Dev/pytests/pytests_real_user_api/api_samples/
+Dev/pytests/pytests_real_user_api/*.json
+Dev/pytests/pytests_real_user_api/*.txt
+# Temporary helper scripts created during local experiments
+.tmp_*.py
+# ==================================================================
+# SECURITY: Ignore all .json and .txt files by default to avoid
+# accidentally committing sensitive data (cookies, tokens, exports).
+# Note: Files already tracked by Git remain tracked until removed from the index.
+# To purge already-committed sensitive files from history, rewrite is required
+# (git filter-repo / BFG). See README or ask me to perform the purge.
+# ==================================================================
+*.json
+*.txt
