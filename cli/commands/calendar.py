@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
 # Constantes de description simplifi…es
 CALENDAR_DESCRIPTION = "G…rer le calendrier Alexa"
@@ -79,7 +79,7 @@ class CalendarCommand(BaseCommand):
             "list",
             help="Consulter les …v…nements (commande vocale)",
             description=LIST_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         list_parser.add_argument(
@@ -103,7 +103,7 @@ class CalendarCommand(BaseCommand):
             "add",
             help="Ajouter un …v…nement au calendrier",
             description=ADD_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         add_parser.add_argument(
@@ -144,7 +144,7 @@ class CalendarCommand(BaseCommand):
             "delete",
             help="Supprimer un …v…nement",
             description=DELETE_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         delete_parser.add_argument(
@@ -160,7 +160,7 @@ class CalendarCommand(BaseCommand):
             "info",
             help="Afficher les d…tails d'un …v…nement",
             description=INFO_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         info_parser.add_argument(

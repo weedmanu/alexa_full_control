@@ -1,16 +1,12 @@
 """
-Shim d'import pour garder la compatibilité pendant la réorganisation.
+Module de gestion des timers, alarmes et rappels Alexa.
 
-Ce fichier ré-exporte les gestionnaires d'alarmes et de rappels depuis
-leurs dossiers dédiés (`core.alarms`, `core.reminders`) tout en conservant
-`TimerManager` local. Ainsi les imports existants `from core.timers import ...`
-continuent de fonctionner pendant la migration.
+Ce package fournit une interface thread-safe pour gérer les timers,
+alarmes et rappels via l'API Alexa.
 """
 
-from core.alarms.alarm_manager import AlarmManager as AlarmManager
-from core.reminders.reminder_manager import ReminderManager as ReminderManager
-
-# Conserver TimerManager local (implémentation spécifique aux minuteurs)
+from .alarm_manager import AlarmManager
+from .reminder_manager import ReminderManager
 from .timer_manager import TimerManager
 
 __all__ = [

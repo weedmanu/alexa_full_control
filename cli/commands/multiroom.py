@@ -11,7 +11,7 @@ import argparse
 from typing import Any, Dict, Iterable, List
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
 # Constantes de description simplifi…es
 MULTIROOM_DESCRIPTION = "G…rer les groupes multiroom Alexa"
@@ -61,7 +61,7 @@ class MultiroomCommand(BaseCommand):
         parser.formatter_class = UniversalHelpFormatter
 
         # Description simplifi…e
-        parser.description = ""
+        parser.description = MULTIROOM_DESCRIPTION
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -75,7 +75,7 @@ class MultiroomCommand(BaseCommand):
             "list",
             help="Lister groupes",
             description=LIST_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
 
@@ -84,7 +84,7 @@ class MultiroomCommand(BaseCommand):
             "create",
             help="Cr…er groupe",
             description=CREATE_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         create_parser.add_argument(
@@ -109,7 +109,7 @@ class MultiroomCommand(BaseCommand):
             "delete",
             help="Supprimer groupe",
             description=DELETE_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         delete_parser.add_argument(
@@ -126,7 +126,7 @@ class MultiroomCommand(BaseCommand):
             "info",
             help="Informations groupe",
             description=INFO_HELP,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         info_parser.add_argument("--name", type=str, required=True, metavar="GROUP_NAME", help="Nom du groupe")

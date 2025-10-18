@@ -39,7 +39,7 @@ class ListsCommand(BaseCommand):
         parser.usage = argparse.SUPPRESS
 
         # Description simplifiée
-        parser.description = ""
+        parser.description = "Gérer les listes de courses et tâches"
 
         subparsers = parser.add_subparsers(
             dest="action",

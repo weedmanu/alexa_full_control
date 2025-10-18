@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     # Importer uniquement pour annotations afin d'éviter cycles d'import
     from alexa_auth.alexa_auth import AlexaAuth
     from core.activity_manager import ActivityManager
+    from core.alarms import AlarmManager
     from core.audio import BluetoothManager, EqualizerManager
 
     # from core.communication import AnnouncementManager  # DEPRECATED - module vide
@@ -37,17 +38,14 @@ if TYPE_CHECKING:
     from core.dnd_manager import DNDManager
     from core.lists.lists_manager import ListsManager
     from core.multiroom import MultiRoomManager
+    from core.music import LibraryManager, PlaybackManager, TuneInManager
     from core.notification_manager import NotificationManager
+    from core.reminders import ReminderManager
     from core.routines import RoutineManager
     from core.scenario.scenario_manager import ScenarioManager
     from core.settings import DeviceSettingsManager
     from core.smart_home import LightController, SmartDeviceController, ThermostatController
-    from core.alarms.alarm_manager import AlarmManager
-    from core.music.library_manager import LibraryManager
-    from core.music.playback_manager import PlaybackManager
-    from core.music.tunein_manager import TuneInManager
-    from core.reminders.reminder_manager import ReminderManager
-    from core.timers.timer_manager import TimerManager
+    from core.timers import TimerManager
     from services.music_library import MusicLibraryService
     from services.sync_service import SyncService
     from services.voice_command_service import VoiceCommandService
@@ -184,7 +182,7 @@ class Context:
     def timer_mgr(self) -> Optional["TimerManager"]:
         """Gestionnaire de timers (lazy-loaded)."""
         if self._timer_mgr is None and self.auth:
-            from core.timers.timer_manager import TimerManager
+            from core.timers import TimerManager
             from services.alexa_api_service import AlexaAPIService
 
             api_service = AlexaAPIService(self.auth, self.cache_service)
@@ -196,7 +194,7 @@ class Context:
     def alarm_mgr(self) -> Optional["AlarmManager"]:
         """Gestionnaire d'alarmes (lazy-loaded)."""
         if self._alarm_mgr is None and self.auth:
-            from core.alarms.alarm_manager import AlarmManager
+            from core.alarms import AlarmManager
 
             self._alarm_mgr = AlarmManager(self.auth, self.config, self.state_machine, self.cache_service)
             logger.debug("AlarmManager chargé")
@@ -206,7 +204,7 @@ class Context:
     def reminder_mgr(self) -> Optional["ReminderManager"]:
         """Gestionnaire de rappels (lazy-loaded)."""
         if self._reminder_mgr is None and self.auth:
-            from core.reminders.reminder_manager import ReminderManager
+            from core.reminders import ReminderManager
 
             self._reminder_mgr = ReminderManager(self.auth, self.config, self.state_machine, self.cache_service)
             logger.debug("ReminderManager chargé")
@@ -251,7 +249,7 @@ class Context:
     def playback_mgr(self) -> Optional["PlaybackManager"]:
         """Gestionnaire de playback musique (lazy-loaded)."""
         if self._playback_mgr is None and self.auth:
-            from core.music.playback_manager import PlaybackManager
+            from core.music import PlaybackManager
 
             self._playback_mgr = PlaybackManager(self.auth, self.config, self.state_machine)
             logger.debug("PlaybackManager chargé")
@@ -261,7 +259,7 @@ class Context:
     def tunein_mgr(self) -> Optional["TuneInManager"]:
         """Gestionnaire TuneIn (lazy-loaded)."""
         if self._tunein_mgr is None and self.auth:
-            from core.music.tunein_manager import TuneInManager
+            from core.music import TuneInManager
 
             self._tunein_mgr = TuneInManager(self.auth, self.state_machine)
             logger.debug("TuneInManager chargé")
@@ -271,7 +269,7 @@ class Context:
     def library_mgr(self) -> Optional["LibraryManager"]:
         """Gestionnaire de bibliothèque musicale (lazy-loaded)."""
         if self._library_mgr is None and self.auth:
-            from core.music.library_manager import LibraryManager
+            from core.music import LibraryManager
 
             self._library_mgr = LibraryManager(self.auth, self.config, self.state_machine, self.voice_service)
             logger.debug("LibraryManager chargé")

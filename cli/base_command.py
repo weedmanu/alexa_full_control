@@ -245,13 +245,13 @@ class BaseCommand(ABC):
         Returns:
             Parser configuré pour l'action
         """
-        from cli.command_parser import UniversalHelpFormatter
+        from cli.command_parser import ActionHelpFormatter
 
         return subparsers.add_parser(
             action_name,
             help=help_text,
             description=description,
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=add_help,
         )
 

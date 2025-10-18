@@ -16,7 +16,7 @@ import json
 from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
-from cli.command_parser import UniversalHelpFormatter
+from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
 
 
 class AnnouncementCommand(BaseCommand):
@@ -66,7 +66,7 @@ class AnnouncementCommand(BaseCommand):
         send_parser = subparsers.add_parser(
             "send",
             help="Envoyer une annonce",
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         send_parser.add_argument(
@@ -84,7 +84,7 @@ class AnnouncementCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister les annonces",
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         list_parser.add_argument(
@@ -100,7 +100,7 @@ class AnnouncementCommand(BaseCommand):
         clear_parser = subparsers.add_parser(
             "clear",
             help="Supprimer annonces",
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         clear_parser.add_argument("--device", type=str, required=True, metavar="DEVICE_NAME", help="Nom de l'appareil")
@@ -110,7 +110,7 @@ class AnnouncementCommand(BaseCommand):
         read_parser = subparsers.add_parser(
             "read",
             help="Marquer comme lu",
-            formatter_class=UniversalHelpFormatter,
+            formatter_class=ActionHelpFormatter,
             add_help=False,
         )
         read_parser.add_argument("--id", type=str, required=True, metavar="ANNOUNCEMENT_ID", help="ID de l'annonce")
