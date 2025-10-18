@@ -275,5 +275,23 @@ Dev/pytests/pytests_real_user_api/*.txt
 # To purge already-committed sensitive files from history, rewrite is required
 # (git filter-repo / BFG). See README or ask me to perform the purge.
 # ==================================================================
+# Ignore all JSON/TXT and other potential sensitive extensions by default
+
+# Ignore common sensitive dotfiles (files starting with a dot)
+.*cookie*
+.*token*
+.*auth*
+.*credential*
+.*secret*
+.*private*
+.*personal*
+.*user*
+
 *.json
 *.txt
+*.cookies
+
+# Allow only the project requirement files to be tracked (do NOT unignore folders)
+!/requirements.txt
+!/requirements-dev.txt
+!/Dev/requirements-dev.txt
