@@ -12,7 +12,7 @@ import argparse
 import json
 import sys
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Protocol, runtime_checkable
+from typing import Any, Callable, List, Optional, Protocol, runtime_checkable
 
 from loguru import logger
 
@@ -496,6 +496,27 @@ class BaseCommand(ABC):
 
         return "ECHO"
 
+    def get_device_serial(self, device_name: str) -> Optional[str]:
+        """
+        Récupère le serial d'un appareil.
+
+        Args:
+            device_name: Nom de l'appareil
+
+        Returns:
+            Serial de l'appareil ou None si non trouvé
+        """
+        if not self.device_mgr:
+            return None
+
+        devices = self.device_mgr.get_devices()
+        for device in devices:
+            if device.get("accountName") == device_name:
+                serial = device.get("serialNumber")
+                return str(serial) if serial is not None else None
+
+        return None
+
     def get_device_info(self, device_name: str) -> Optional[tuple[str, str]]:
         """
         Récupère le serial et le type d'un appareil.
@@ -598,6 +619,52 @@ class BaseCommand(ABC):
             parts.append(f"{seconds_remainder}s")
 
         return " ".join(parts) if parts else "0s"
+
+    def format_table(self, data: List[List[Any]], headers: List[str]) -> str:
+        """
+        Formate une liste de données en tableau texte.
+
+        Args:
+            data: Liste de listes (lignes de données)
+            headers: Liste des en-têtes de colonnes
+
+        Returns:
+            Tableau formaté en texte
+        """
+        if not data:
+            return "Aucune donnée à afficher"
+
+        # Calculer la largeur de chaque colonne
+        col_widths = []
+        for i, header in enumerate(headers):
+            # Largeur minimum = longueur du header
+            width = len(header)
+            # Vérifier toutes les lignes pour cette colonne
+            for row in data:
+                if i < len(row):
+                    width = max(width, len(str(row[i])))
+            col_widths.append(width)
+
+        # Créer la ligne de séparation
+        separator = "+" + "+".join("-" * (w + 2) for w in col_widths) + "+"
+
+        # Formater les lignes
+        lines = []
+
+        # En-têtes
+        header_line = "|" + "|".join(f" {headers[i]:{col_widths[i]}} " for i in range(len(headers))) + "|"
+        lines.append(separator)
+        lines.append(header_line)
+        lines.append(separator)
+
+        # Données
+        for row in data:
+            row_str = "|" + "|".join(f" {str(row[i]) if i < len(row) else '':{col_widths[i]}} " for i in range(len(headers))) + "|"
+            lines.append(row_str)
+
+        lines.append(separator)
+
+        return "\n".join(lines)
 
     # ------------------------------------------------------------------
     # Compatibility aliases (historical names used by CLI commands)
@@ -763,6 +830,23 @@ class BaseCommand(ABC):
             device: Appareil cible
         """
         self.logger.success(f"{SharedIcons.MUSIC} {track_info} {action} sur {device}")
+
+    def get_device_serial_and_type(self, device_name: str) -> Optional[tuple[str, str]]:
+        """
+        Récupère le serial et le type d'un appareil.
+
+        Args:
+            device_name: Nom de l'appareil
+
+        Returns:
+            Tuple (serial, device_type) ou None si non trouvé
+        """
+        serial = self.get_device_serial(device_name)
+        if not serial:
+            return None
+
+        device_type = self.get_device_type(device_name)
+        return (serial, device_type)
 
 
 class CommandError(Exception):

@@ -24,23 +24,6 @@ except Exception:
 LOGURU_AVAILABLE: bool = logger is not None
 
 
-# Map émojis par niveau (défini une seule fois, réutilisé partout)
-_EMOJI_MAP = {
-    "TRACE": "🔍",
-    "DEBUG": "🐞",
-    "INFO": "ℹ️ ",
-    "SUCCESS": "✅",
-    "WARNING": "⚠️ ",
-    "ERROR": "❌",
-    "CRITICAL": "🆘",
-    "AUTH": "🔐",
-    "INSTALL": "🔧",
-}
-
-# Calculer la largeur maximale pour l'alignement
-_MAX_LEVEL_WIDTH = max(len(level) for level in _EMOJI_MAP)
-
-
 # --- Système centralisé d'icônes partagées ---
 class SharedIcons:
     """Distributeur centralisé d'icônes pour tout le projet.
@@ -49,33 +32,33 @@ class SharedIcons:
     pour éviter la duplication et faciliter la maintenance.
     """
 
-    # Icônes de statut/opérations
-    SUCCESS = "✅"
-    ERROR = "❌"
-    WARNING = "⚠️"
-    INFO = "ℹ️"
-    DEBUG = "🐞"
-    SEARCH = "🔍"
-    CRITICAL = "🆘"
-    AUTH = "🔐"
-    INSTALL = "🔧"
-    STEP = "⚡"
-    PROGRESS = "⏳"
+    # Icônes de statut/opérations (désactivées)
+    SUCCESS = ""
+    ERROR = ""
+    WARNING = ""
+    INFO = ""
+    DEBUG = ""
+    SEARCH = ""
+    CRITICAL = ""
+    AUTH = ""
+    INSTALL = ""
+    STEP = ""
+    PROGRESS = ""
 
-    # Icônes spécialisées
-    ROCKET = "🚀"  # Installation
-    PACKAGE = "📦"  # Dépendances
-    PYTHON = "🐍"  # Python
-    NODEJS = "🟢"  # Node.js
-    DOCUMENT = "📖"  # Documentation
-    TRASH = "🗑️"  # Suppression
-    CELEBRATION = "🎉"  # Succès final
-    GEAR = "⚙️"  # Configuration
-    SYNC = "🔄"  # Synchronisation
-    SAVE = "💾"  # Sauvegarde
-    FILE = "📄"  # Fichier
-    DEVICE = "📱"  # Appareil
-    MUSIC = "🎵"  # Musique
+    # Icônes spécialisées (désactivées)
+    ROCKET = ""  # Installation
+    PACKAGE = ""  # Dépendances
+    PYTHON = ""  # Python
+    NODEJS = ""  # Node.js
+    DOCUMENT = ""  # Documentation
+    TRASH = ""  # Suppression
+    CELEBRATION = ""  # Succès final
+    GEAR = ""  # Configuration
+    SYNC = ""  # Synchronisation
+    SAVE = ""  # Sauvegarde
+    FILE = ""  # Fichier
+    DEVICE = ""  # Appareil
+    MUSIC = ""  # Musique
 
     # Tuple des icônes partagées (pour référence)
     SHARED_ICONS = (
@@ -175,17 +158,9 @@ def _get_format_record() -> Callable[[Any], str]:
     """Retourne une fonction de formatage Loguru réutilisable."""
 
     def format_record(record: Any) -> str:
-        """Formateur personnalisé pour injecter l'émoji."""
+        """Formateur personnalisé pour les logs."""
         level_name = record["level"].name
         level_no = record["level"].no
-        emoji = _EMOJI_MAP.get(level_name, "📋")
-        # Assurer que la clé extra existe
-        try:
-            record_extra = record.setdefault("extra", {})
-            record_extra["emoji"] = emoji
-        except Exception:
-            # En cas d'objet non-mappé, ignorer l'assignation
-            pass
 
         # Afficher la localisation seulement pour les erreurs ou en mode debug
         show_location = level_name in ["ERROR", "CRITICAL"] or level_no <= 10  # DEBUG level
@@ -194,7 +169,7 @@ def _get_format_record() -> Callable[[Any], str]:
 
         return (
             "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-            "{extra[emoji]} <level>{level: <" + str(_MAX_LEVEL_WIDTH) + "}</level> | "
+            "<level>{level: <8}</level> | "
             "<level>{message}</level>" + location_part + "\n{exception}"
         )
 
@@ -213,9 +188,8 @@ def _register_custom_levels(custom_levels: Optional[List[str]] = None) -> None:
             if hasattr(logger, "_core") and level_name in str(logger._core.levels):
                 continue
 
-            # Enregistrer le niveau avec icône depuis _EMOJI_MAP
-            icon = _EMOJI_MAP.get(level_name, "📋")
-            logger.level(level_name, no=25, color="<cyan>", icon=icon)
+            # Enregistrer le niveau personnalisé
+            logger.level(level_name, no=25, color="<cyan>")
         except Exception:
             pass  # Niveau déjà existant
 
@@ -231,10 +205,10 @@ def setup_loguru_logger(
     ensure_utf8: bool = True,
     no_color: bool = False,
 ) -> None:
-    """Configure Loguru avec format émoji et couleurs - Fonction centrale unique.
+    """Configure Loguru avec format et couleurs - Fonction centrale unique.
 
     Format de sortie:
-    2025-10-14 16:07:50 | ℹ️  INFO         | module:function:line | Message
+    2025-10-14 16:07:50 | INFO     | module:function:line | Message
 
     Args:
         log_file: Chemin du fichier de log (optionnel)
@@ -420,7 +394,7 @@ class InstallLogger:
                 ensure_utf8=True,
             )
 
-    def header(self, msg: str, emoji: str = "🔧") -> None:
+    def header(self, msg: str, emoji: str = "") -> None:
         if self.use_loguru:
             logger.opt(depth=1).log("INSTALL", f"{emoji} {msg}")
         else:
@@ -433,7 +407,7 @@ class InstallLogger:
 
             fallback_logger.header(msg, emoji)
 
-    def step(self, msg: str, emoji: str = "⚡") -> None:
+    def step(self, msg: str, emoji: str = "") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{emoji} {msg}")
         else:
@@ -445,7 +419,7 @@ class InstallLogger:
 
     def progress(self, msg: str) -> None:
         if self.use_loguru:
-            logger.opt(depth=1).info(f"⏳ {msg}...")
+            logger.opt(depth=1).info(f"{msg}...")
         else:
             from importlib import import_module
 
@@ -453,7 +427,7 @@ class InstallLogger:
 
             fallback_logger.progress(msg)
 
-    def success(self, msg: str, emoji: str = "✅") -> None:
+    def success(self, msg: str, emoji: str = "") -> None:
         if self.use_loguru:
             logger.opt(depth=1).success(f"{msg}")
         else:
@@ -463,7 +437,7 @@ class InstallLogger:
 
             fallback_logger.success(msg, emoji)
 
-    def error(self, msg: str, emoji: str = "❌") -> None:
+    def error(self, msg: str, emoji: str = "") -> None:
         if self.use_loguru:
             logger.opt(depth=1).error(f"{msg}")
         else:
@@ -473,7 +447,7 @@ class InstallLogger:
 
             fallback_logger.error(msg, emoji)
 
-    def warning(self, msg: str, emoji: str = "⚠️") -> None:
+    def warning(self, msg: str, emoji: str = "") -> None:
         if self.use_loguru:
             logger.opt(depth=1).warning(f"{msg}")
         else:
@@ -483,7 +457,7 @@ class InstallLogger:
 
             fallback_logger.warning(msg, emoji)
 
-    def info(self, msg: str, emoji: str = "ℹ️") -> None:
+    def info(self, msg: str, emoji: str = "") -> None:
         if self.use_loguru:
             logger.opt(depth=1).info(f"{msg}")
         else:
@@ -497,7 +471,7 @@ class InstallLogger:
         if self.use_loguru:
             logger.opt(depth=1).debug(msg)
         else:
-            print(f"🐞 DEBUG: {msg}")
+            print(f"DEBUG: {msg}")
 
 
 # Instance globale pour import facile

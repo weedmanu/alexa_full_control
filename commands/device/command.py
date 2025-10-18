@@ -15,7 +15,7 @@ from typing import Any, Dict, List
 
 from utils.cli.base_command import BaseCommand
 from utils.cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from utils.cli.device_utils import get_device_display_name
+from data.device_family_mapping import get_device_display_name
 
 
 class DeviceCommand(BaseCommand):

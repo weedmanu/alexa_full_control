@@ -8,7 +8,6 @@ Format concis avec sections : Usage, Actions possibles, Exemples.
 import argparse
 from typing import Dict, List, Optional
 
-from utils.logger import SharedIcons
 from utils.term import Colors
 
 
@@ -41,14 +40,13 @@ class ShortHelpFormatter:
         return f"{ShortHelpFormatter.COLOR_SEPARATOR}{'─' * l}{ShortHelpFormatter.RESET}"
 
     @staticmethod
-    def _header(emoji: str, title: str) -> str:
+    def _header(title: str) -> str:
         """Génère un header de section."""
-        return f"{ShortHelpFormatter.COLOR_HEADER}{emoji} {title}{ShortHelpFormatter.RESET}"
+        return f"{ShortHelpFormatter.COLOR_HEADER}{title}{ShortHelpFormatter.RESET}"
 
     @staticmethod
     def format_short_help(
         category: str,
-        emoji: str,
         title: str,
         usage_patterns: List[str],
         actions: List[Dict[str, str]],
@@ -61,7 +59,6 @@ class ShortHelpFormatter:
 
         Args:
             category: Nom de la catégorie (ex: "device")
-            emoji: Emoji pour le header (ex: "📱")
             title: Titre de la section (ex: "DEVICE - Gestion des appareils")
             usage_patterns: Patterns d'usage (ex: ["alexa [OPTIONS_GLOBALES] device <ACTION> [OPTIONS_ACTION]"])
             actions: Liste des actions avec descriptions
@@ -87,11 +84,11 @@ class ShortHelpFormatter:
         content_width = min(term_width, 120)
 
         # Title header (no heavy separators)
-        lines.append(f"{emoji} {ShortHelpFormatter.BOLD}{title}{ShortHelpFormatter.RESET}")
+        lines.append(f"{ShortHelpFormatter.BOLD}{title}{ShortHelpFormatter.RESET}")
         lines.append("")
 
         # Section Usage
-        lines.append(ShortHelpFormatter._header(SharedIcons.DOCUMENT, "Usage:"))
+        lines.append(ShortHelpFormatter._header("Usage:"))
         lines.append("")
         lines.append("Champs possible :")
         lines.append("")
@@ -193,7 +190,7 @@ class ShortHelpFormatter:
 
         # Hint pour aide web
         if web_help_hint:
-            doc_header = f"{ShortHelpFormatter.COLOR_HEADER}📚 Documentation complète : "
+            doc_header = f"{ShortHelpFormatter.COLOR_HEADER}Documentation complète : "
             doc_link = f"{ShortHelpFormatter.COLOR_USAGE}alexa {category} --help-web{ShortHelpFormatter.RESET}"
             lines.append(doc_header + doc_link)
 

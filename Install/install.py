@@ -215,10 +215,9 @@ class Logger:
         print()
 
     @staticmethod
-    def step(msg: str, emoji: str = SharedIcons.STEP) -> None:
+    def step(msg: str) -> None:
         """Affiche une étape en cours."""
-        # Reuse same rendering as header to keep consistent borders
-        Logger.header(msg, emoji)
+        Logger.header(msg)
 
     @staticmethod
     def progress(msg: str) -> None:
@@ -226,25 +225,25 @@ class Logger:
         Logger._internal_wrap_and_print(SharedIcons.PROGRESS, f"{msg}...", Colors.MAGENTA)
 
     @staticmethod
-    def success(msg: str, emoji: str = SharedIcons.SUCCESS) -> None:
+    def success(msg: str) -> None:
         """Affiche un succès."""
         # Simple one-line success message
-        Logger._internal_wrap_and_print(emoji, msg, Colors.GREEN)
+        Logger._internal_wrap_and_print("", msg, Colors.GREEN)
 
     @staticmethod
-    def error(msg: str, emoji: str = SharedIcons.ERROR) -> None:
+    def error(msg: str) -> None:
         """Affiche une erreur."""
-        Logger._wrap_and_print(emoji, msg, Colors.RED)
+        Logger._wrap_and_print("", msg, Colors.RED)
 
     @staticmethod
-    def warning(msg: str, emoji: str = SharedIcons.WARNING) -> None:
+    def warning(msg: str) -> None:
         """Affiche un avertissement."""
-        Logger._internal_wrap_and_print(emoji, msg, Colors.YELLOW)
+        Logger._internal_wrap_and_print("", msg, Colors.YELLOW)
 
     @staticmethod
-    def info(msg: str, emoji: str = SharedIcons.INFO) -> None:
+    def info(msg: str) -> None:
         """Affiche une information."""
-        Logger._internal_wrap_and_print(emoji, msg, Colors.CYAN)
+        Logger._internal_wrap_and_print("", msg, Colors.CYAN)
 
     @staticmethod
     def _internal_wrap_and_print(emoji: str, msg: str, color: str, max_width: int = 78) -> None:
@@ -266,6 +265,7 @@ class Logger:
 
             This ensures messages won't contain an emoji immediately after the
             Logger-provided emoji prefix (avoids sequences like "✅ 🎉 ...").
+            Only removes emojis that are at the very beginning or end of the string.
             """
             s2 = s.strip()
             emoji_prefixes = [
@@ -285,25 +285,19 @@ class Logger:
                 SharedIcons.DOCUMENT,
                 SharedIcons.TRASH,
             ]
-            changed = True
-            while changed:
-                changed = False
-                for e in emoji_prefixes:
-                    # Leading emoji removal: this branch is defensive and often
-                    # won't be hit because previous lstrip usually removes leading
-                    # non-alphanumeric characters. Keep for parity with various
-                    # emoji sequences but mark as no-cover for testing.
-                    if s2.startswith(e):  # pragma: no cover - defensive
-                        s2 = s2[len(e) :].lstrip()
-                        changed = True
-                        break
-                if changed:  # pragma: no cover - defensive continue when leading emojis removed
-                    continue
-                for e in emoji_prefixes:
-                    if s2.endswith(e):
-                        s2 = s2[: -len(e)].rstrip()
-                        changed = True
-                        break
+
+            # Remove leading emojis (only one pass, not in a loop)
+            for e in emoji_prefixes:
+                if s2.startswith(e):
+                    s2 = s2[len(e) :].lstrip()
+                    break  # Only remove one leading emoji
+
+            # Remove trailing emojis (only one pass, not in a loop)
+            for e in emoji_prefixes:
+                if s2.endswith(e):
+                    s2 = s2[: -len(e)].rstrip()
+                    break  # Only remove one trailing emoji
+
             return s2
 
         if text and not text.lstrip()[0].isalnum():
@@ -834,7 +828,7 @@ class InstallationManager:
         """Affiche un petit résumé après la désinstallation."""
         # Note: referenced from tests; keep even if vulture thinks it's unused.
         # VULTURE_KEEP
-        Logger.header("DÉSINSTALLATION TERMINÉE", SharedIcons.TRASH)
+        Logger.header("DÉSINSTALLATION TERMINÉE")
         print()
         Logger.success("Éléments supprimés :")
         Logger.success("  ✓ .venv (environnement virtuel Python)")
@@ -842,7 +836,7 @@ class InstallationManager:
         Logger.success("  ✓ Fichiers cookies (cookie.txt, cookie-resultat.json)")
         Logger.success("  ✓ Fichiers cache (data/cache/*.json)")
         print()
-        Logger.header("VÉRIFICATION POST-DÉSINSTALLATION", SharedIcons.SEARCH)
+        Logger.header("VÉRIFICATION POST-DÉSINSTALLATION")
         print()
         if platform.system() == "Windows":
             print("Vérifier suppression .venv:")
@@ -866,7 +860,7 @@ class InstallationManager:
 
     def run_system_checks(self) -> None:
         """Effectue les vérifications système."""
-        Logger.header("VÉRIFICATIONS SYSTÈME", SharedIcons.SEARCH)
+        Logger.header("VÉRIFICATIONS SYSTÈME")
 
         # Informations système
         platform_info = SystemChecker.get_platform_info()
@@ -906,21 +900,21 @@ class InstallationManager:
             self.cleanup_existing_installation()
 
         # Environnement Python
-        Logger.header("ENVIRONNEMENT PYTHON", SharedIcons.PYTHON)
+        Logger.header("ENVIRONNEMENT PYTHON")
         self.installer.create_venv()
         self.installer.upgrade_pip()
 
         # Dépendances Python
-        Logger.header("DÉPENDANCES PYTHON", SharedIcons.PACKAGE)
+        Logger.header("DÉPENDANCES PYTHON")
         self.installer.install_python_packages()
 
         # Environnement Node.js
-        Logger.header("ENVIRONNEMENT NODE.JS", SharedIcons.NODEJS)
+        Logger.header("ENVIRONNEMENT NODE.JS")
         self.installer.install_nodejs()
         self.installer.install_npm_packages()
 
         # Configuration finale
-        Logger.header("CONFIGURATION FINALE", SharedIcons.GEAR)
+        Logger.header("CONFIGURATION FINALE")
         self.installer.create_data_directory()
 
         if not self.skip_tests:
@@ -928,7 +922,7 @@ class InstallationManager:
 
     def show_summary(self) -> None:
         """Affiche le résumé de l'installation."""
-        Logger.header("INSTALLATION TERMINÉE", SharedIcons.CELEBRATION)
+        Logger.header("INSTALLATION TERMINÉE")
 
         print()
         Logger.success("Environnement Python (.venv) créé")
@@ -936,7 +930,7 @@ class InstallationManager:
         Logger.success(f"Node.js v{NODE_VERSION} installé via nodeenv")
         print()
 
-        Logger.header("INSTRUCTIONS", SharedIcons.DOCUMENT)
+        Logger.header("INSTRUCTIONS")
         print()
         # Afficher uniquement les commandes pertinentes pour activer le .venv
         activate_lines, _ = get_venv_instructions()
@@ -1001,7 +995,7 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
     Lève `CLIError` pour signaler des terminaisons voulues au wrapper CLI.
     """
     # Title demandé par l'utilisateur (emoji fourni séparément pour éviter la duplication)
-    Logger.header("INSTALLATION ALEXA ADVANCED CONTROL", SharedIcons.ROCKET)
+    Logger.header("INSTALLATION ALEXA ADVANCED CONTROL")
 
     # Early detection: running inside project venv and requested uninstall
     if running_in_project_venv_fn() and args.uninstall:
@@ -1059,7 +1053,7 @@ def core_main(args: argparse.Namespace, install_dir: Path, running_in_project_ve
             raise CLIError(2)
 
         if args.uninstall:
-            Logger.header("DÉSINSTALLATION", SharedIcons.TRASH)
+            Logger.header("DÉSINSTALLATION")
             if manager.check_existing_installation():
                 manager.cleanup_existing_installation()
                 manager.show_uninstall_summary()

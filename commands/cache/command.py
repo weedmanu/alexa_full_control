@@ -8,7 +8,7 @@ from loguru import logger
 
 from utils.cli.base_command import BaseCommand
 from utils.cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
-from utils.cli.context import Context
+from commands.infrastructure import Context
 
 # Constantes de description simplifi�es
 CACHE_DESCRIPTION = "G�rer le cache de la CLI"

@@ -55,95 +55,11 @@ class ManagerFactory:
         """Load default configurations for standard managers."""
         # Import here to avoid circular imports
         try:
-            from core.alarms.alarm_manager import AlarmManager
             from core.audio.bluetooth_manager import BluetoothManager
             from core.audio.equalizer_manager import EqualizerManager
-            from core.device_manager import DeviceManager
-            from core.lists.lists_manager import ListsManager
-            from core.music.library_manager import LibraryManager
-            from core.music.playback_manager import PlaybackManager
-            from core.music.tunein_manager import TuneInManager
-            from core.reminders.reminder_manager import ReminderManager
-            from core.routines.routine_manager import RoutineManager
             from core.settings.device_settings_manager import DeviceSettingsManager
 
             # Register standard managers
-            self.register(
-                ManagerConfig(
-                    name="playback_manager",
-                    manager_class=PlaybackManager,
-                    dependencies={"auth": "auth", "config": "config", "state_machine": "state_machine"},
-                    optional_params={"api_service": "alexa_api_service"},
-                    cache_ttl=60,
-                )
-            )
-
-            self.register(
-                ManagerConfig(
-                    name="routine_manager",
-                    manager_class=RoutineManager,
-                    dependencies={"auth": "auth", "config": "config", "state_machine": "state_machine"},
-                    cache_ttl=300,
-                )
-            )
-
-            self.register(
-                ManagerConfig(
-                    name="device_manager",
-                    manager_class=DeviceManager,
-                    dependencies={"auth": "auth", "state_machine": "state_machine"},
-                    optional_params={"api_service": "alexa_api_service"},
-                    cache_ttl=600,
-                )
-            )
-
-            # Reminder manager (batch1)
-            self.register(
-                ManagerConfig(
-                    name="reminder_manager",
-                    manager_class=ReminderManager,
-                    dependencies={"auth": "auth", "config": "config", "state_machine": "state_machine"},
-                    optional_params={"api_service": "alexa_api_service"},
-                    cache_ttl=60,
-                )
-            )
-
-            self.register(
-                ManagerConfig(
-                    name="alarm_manager",
-                    manager_class=AlarmManager,
-                    dependencies={"auth": "auth", "config": "config"},
-                    cache_ttl=300,
-                )
-            )
-
-            self.register(
-                ManagerConfig(
-                    name="library_manager",
-                    manager_class=LibraryManager,
-                    dependencies={"auth": "auth", "config": "config"},
-                    optional_params={"voice_service": "voice_service"},
-                )
-            )
-
-            self.register(
-                ManagerConfig(
-                    name="tunein_manager",
-                    manager_class=TuneInManager,
-                    dependencies={"auth": "auth", "config": "config"},
-                    cache_ttl=300,
-                )
-            )
-
-            self.register(
-                ManagerConfig(
-                    name="lists_manager",
-                    manager_class=ListsManager,
-                    dependencies={"auth": "auth", "config": "config"},
-                    optional_params={"voice_service": "voice_service"},
-                )
-            )
-
             self.register(
                 ManagerConfig(
                     name="bluetooth_manager",

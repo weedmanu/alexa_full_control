@@ -12,7 +12,6 @@ from loguru import logger
 from alexa_auth.alexa_auth import AlexaAuth
 from core.config import Config
 from core.manager_factory import ManagerFactory
-from core.multiroom.multiroom_manager import MultiRoomManager
 from core.state_machine import AlexaStateMachine
 from services.favorite_service import FavoriteService
 
@@ -193,8 +192,7 @@ def setup_di_container(
         logger.warning(f"Could not initialize AlexaAPIService: {e}")
 
     # Register managers
-    multiroom_manager = MultiRoomManager()
-    container.register_singleton("MultiRoomManager", multiroom_manager)
+    # Note: Managers are now created via ManagerFactory on demand
 
     logger.info("✅ DI Container initialized with core dependencies")
 
