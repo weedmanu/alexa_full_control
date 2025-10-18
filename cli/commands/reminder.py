@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 
 
 class ReminderCommand(BaseCommand):
@@ -61,7 +61,7 @@ class ReminderCommand(BaseCommand):
         parser.usage = "alexa [OPTIONS_GLOBALES] reminder <ACTION> [OPTIONS_ACTION]"
 
         # Description simplifiée
-        parser.description = "Gérer les rappels sur les appareils Alexa"
+        parser.description = ""
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -74,7 +74,7 @@ class ReminderCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister rappels",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         list_parser.add_argument(
@@ -97,7 +97,7 @@ class ReminderCommand(BaseCommand):
         create_parser = subparsers.add_parser(
             "create",
             help="Créer rappel",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         create_parser.add_argument("--label", type=str, required=True, metavar="TEXT", help="Texte du rappel")
@@ -121,7 +121,7 @@ class ReminderCommand(BaseCommand):
         delete_parser = subparsers.add_parser(
             "delete",
             help="Supprimer rappel",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         delete_parser.add_argument(
@@ -133,7 +133,7 @@ class ReminderCommand(BaseCommand):
         complete_parser = subparsers.add_parser(
             "complete",
             help="Marquer complété",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         complete_parser.add_argument(

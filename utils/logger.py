@@ -11,17 +11,17 @@ from typing import Any, Callable, List, Optional
 
 # Pre-declare logger so type checkers have a stable name and type for it.
 logger: Any = None
-LOGURU_AVAILABLE = False
 try:
-    # Import into a temporary name then assign to the pre-declared symbol to
-    # avoid redefining the name from an import (which mypy flags).
+    # Import into a temporary name then assign to the pre-declared symbol.
     from loguru import logger as _loguru_logger
 
     logger = _loguru_logger
-    LOGURU_AVAILABLE = True
 except Exception:
     # Best-effort: leave logger as None when Loguru is not available.
-    LOGURU_AVAILABLE = False
+    logger = None
+
+# Single assignment for static analyzers: True iff import succeeded
+LOGURU_AVAILABLE: bool = logger is not None
 
 
 # Map émojis par niveau (défini une seule fois, réutilisé partout)
@@ -146,21 +146,26 @@ def _ensure_utf8_stdout() -> None:
     # Some streams (especially when mocked in tests or older Python) may not
     # implement `reconfigure`. Use hasattr/try to remain robust and avoid
     # static type complaints about missing attributes.
+    # Use getattr and callable checks to satisfy static analysis.
     try:
-        if hasattr(sys.stdout, "reconfigure"):
-            sys.stdout.reconfigure(encoding="utf-8")
-        if hasattr(sys.stderr, "reconfigure"):
-            sys.stderr.reconfigure(encoding="utf-8")
+        stdout_reconf = getattr(sys.stdout, "reconfigure", None)
+        stderr_reconf = getattr(sys.stderr, "reconfigure", None)
+        if callable(stdout_reconf):
+            stdout_reconf(encoding="utf-8")
+        if callable(stderr_reconf):
+            stderr_reconf(encoding="utf-8")
         return
     except Exception:
         # Fallback: wrap binary buffer if available
         try:
             import io
 
-            if hasattr(sys.stdout, "buffer"):
-                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
-            if hasattr(sys.stderr, "buffer"):
-                sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", line_buffering=True)
+            stdout_buffer = getattr(sys.stdout, "buffer", None)
+            stderr_buffer = getattr(sys.stderr, "buffer", None)
+            if stdout_buffer is not None:
+                sys.stdout = io.TextIOWrapper(stdout_buffer, encoding="utf-8", line_buffering=True)
+            if stderr_buffer is not None:
+                sys.stderr = io.TextIOWrapper(stderr_buffer, encoding="utf-8", line_buffering=True)
         except Exception:
             # Give up silently; UTF-8 is best-effort only
             return
@@ -220,6 +225,7 @@ def setup_loguru_logger(
     level: str = "INFO",
     rotation: str = "10 MB",
     retention: str = "1 week",
+    enable_console: bool = True,
     enable_stderr: bool = False,
     custom_levels: Optional[List[str]] = None,
     ensure_utf8: bool = True,
@@ -256,19 +262,20 @@ def setup_loguru_logger(
     # Récupérer le formateur
     format_record = _get_format_record()
 
-    # Handler console (stdout)
-    # Tests patch stdout to a non-tty; to maintain readable output and meet
-    # test expectations, enable colorization unless the caller explicitly
-    # requested no_color. This keeps behavior predictable under test.
-    colorize = not no_color
-    logger.add(
-        sys.stdout,
-        format=format_record,
-        level=level,
-        colorize=colorize,
-        backtrace=True,
-        diagnose=True,
-    )
+    # Handler console (stdout) - ajouté seulement si enable_console=True
+    if enable_console:
+        # Tests patch stdout to a non-tty; to maintain readable output and meet
+        # test expectations, enable colorization unless the caller explicitly
+        # requested no_color. This keeps behavior predictable under test.
+        colorize = not no_color
+        logger.add(
+            sys.stdout,
+            format=format_record,
+            level=level,
+            colorize=colorize,
+            backtrace=True,
+            diagnose=True,
+        )
 
     # Handler stderr optionnel (pour les erreurs uniquement)
     if enable_stderr:

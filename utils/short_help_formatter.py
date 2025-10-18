@@ -31,7 +31,14 @@ class ShortHelpFormatter:
     @staticmethod
     def _separator(length: int = 120) -> str:
         """Génère une ligne de séparation."""
-        return f"{ShortHelpFormatter.COLOR_SEPARATOR}{'━' * length}{ShortHelpFormatter.RESET}"
+        # Legacy: keep API but return empty (we prefer short discrete lines).
+        return ""
+
+    @staticmethod
+    def _short_line(length: int = 40) -> str:
+        """Génère une ligne courte et discrète pour séparer les sections."""
+        l = max(0, min(length, 40))
+        return f"{ShortHelpFormatter.COLOR_SEPARATOR}{'─' * l}{ShortHelpFormatter.RESET}"
 
     @staticmethod
     def _header(emoji: str, title: str) -> str:
@@ -68,15 +75,23 @@ class ShortHelpFormatter:
         """
         lines = []
 
-        # Separator top
-        lines.append(ShortHelpFormatter._separator())
+        # Determine terminal width to size separators and wrapping
+        try:
+            import shutil
+
+            term_width = shutil.get_terminal_size((80, 20)).columns
+        except Exception:
+            term_width = 80
+
+        # We'll compute the effective content width and make separators adapt to it
+        content_width = min(term_width, 120)
+
+        # Title header (no heavy separators)
         lines.append(f"{emoji} {ShortHelpFormatter.BOLD}{title}{ShortHelpFormatter.RESET}")
-        lines.append(ShortHelpFormatter._separator())
         lines.append("")
 
         # Section Usage
         lines.append(ShortHelpFormatter._header(SharedIcons.DOCUMENT, "Usage:"))
-        lines.append(ShortHelpFormatter._separator())
         lines.append("")
         lines.append("Champs possible :")
         lines.append("")
@@ -110,40 +125,77 @@ class ShortHelpFormatter:
         # Section Actions possibles
         lines.append("Actions possibles :")
         lines.append("")
+        # Calculer la largeur d'alignement dynamiquement : s'aligner sur la
+        # longueur de la plus longue action (ex: "device communicate") et
+        # ajouter un petit padding. Limiter quand même à 60 cols pour éviter
+        # des mises en page trop larges.
+        max_len = max((len(a.get("action", "")) for a in actions), default=0)
+        align_width = max(10, min(60, max_len + 2))
+
+        # Reserve space: bullet + spaces + action column + space
+        reserved = 4 + align_width + 1
+        desc_max = max(20, min(content_width - reserved, 80))
+
+        # Prepare wrapper for descriptions
+        import textwrap
+
         for action_info in actions:
             action = action_info.get("action", "")
-            description = action_info.get("description", "")
+            description = action_info.get("description", "") or ""
 
-            # Colorer l'action en vert et la description en gris
+            # Normalize description: remove repetitive prefixes like
+            # "Commande pour", "Commande de", "Commande" which sont
+            # souvent verbeux et inutiles in the compact help.
+            import re
+
+            plain_desc = description.strip()
+            # Use IGNORECASE flag instead of inline (?i) which must be at start
+            plain_desc = re.sub(r'^(?:commande(?:s)?(?:\s+(?:pour|de))?)\s*[:\-]?\s*', '', plain_desc, flags=re.IGNORECASE)
+
+            # Support explicit paragraph breaks in descriptions (\n).
+            # Wrap each paragraph separately to preserve intentional newlines.
+            wrapped = []
+            for para in plain_desc.splitlines():
+                if not para.strip():
+                    # keep blank paragraph as a visual break
+                    wrapped.append("")
+                    continue
+                parts = textwrap.wrap(
+                    para, width=desc_max, break_long_words=False, break_on_hyphens=False
+                )
+                if parts:
+                    wrapped.extend(parts)
+                else:
+                    wrapped.append("")
+
+            # Colorer l'action en vert (colorer uniquement le texte, ajouter la
+            # padding séparément pour s'aligner sur la longueur visible)
+            action_len = len(action)
             colored_action = f"{ShortHelpFormatter.COLOR_ACTION}{action}{ShortHelpFormatter.RESET}"
-            colored_desc = f"{ShortHelpFormatter.COLOR_DESCRIPTION}: {description}{ShortHelpFormatter.RESET}"
+            padding = " " * max(0, align_width - action_len)
 
-            lines.append(f"  • {colored_action:<70} {colored_desc}")
+            # Première ligne avec action et première partie de description
+            first_desc = wrapped[0]
+            colored_desc_first = f"{ShortHelpFormatter.COLOR_DESCRIPTION}: {first_desc}{ShortHelpFormatter.RESET}"
+            lines.append(f"  • {colored_action}{padding} {colored_desc_first}")
+
+            # Lignes suivantes (si wrap) alignées sous la description
+            if len(wrapped) > 1:
+                # Align continuation lines under the description column.
+                # Prefix consists of: two spaces, bullet, space => 4 chars, plus
+                # the action column (align_width) and one separating space.
+                indent = 4 + align_width + 1
+                for cont in wrapped[1:]:
+                    lines.append(" " * indent + f"{ShortHelpFormatter.COLOR_DESCRIPTION}{cont}{ShortHelpFormatter.RESET}")
         lines.append("")
 
-        # Section Exemples
-        lines.append("Exemple :")
-        lines.append("")
-        for example in examples:
-            lines.append(f"  {ShortHelpFormatter.COLOR_EXAMPLE}{example}{ShortHelpFormatter.RESET}")
-
-        # Exemples avec options globales
-        if global_examples:
-            lines.append("")
-            lines.append("  Avec une option globale :")
-            lines.append("")
-            for example in global_examples:
-                lines.append(f"\t{ShortHelpFormatter.COLOR_EXAMPLE}{example}{ShortHelpFormatter.RESET}")
-
-        lines.append("")
+        # (Exemples et options globales retirés pour un -h compact)
 
         # Hint pour aide web
         if web_help_hint:
-            lines.append(ShortHelpFormatter._separator())
             doc_header = f"{ShortHelpFormatter.COLOR_HEADER}📚 Documentation complète : "
             doc_link = f"{ShortHelpFormatter.COLOR_USAGE}alexa {category} --help-web{ShortHelpFormatter.RESET}"
             lines.append(doc_header + doc_link)
-            lines.append(ShortHelpFormatter._separator())
 
         return "\n".join(lines)
 
@@ -153,27 +205,7 @@ class ShortHelpFormatter:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-class ShortHelpArgparseFormatter(argparse.RawDescriptionHelpFormatter):
-    """
-    Formatter argparse personnalisé pour n'afficher que la description.
-    Masque toutes les sections générées automatiquement (positional arguments, options).
-    """
-
-    def format_help(self):
-        """N'affiche que la description personnalisée."""
-        # Récupérer le parser parent pour accéder à la description
-        if hasattr(self, "_prog") and hasattr(self, "_root_section"):
-            formatter = self._root_section.formatter
-            if hasattr(formatter, "_current_section"):
-                # Afficher uniquement la description
-                help_text = []
-                if self._root_section.heading:
-                    help_text.append(self._format_text(self._root_section.heading))
-                return "\n".join(help_text)
-
-        # Fallback: afficher simplement la description du parser
-        # On récupère la description depuis l'attribut de la classe parente
-        return self._root_section.format_help() if hasattr(self, "_root_section") else ""
+# ShortHelpArgparseFormatter removed: we use UniversalHelpFormatter for argparse formatting.
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

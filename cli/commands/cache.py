@@ -7,15 +7,15 @@ from pathlib import Path
 from loguru import logger
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 from cli.context import Context
 
 # Constantes de description simplifi…es
-CACHE_DESCRIPTION = "G…rer le cache de la CLI"
+CACHE_DESCRIPTION = "Gérer le cache de la CLI."
 CLEAR_HELP = "Vider le cache"
 REFRESH_HELP = "Actualiser le cache"
 SHOW_HELP = "Afficher le contenu du cache"
-STATUS_HELP = "Afficher l'…tat du cache"
+STATUS_HELP = "Afficher l'état du cache."
 
 
 class CacheCommand(BaseCommand):
@@ -27,11 +27,11 @@ class CacheCommand(BaseCommand):
 
     def setup_parser(self, parser: ArgumentParser) -> None:
         """Configure le parser pour cache."""
-        # Utiliser le formatter universel pour l'aide simplifi…e
+        # Utiliser le formatter universel pour l'aide simplifiée
         parser.formatter_class = UniversalHelpFormatter
 
-        # Description simplifi…e
-        parser.description = CACHE_DESCRIPTION
+        # Description supprimée pour laisser place à l'usage en tête
+        parser.description = ""
 
         subparsers = parser.add_subparsers(dest="action", help="Actions de gestion du cache", required=True)
 
@@ -40,7 +40,7 @@ class CacheCommand(BaseCommand):
             "status",
             help="Afficher statistiques cache",
             description=STATUS_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
 
@@ -49,7 +49,7 @@ class CacheCommand(BaseCommand):
             "refresh",
             help="Forcer resynchronisation",
             description=REFRESH_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         refresh_parser.add_argument(
@@ -57,7 +57,7 @@ class CacheCommand(BaseCommand):
             dest="refresh_category",
             choices=["devices", "smart_home", "alarms_and_reminders", "all"],
             default="all",
-            help="Cat…gorie … resynchroniser (d…faut: all)",
+            help="Catégorie à resynchroniser (défaut: all)",
         )
 
         # cache clear
@@ -65,7 +65,7 @@ class CacheCommand(BaseCommand):
             "clear",
             help="Supprimer tout le cache",
             description=CLEAR_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
 
@@ -74,7 +74,7 @@ class CacheCommand(BaseCommand):
             "show",
             help="Afficher contenu JSON",
             description=SHOW_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         show_parser.add_argument(
@@ -82,16 +82,16 @@ class CacheCommand(BaseCommand):
             dest="show_category",
             choices=["devices", "smart_home", "alarms_and_reminders", "routines", "sync_stats"],
             required=True,
-            help="Cat…gorie … afficher",
+            help="Catégorie à afficher",
         )
 
     def execute(self, args: Namespace) -> bool:
-        """Ex…cute cache status/refresh/clear."""
+        """Execute cache status/refresh/clear."""
         if not args.action:
             print("\nCommandes cache disponibles:\n")
             print("  status   - Afficher statistiques cache")
             print("  refresh  - Forcer resynchronisation")
-            print("  show     - Afficher contenu JSON d'une cat…gorie")
+            print("  show     - Afficher contenu JSON d'une catégorie")
             print("  clear    - Supprimer tout le cache")
             return True
 
@@ -105,7 +105,7 @@ class CacheCommand(BaseCommand):
             if category:
                 self._show(category)
             else:
-                print("\n? Cat…gorie requise pour la commande show")
+                print("\n? Catégorie requise pour la commande show")
                 print("   Utilisez: alexa cache show --category <category>")
         elif args.action == "clear":
             self._clear()
@@ -127,18 +127,18 @@ class CacheCommand(BaseCommand):
             print("\n?? Statistiques cache:\n")
             print(f"  Hits: {stats['hits']}")
             print(f"  Misses: {stats['misses']}")
-            print(f"  Taux de succ…s: {stats['hit_rate']:.1%}")
-            print(f"  …critures: {stats['writes']}")
+            print(f"  Taux de succès: {stats['hit_rate']:.1%}")
+            print(f"  Écritures: {stats['writes']}")
             print(f"  Invalidations: {stats['invalidations']}")
-            print(f"  Compression: {'Activ…e' if stats['compression_enabled'] else 'D…sactiv…e'}")
+            print(f"  Compression: {'Activée' if stats['compression_enabled'] else 'Désactivée'}")
             if stats["compression_enabled"]:
                 print(f"  Ratio compression moyen: {stats['avg_compression_ratio']:.1f}%")
-            print(f"  Entr…es totales: {stats['total_entries']}")
+            print(f"  Entrées totales: {stats['total_entries']}")
 
             if stats["entries"]:
-                print("\n?? D…tail des entr…es:\n")
+                print("\n?? Détail des entrées:\n")
                 for entry in stats["entries"]:
-                    status = "? Valide" if not entry["expired"] else "? Expir…"
+                    status = "? Valide" if not entry["expired"] else "? Expirée"
                     key_part = f"  {entry['key']:15} {entry['size_bytes']:>8} octets"
                     time_part = f"  {entry['expires_in_seconds']:>6}s  {status}"
                     print(key_part + time_part)
@@ -150,8 +150,8 @@ class CacheCommand(BaseCommand):
                     with open(sync_stats_file) as f:
                         sync_stats = json.load(f)
                     print("\n? Statistiques synchronisation:\n")
-                    print(f"  Derni…re sync: {sync_stats.get('timestamp', 'N/A')}")
-                    print(f"  Dur…e: {sync_stats.get('duration_seconds', 0):.2f}s")
+                    print(f"  Dernière sync: {sync_stats.get('timestamp', 'N/A')}")
+                    print(f"  Durée: {sync_stats.get('duration_seconds', 0):.2f}s")
                     if "synced" in sync_stats:
                         for category, count in sync_stats["synced"].items():
                             print(f"  {category.capitalize()}: {count}")
@@ -190,19 +190,19 @@ class CacheCommand(BaseCommand):
                 notifs = ctx.sync_service._sync_notifications()
                 result = {"success": True, "count": len(notifs)}
             else:
-                print(f"\n? Cat…gorie '{category}' non reconnue")
+                print(f"\n? Catégorie '{category}' non reconnue")
                 return
 
-            print("\n? Synchronisation termin…e")
+            print("\n? Synchronisation terminée")
             if result and "duration_seconds" in result:
-                print(f"   Dur…e: {result.get('duration_seconds', 0):.2f}s")
+                print(f"   Durée: {result.get('duration_seconds', 0):.2f}s")
 
         except Exception as e:
             logger.error(f"Erreur refresh: {e}")
             print(f"\n? Erreur: {e}")
 
     def _clear(self) -> None:
-        """Supprime tout le cache sauf les donn…es d'authentification."""
+        """Supprime tout le cache sauf les données d'authentification."""
         try:
             ctx = self.require_context()
             cache_service = ctx.cache_service
@@ -210,16 +210,16 @@ class CacheCommand(BaseCommand):
                 print("\n? CacheService indisponible")
                 return
 
-            print("\n???  Suppression cache (pr…servation des donn…es d'authentification)...")
+            print("\n???  Suppression cache (préservation des données d'authentification)...")
             count = cache_service.clear_all_except(preserve_keys=["auth_data"])
-            print(f"? {count} entr…e(s) supprim…e(s), donn…es d'authentification pr…serv…es")
+            print(f"? {count} entrée(s) supprimée(s), données d'authentification préservées")
 
         except Exception as e:
             logger.error(f"Erreur clear: {e}")
             print(f"\n? Erreur: {e}")
 
     def _show(self, category: str) -> None:
-        """Affiche le contenu JSON d'une cat…gorie de cache."""
+        """Affiche le contenu JSON d'une catégorie de cache."""
         try:
             ctx = self.require_context()
             cache_service = ctx.cache_service
@@ -227,15 +227,15 @@ class CacheCommand(BaseCommand):
                 print("\n? CacheService indisponible")
                 return
 
-            print(f"\n?? Contenu JSON de la cat…gorie '{category}':\n")
+            print(f"\n?? Contenu JSON de la catégorie '{category}':\n")
 
-            # R…cup…rer les donn…es du cache
+            # Récupérer les données du cache
             data = cache_service.get(category)
             if data is None:
-                print(f"? Aucune donn…e trouv…e pour la cat…gorie '{category}'")
+                print(f"? Aucune donnée trouvée pour la catégorie '{category}'")
                 return
 
-            # Afficher le JSON format…
+            # Afficher le JSON formaté
             print(json.dumps(data, indent=2, ensure_ascii=False))
 
         except Exception as e:

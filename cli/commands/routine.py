@@ -11,7 +11,7 @@ import argparse
 from typing import Any, Dict, List, Optional
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 
 
 class RoutineCommand(BaseCommand):
@@ -57,7 +57,7 @@ class RoutineCommand(BaseCommand):
         parser.usage = argparse.SUPPRESS
 
         # Description simplifiée
-        parser.description = "Gérer les routines Alexa"
+        parser.description = ""
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -70,7 +70,7 @@ class RoutineCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister routines",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         list_parser.add_argument("--only-active", action="store_true", help="Afficher uniquement les routines activées")
@@ -79,7 +79,7 @@ class RoutineCommand(BaseCommand):
         info_parser = subparsers.add_parser(
             "info",
             help="Détails routine",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         info_parser.add_argument("--name", type=str, required=True, metavar="ROUTINE_NAME", help="Nom de la routine")
@@ -95,7 +95,7 @@ class RoutineCommand(BaseCommand):
         exec_parser = subparsers.add_parser(
             "execute",
             help="Exécuter routine",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         exec_parser.add_argument(
@@ -117,7 +117,7 @@ class RoutineCommand(BaseCommand):
         enable_parser = subparsers.add_parser(
             "enable",
             help="Activer routine",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         enable_parser.add_argument(
@@ -139,7 +139,7 @@ class RoutineCommand(BaseCommand):
         disable_parser = subparsers.add_parser(
             "disable",
             help="Désactiver routine",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         disable_parser.add_argument(

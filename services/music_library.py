@@ -17,10 +17,12 @@ from pybreaker import CircuitBreaker
 
 from core.config import Config
 from services.auth import AuthClient
-from utils.logger import SharedIcons, setup_loguru_logger
+from utils.logger import SharedIcons
 
-# Initialiser le logger avec Loguru (appel après imports)
-setup_loguru_logger()
+# NOTE: Ne pas initialiser le logger ici (au moment de l'import) car cela
+# provoquerait l'ajout d'un sink console par défaut lors de l'import de modules
+# dans des contextes non-verbeux. L'initialisation doit être faite explicitement
+# par l'application principale (`alexa`) via `setup_loguru_logger(enable_console=...)`.
 
 # Common header values to avoid long repeated literals (helps ruff E501)
 _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 bash-script/1.0"
@@ -333,7 +335,7 @@ class MusicLibraryService:
         """
         with self._lock:
             try:
-                payload = {
+                payload: dict[str, Any] = {
                     "deviceType": device_type,
                     "deviceSerialNumber": device_serial,
                     "mediaOwnerCustomerId": media_owner_id,

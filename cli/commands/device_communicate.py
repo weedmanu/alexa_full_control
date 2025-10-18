@@ -15,7 +15,7 @@ import argparse
 from typing import Any, Dict, List, cast
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 
 
 class CommunicationEffects:
@@ -65,7 +65,7 @@ class DeviceCommunicateCommand(BaseCommand):
         """
         parser.formatter_class = UniversalHelpFormatter
         parser.usage = argparse.SUPPRESS
-        parser.description = "Communiquer avec les appareils Alexa"
+        parser.description = ""
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -78,7 +78,7 @@ class DeviceCommunicateCommand(BaseCommand):
         send_parser = subparsers.add_parser(
             "send",
             help="Envoyer un message simple",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         send_parser.add_argument(
@@ -107,7 +107,7 @@ class DeviceCommunicateCommand(BaseCommand):
         announce_parser = subparsers.add_parser(
             "announce",
             help="Faire une annonce officielle",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         announce_parser.add_argument(
@@ -141,7 +141,7 @@ class DeviceCommunicateCommand(BaseCommand):
         sound_parser = subparsers.add_parser(
             "sound",
             help="Jouer un son d'effet",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         sound_parser.add_argument(
@@ -175,7 +175,7 @@ class DeviceCommunicateCommand(BaseCommand):
         textcommand_parser = subparsers.add_parser(
             "textcommand",
             help="Exécuter une commande texte",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         textcommand_parser.add_argument(

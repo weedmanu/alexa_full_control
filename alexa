@@ -33,7 +33,7 @@ __version__ = "2.0.0"
 import io
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Dict, cast
 
 # Forcer l'encodage UTF-8 pour stdout/stderr sur Windows **seulement** lorsque
 # le script est exécuté directement. Réaffecter sys.stdout/stderr à l'import
@@ -52,6 +52,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 # Logger global avec loguru
 from loguru import logger
+# Retirer le sink par défaut de Loguru pour éviter les logs non sollicités
+# lors de l'import de modules. Le sink sera ré-ajouté explicitement dans
+# `setup_logging()` uniquement si --debug ou --verbose est demandé.
+try:
+    logger.remove()
+except Exception:
+    pass
 
 from cli import create_context, create_parser
 from cli.command_adapter import get_command_adapter
@@ -66,13 +73,15 @@ from cli.commands import (
     FavoriteCommand,
     ListsCommand,
     MultiroomCommand,
-    MusicCommand,
+    MusicLibraryCommand,
+    MusicPlaybackCommand,
+    MusicRadioCommand,
     RoutineCommand,
     ScenarioCommand,
     SmartHomeCommand,
-    TimersManagerCommand,
 )
 from utils.logger import setup_loguru_logger
+# Deprecated: short help generator removed in favor of argparse's native help
 
 
 # Configuration du logging utilisant la fonction centralisée
@@ -90,7 +99,8 @@ def setup_logging(verbose: bool = False, debug: bool = False, no_color: bool = F
     elif verbose:
         level = "INFO"
     else:
-        level = "WARNING"
+        # Mode quiet par défaut : n'afficher que les erreurs
+        level = "ERROR"
 
     # Fichier de log en mode debug
     log_file = None
@@ -100,9 +110,9 @@ def setup_logging(verbose: bool = False, debug: bool = False, no_color: bool = F
     # Utiliser la fonction centralisée du module utils.logger
     # Passer `no_color` uniquement si activé pour ne pas modifier la signature
     if no_color:
-        setup_loguru_logger(log_file=log_file, level=level, ensure_utf8=True, no_color=True)
+        setup_loguru_logger(log_file=log_file, level=level, enable_console=True, ensure_utf8=True, no_color=True)
     else:
-        setup_loguru_logger(log_file=log_file, level=level, ensure_utf8=True)
+        setup_loguru_logger(log_file=log_file, level=level, enable_console=True, ensure_utf8=True)
 
 
 def register_all_commands(parser: Any) -> None:
@@ -118,6 +128,8 @@ def register_all_commands(parser: Any) -> None:
 
     # Phase 1.5 - Communication ✅ NEW
     parser.register_command("device communicate", DeviceCommunicateCommand)
+    # Alias plat (sans espace) pour éviter les sous-catégories
+    parser.register_command("device-communicate", DeviceCommunicateCommand)
 
     # Phase 1.6 - Favorites ✅ NEW
     parser.register_command("favorite", FavoriteCommand)
@@ -128,13 +140,23 @@ def register_all_commands(parser: Any) -> None:
     # Phase 1.8 - Scenarios ✅ NEW
     parser.register_command("scenario", ScenarioCommand)
 
-    # Phase 2 - Sprint 2 ✅
-    parser.register_command("music", MusicCommand)
-    parser.register_command("timers", TimersManagerCommand)
+    # Phase 2 - Sprint 2 ✅ (musique scindée en sous-catégories)
+    # Register only short music category names (no 'music' prefix)
+    parser.register_command("library", MusicLibraryCommand)
+    parser.register_command("playback", MusicPlaybackCommand)
+    parser.register_command("radio", MusicRadioCommand)
+    # 'timers' category removed: functionality moved to timers_* modules and integrated into device
     # alarm et reminder sont maintenant des sous-catégories de timers
 
     # Phase 3 - Sprint 3 ✅
     parser.register_command("smarthome", SmartHomeCommand)
+
+    # Timers split into explicit top-level categories: alarms, reminders, countdown
+    from cli.commands import AlarmCommand, RemindersCommand, CountdownCommand
+
+    parser.register_command("alarms", AlarmCommand)
+    parser.register_command("reminders", RemindersCommand)
+    parser.register_command("countdown", CountdownCommand)
 
     # Phase 4 - Sprint 4 ✅
     parser.register_command("dnd", DNDCommand)
@@ -159,15 +181,27 @@ def main() -> int:
         Code de sortie (0 = succès, >0 = erreur)
     """
     try:
-        # Configuration temporaire du logging (très silencieux)
-        logger.remove()
-        logger.add(sys.stdout, level="CRITICAL", format="{message}")  # Seulement CRITICAL
+    # Ne pas ajouter de sink log par défaut ici. L'initialisation complète
+    # du logging est effectuée par `setup_logging()` plus bas uniquement
+    # lorsque l'utilisateur a demandé `--verbose` ou `--debug`.
+
+        # NOTE: top-level help handling moved below (after commands registered)
 
         # Créer le parser
         parser = create_parser(version=__version__)
 
         # Enregistrer toutes les commandes
         register_all_commands(parser)
+
+        # Si -h/--help demandé au niveau top-level (ex: `alexa -h`), afficher
+        # l'aide standard fournie par argparse et quitter. Si -h apparaît
+        # après la catégorie, laisser argparse gérer le détail de la catégorie.
+        if ("-h" in sys.argv or "--help" in sys.argv) and len(sys.argv) > 1:
+            flag = "-h" if "-h" in sys.argv else "--help"
+            if sys.argv.index(flag) == 1:
+                # Utiliser le help natif d'argparse pour la sortie concise
+                parser.print_help()
+                return 0
 
         # Parser les arguments
         # Si -h est passé après une action, c'est une erreur car -h n'existe qu'au niveau catégorie
@@ -194,24 +228,16 @@ def main() -> int:
         # Configurer le logging définitif avec les bonnes options
         verbose_mode = getattr(args, "verbose", False)
         debug_mode = getattr(args, "debug", False)
+
         # Only pass --no-color when the attribute is present on args
-        no_color_exists = hasattr(args, "no_color")
         raw_no_color = getattr(args, "no_color", False)
         # If argparse produced a real bool, keep it. If tests used MagicMock, coerce to False.
         no_color_mode = raw_no_color if isinstance(raw_no_color, bool) else False
 
-        # Déterminer le niveau de log (conservé pour compatibilité)
-        if debug_mode:
-            level = "DEBUG"
-        elif verbose_mode:
-            level = "INFO"
-        else:
-            level = "WARNING"
-
-        # Setup logger once, respecting --no-color
-        # Call the module-level helper so tests can patch it
+        # Toujours initialiser Loguru : par défaut (quiet) on affiche uniquement
+        # les erreurs (niveau ERROR). Si --verbose/--debug est fourni, on élève
+        # le niveau en conséquence.
         if isinstance(raw_no_color, bool):
-            # pass only when it's a real bool (i.e. user provided the flag)
             setup_logging(verbose=verbose_mode, debug=debug_mode, no_color=no_color_mode)
         else:
             setup_logging(verbose=verbose_mode, debug=debug_mode)
@@ -257,7 +283,6 @@ def main() -> int:
         if not command_class:
             if not args.category:
                 logger.error("Aucune catégorie spécifiée")
-                print("❌ Erreur: Veuillez spécifier une catégorie (ex: alexa device list)", file=sys.stderr)
             else:
                 logger.error(f"Commande '{args.category}' non trouvée")
                 print(f"❌ Erreur: Catégorie '{args.category}' non reconnue", file=sys.stderr)
@@ -299,11 +324,11 @@ def main() -> int:
                             print(json.dumps(result.get("data"), indent=2, ensure_ascii=False))
                         else:
                             # Display structured data (device list, etc)
-                            data = result.get("data")
+                            data: Any = result.get("data")
                             if isinstance(data, list):
-                                for item in data:
-                                    if isinstance(item, dict):
-                                        print(f"  - {item.get('accountName', 'Unknown')}")
+                                # Cast for the static analyzer now that we checked type
+                                for item in cast(List[Dict[str, Any]], data):
+                                    print(f"  - {item.get('accountName', 'Unknown')}")
                             else:
                                 print(data)
                 else:

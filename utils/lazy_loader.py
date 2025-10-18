@@ -39,31 +39,31 @@ class LazyCommandLoader:
     # Mapping des commandes vers leurs modules
     COMMAND_MAP: Dict[str, str] = {
         # Phase 1 - Sprint 1
-        "auth": "cli.commands.auth.AuthCommand",
-        "device": "cli.commands.device.DeviceCommand",
-        # Phase 2 - Sprint 2
-        "music": "cli.commands.music.MusicCommand",
-        "timers": "cli.commands.timers.TimerCommand",
-        "alarm": "cli.commands.alarm.AlarmCommand",
+    "auth": "cli.auth.AuthCommand",
+    "device": "cli.device.DeviceCommand",
+    # Phase 2 - Sprint 2
+    "music": "cli.music.MusicCommand",
+    "timers": "cli.timers.TimerCommand",
+    "alarm": "cli.alarm.AlarmCommand",
         # Phase 3 - Sprint 3
-        "light": "cli.commands.light.LightCommand",
-        "thermostat": "cli.commands.thermostat.ThermostatCommand",
-        "smarthome": "cli.commands.smarthome.SmartHomeCommand",
+    "light": "cli.light.LightCommand",
+    "thermostat": "cli.thermostat.ThermostatCommand",
+    "smarthome": "cli.smarthome.SmartHomeCommand",
         # Phase 4 - Sprint 4
-        "announcement": "cli.commands.announcement.AnnouncementCommand",
-        "dnd": "cli.commands.dnd.DNDCommand",
+    "announcement": "cli.announcement.AnnouncementCommand",
+    "dnd": "cli.dnd.DNDCommand",
         # Phase 5 - Sprint 5
-        "lists": "cli.commands.list.ListCommand",
-        "reminder": "cli.commands.reminder.ReminderCommand",
-        "activity": "cli.commands.activity.ActivityCommand",
+    "lists": "cli.lists.ListCommand",
+    "reminder": "cli.reminder.ReminderCommand",
+    "activity": "cli.activity.ActivityCommand",
         # Phase 6 - Sprint 6
-        "settings": "cli.commands.settings.SettingsCommand",
-        "audio": "cli.commands.audio.AudioCommand",
+    "settings": "cli.settings.SettingsCommand",
+    "audio": "cli.audio.AudioCommand",
         # Phase 7 - Sprint 7
-        "routine": "cli.commands.routine.RoutineCommand",
-        "multiroom": "cli.commands.multiroom.MultiroomCommand",
+    "routine": "cli.routine.RoutineCommand",
+    "multiroom": "cli.multiroom.MultiroomCommand",
         # Cache management
-        "cache": "cli.commands.cache.CacheCommand",
+    "cache": "cli.cache.CacheCommand",
     }
 
     def __init__(self):

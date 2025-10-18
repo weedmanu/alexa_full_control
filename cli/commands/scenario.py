@@ -13,7 +13,7 @@ import argparse
 import json
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 
 # Constantes de description simplifiées
 DESCRIPTION = "Gérer les scénarios/macros Alexa"
@@ -72,7 +72,7 @@ class ScenarioCommand(BaseCommand):
         """
         # Utiliser le formatter universel
         parser.formatter_class = UniversalHelpFormatter
-        parser.description = SCENARIO_DESCRIPTION
+        parser.description = ""
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -86,7 +86,7 @@ class ScenarioCommand(BaseCommand):
             "list",
             help="Lister scénarios",
             description=LIST_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
 
@@ -95,7 +95,7 @@ class ScenarioCommand(BaseCommand):
             "create",
             help="Créer scénario",
             description=CREATE_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         create_parser.add_argument(
@@ -118,7 +118,7 @@ class ScenarioCommand(BaseCommand):
             "run",
             help="Exécuter scénario",
             description=RUN_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         run_parser.add_argument(
@@ -134,7 +134,7 @@ class ScenarioCommand(BaseCommand):
             "delete",
             help="Supprimer scénario",
             description=DELETE_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         delete_parser.add_argument(
@@ -155,7 +155,7 @@ class ScenarioCommand(BaseCommand):
             "show",
             help="Voir détails",
             description=INFO_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         show_parser.add_argument(
@@ -171,7 +171,7 @@ class ScenarioCommand(BaseCommand):
             "edit",
             help="Éditer scénario",
             description=EDIT_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         edit_parser.add_argument(

@@ -10,7 +10,7 @@ Ce module fournit une interface CLI pour consulter l'historique :
 import argparse
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 
 # Constantes de description simplifiées
 ACTIVITY_DESCRIPTION = "Consulter l'historique d'activité Alexa"
@@ -63,7 +63,7 @@ class ActivityCommand(BaseCommand):
         parser.usage = argparse.SUPPRESS
 
         # Description centralisée
-        parser.description = ACTIVITY_DESCRIPTION
+        parser.description = ""
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -77,7 +77,7 @@ class ActivityCommand(BaseCommand):
             "list",
             help="Lister activités",
             description=LIST_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         list_parser.add_argument(
@@ -100,7 +100,7 @@ class ActivityCommand(BaseCommand):
             "lastdevice",
             help="Dernier appareil utilisé",
             description="Affiche le nom du dernier appareil qui a eu une interaction avec Alexa",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
 
@@ -109,7 +109,7 @@ class ActivityCommand(BaseCommand):
             "lastcommand",
             help="Dernière commande vocale",
             description="Affiche la dernière commande vocale prononcée",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         lastcommand_parser.add_argument(
@@ -124,7 +124,7 @@ class ActivityCommand(BaseCommand):
             "lastresponse",
             help="Dernière réponse d'Alexa",
             description="Affiche la dernière réponse vocale d'Alexa",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         lastresponse_parser.add_argument(
@@ -171,12 +171,12 @@ class ActivityCommand(BaseCommand):
             verbose = getattr(args, "verbose", False)
 
             if device_name:
-                self.info(f"?? R…cup…ration des activit…s pour '{device_name}'...")
+                self.info(f"🔄 Récupération des activités pour '{device_name}'...")
                 serial = self.get_device_serial(device_name)
                 if not serial:
                     return False
             else:
-                self.info("?? R…cup…ration de toutes les activit…s...")
+                self.info("🔄 Récupération de toutes les activités...")
                 serial = None
 
             ctx = self.require_context()
@@ -184,31 +184,31 @@ class ActivityCommand(BaseCommand):
                 self.error("ActivityManager non disponible")
                 return False
 
-            # L'API Alexa ne filtre pas par serial ou type c…t… serveur
-            # On r…cup…re toutes les activit…s puis on filtre localement
+            # L'API Alexa ne filtre pas par serial ou type côté serveur
+            # On récupère toutes les activités puis on filtre localement
             activities = self.call_with_breaker(
                 ctx.activity_mgr.get_activities,
                 limit,
             )
 
             if not activities:
-                self.warning("Aucune activit… trouv…e")
+                self.warning("Aucune activité trouvée")
                 return True
 
-            # Filtrage local par appareil si sp…cifi…
+            # Filtrage local par appareil si spécifié
             if serial:
                 activities = [a for a in activities if a.get("deviceSerialNumber") == serial]
 
-            # Filtrage local par type si sp…cifi…
+            # Filtrage local par type si spécifié
             if activity_type and activity_type != "all":
                 activities = [a for a in activities if a.get("activityType") == activity_type]
 
-            # Afficher les activit…s
+            # Afficher les activités
             self._display_activities(activities, verbose)
             return True
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la r…cup…ration des activit…s")
+            self.logger.exception("Erreur lors de la récupération des activités")
             self.error(f"Erreur: {e}")
             return False
 
@@ -434,16 +434,16 @@ class ActivityCommand(BaseCommand):
                 if device_filter:
                     print(f"\n???  Derni…re r…ponse Alexa sur '{device_filter}' : \"{last_response}\"")
                 else:
-                    print(f'\n???  Derni…re r…ponse Alexa : "{last_response}"')
+                    print(f"\n???  Dernière réponse Alexa : \"{last_response}\"")
                 return True
             else:
                 if device_filter:
-                    self.warning(f"Aucune r…ponse trouv…e pour l'appareil '{device_filter}'")
+                    self.warning(f"Aucune réponse trouvée pour l'appareil '{device_filter}'")
                 else:
-                    self.warning("Aucune r…ponse trouv…e dans l'historique r…cent")
+                    self.warning("Aucune réponse trouvée dans l'historique récent")
                 return True
 
         except Exception as e:
-            self.logger.exception("Erreur lors de la r…cup…ration de la derni…re r…ponse Alexa")
+            self.logger.exception("Erreur lors de la récupération de la dernière réponse Alexa")
             self.error(f"Erreur: {e}")
             return False

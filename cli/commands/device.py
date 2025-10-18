@@ -14,7 +14,7 @@ import json
 from typing import Any, Dict, List
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 from data.device_family_mapping import get_device_display_name
 
 
@@ -43,11 +43,9 @@ class DeviceCommand(BaseCommand):
         # Utiliser le formatter universel pour l'ordre exact demandé
         parser.formatter_class = UniversalHelpFormatter
 
-        # Supprimer la ligne d'usage automatique
-        parser.usage = argparse.SUPPRESS
-
-        # Description simplifiée
-        parser.description = "Gérer les appareils Alexa connectés"
+        # Afficher une ligne usage minimale et supprimer la description/titre
+        parser.usage = "alexa device ACTION"
+        parser.description = ""
 
         subparsers = parser.add_subparsers(
             dest="action",
@@ -60,7 +58,7 @@ class DeviceCommand(BaseCommand):
         list_parser = subparsers.add_parser(
             "list",
             help="Lister tous les appareils Alexa",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
         )
         list_parser.add_argument(
             "--filter",
@@ -78,7 +76,7 @@ class DeviceCommand(BaseCommand):
         info_parser = subparsers.add_parser(
             "info",
             help="Informations détaillées sur un appareil",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
         )
         info_parser.add_argument(
             "-d",
@@ -94,7 +92,7 @@ class DeviceCommand(BaseCommand):
         volume_parser = subparsers.add_parser(
             "volume",
             help="Gérer le volume d'un appareil",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
         )
         volume_subparsers = volume_parser.add_subparsers(
             dest="volume_action",
@@ -143,7 +141,7 @@ class DeviceCommand(BaseCommand):
         send_parser = subparsers.add_parser(
             "send",
             help="Envoyer un message à un appareil",
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
         )
         send_parser.add_argument(
             "-d",

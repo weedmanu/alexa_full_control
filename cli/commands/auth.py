@@ -1,10 +1,10 @@
 """
 Commandes d'authentification pour la CLI Alexa Voice Control.
 
-Ce module g…re toutes les op…rations li…es … l'authentification:
-- create: Cr…er une nouvelle session d'authentification
+Ce module gère toutes les opérations liées à l'authentification:
+- create: Créer une nouvelle session d'authentification
 - delete: Supprimer les cookies d'authentification
-- status: V…rifier l'…tat de connexion
+- status: Vérifier l'état de connexion
 
 Auteur: M@nu
 Date: 7 octobre 2025
@@ -14,13 +14,13 @@ import argparse
 from pathlib import Path
 
 from cli.base_command import BaseCommand
-from cli.command_parser import ActionHelpFormatter, UniversalHelpFormatter
+from cli.command_parser import UniversalHelpFormatter
 from core.state_machine import ConnectionState
 
-# Constantes de description simplifi…es
-AUTH_DESCRIPTION = "G…rer l'authentification Alexa"
-CREATE_HELP = "Cr…er une nouvelle session d'authentification"
-STATUS_HELP = "V…rifier l'…tat de connexion"
+# Constantes de description simplifiées
+AUTH_DESCRIPTION = "Gérer l'authentification Alexa."
+CREATE_HELP = "Créer une nouvelle session d'authentification."
+STATUS_HELP = "Vérifier l'état de connexion."
 
 
 class AuthCommand(BaseCommand):
@@ -68,7 +68,7 @@ class AuthCommand(BaseCommand):
             "create",
             help="Cr…er une nouvelle session d'authentification",
             description=CREATE_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
         create_parser.add_argument(
@@ -94,7 +94,7 @@ class AuthCommand(BaseCommand):
             "status",
             help="V…rifier l'…tat de connexion",
             description=STATUS_HELP,
-            formatter_class=ActionHelpFormatter,
+            formatter_class=UniversalHelpFormatter,
             add_help=False,
         )
 
