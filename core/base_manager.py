@@ -154,6 +154,23 @@ class BaseManager(Generic[T]):
 
         return headers
 
+    def _make_cache_key(self, endpoint: str, params_obj: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Construire une clé de cache sûre à partir d'un endpoint et de ses params.
+
+        La clé est nettoyée pour être sûre pour le système de fichiers.
+        """
+        try:
+            import json as _json, re as _re
+
+            params_str = _json.dumps(params_obj or {}, sort_keys=True, ensure_ascii=False)
+            raw = f"api:{endpoint}:{params_str}"
+            safe = _re.sub(r"[^A-Za-z0-9._-]+", "_", raw)
+            return safe
+        except Exception:
+            # Fallback conservative
+            return endpoint.replace("/", "_").replace("?", "_").replace("=", "_")
+
     def _api_call(
         self, method: str, endpoint: str, use_breaker: bool = True, **kwargs: Any
     ) -> Optional[Dict[str, Any]]:
@@ -190,6 +207,45 @@ class BaseManager(Generic[T]):
         # Définir timeout par défaut si non fourni
         kwargs.setdefault("timeout", 10)
 
+        # --- Caching: uniquement pour les GET retournant JSON ---
+        cache_key = None
+        is_get = method.lower() == "get"
+        if is_get:
+            # key based on endpoint + params (if any)
+            try:
+                params_obj = kwargs.get("params") or {}
+                # deterministic serialization
+                import json as _json
+
+                params_str = _json.dumps(params_obj, sort_keys=True, ensure_ascii=False)
+            except Exception:
+                params_str = ""
+            cache_key = f"api:{endpoint}:{params_str}"
+            # sanitize cache key for filesystem storage (CacheService uses it as filename)
+            try:
+                import re as _re
+
+                safe_cache_key = _re.sub(r"[^A-Za-z0-9._-]+", "_", cache_key)
+            except Exception:
+                safe_cache_key = cache_key.replace("/", "_").replace(":", "_")
+
+            # try to return cached value if present
+                try:
+                    cached = None
+                    if self.cache_service:
+                        cached = self.cache_service.get(safe_cache_key)
+                    if cached is not None:
+                        # debug info
+                        if self._debug_mode:
+                            self.logger.debug(f"✅ CacheService hit: {cache_key} -> {safe_cache_key}")
+                        return cast(Dict[str, Any], cached)
+                    else:
+                        if self._debug_mode:
+                            self.logger.debug(f"📦 CacheService miss: {cache_key} -> {safe_cache_key}")
+                except Exception:
+                    # Cache errors must not break API calls
+                    self.logger.debug("CacheService unavailable or error during get")
+
         try:
             # Appel avec ou sans breaker
             if use_breaker and hasattr(self, "breaker"):
@@ -202,7 +258,35 @@ class BaseManager(Generic[T]):
 
             # Parser JSON (gérer réponse vide)
             if response.content.strip():
-                return cast(Dict[str, Any], response.json())
+                parsed = cast(Dict[str, Any], response.json())
+
+                # Si c'était un GET et que nous avons une clé cache, enregistrer
+                if is_get and cache_key and parsed is not None:
+                    try:
+                        # TTL: essayer d'obtenir depuis le client HTTP (si exposé)
+                        ttl = getattr(self.http_client, "get_cache_ttl", None)
+                        if callable(ttl):
+                            try:
+                                ttl_val = int(ttl(url))
+                            except Exception:
+                                ttl_val = int(self._cache_ttl)
+                        else:
+                            ttl_val = int(self._cache_ttl)
+
+                        if self.cache_service:
+                            # ensure serializable; cache_service.set will handle
+                            # use filesystem-safe key
+                            try:
+                                self.cache_service.set(safe_cache_key, parsed, ttl_seconds=ttl_val)
+                                if self._debug_mode:
+                                    self.logger.debug(f"CacheService saved: {cache_key} -> {safe_cache_key} (ttl={ttl_val}s)")
+                            except Exception:
+                                self.logger.debug("CacheService.save failed")
+                    except Exception:
+                        # Never break the API call on cache error
+                        self.logger.debug("CacheService.save failed")
+
+                return parsed
             else:
                 if self._debug_mode:
                     self.logger.debug(f"Réponse vide pour {method.upper()} {endpoint}")

@@ -194,6 +194,9 @@ markers = [
     "security: Security tests",
     "workflow: Workflow tests",
     "scenario: Real-world scenario tests",
+    "mutation: Tests that mutate remote state (enable with ALEXA_ALLOW_MUTATION=1)",
+    "real: Tests that run against a real device/account (use runner -Real)",
+    "mock: Tests that run with mocks (default)",
 ]
 
 [project]

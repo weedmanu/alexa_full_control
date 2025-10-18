@@ -193,10 +193,11 @@ class DNDCommand(BaseCommand):
     def _check_status(self, args: argparse.Namespace) -> bool:
         """V…rifier le statut DND."""
         try:
-            # R…cup…rer le serial de l'appareil
-            serial = self.get_device_serial(args.device)
-            if not serial:
+            # Résoudre serial et device_type via le nouveau résolveur convivial
+            resolved = self.validate_device_arg(args)
+            if not resolved:
                 return False
+            serial, _device_type = resolved
 
             self.info(f"?? Statut DND de '{args.device}'...")
 
@@ -226,12 +227,11 @@ class DNDCommand(BaseCommand):
     def _enable_dnd(self, args: argparse.Namespace) -> bool:
         """Activer le DND."""
         try:
-            # R…cup…rer le serial de l'appareil
-            serial = self.get_device_serial(args.device)
-            if not serial:
+            # Résoudre serial et device_type via le nouveau résolveur convivial
+            resolved = self.validate_device_arg(args)
+            if not resolved:
                 return False
-
-            device_type = self._get_device_type(args.device)
+            serial, device_type = resolved
             self.info(f"?? Activation DND sur '{args.device}'...")
 
             ctx = self.require_context()
@@ -242,7 +242,19 @@ class DNDCommand(BaseCommand):
             result = self.call_with_breaker(ctx.dnd_mgr.enable_dnd, serial, device_type)
 
             if result:
-                self.success(f"? DND activ… sur '{args.device}'")
+                # post-mutation verification
+                try:
+                    new_status = self.call_with_breaker(ctx.dnd_mgr.get_dnd_status, serial)
+                    if new_status is not None:
+                        if hasattr(args, "json_output") and args.json_output:
+                            print(json.dumps(new_status, indent=2, ensure_ascii=False))
+                        else:
+                            self._display_status(args.device, new_status)
+                except Exception:
+                    # non-fatal
+                    pass
+
+                self.success(f"✅ DND activé sur '{args.device}'")
                 return True
 
             return False
@@ -255,12 +267,11 @@ class DNDCommand(BaseCommand):
     def _disable_dnd(self, args: argparse.Namespace) -> bool:
         """D…sactiver le DND."""
         try:
-            # R…cup…rer le serial de l'appareil
-            serial = self.get_device_serial(args.device)
-            if not serial:
+            # Résoudre serial et device_type via le nouveau résolveur convivial
+            resolved = self.validate_device_arg(args)
+            if not resolved:
                 return False
-
-            device_type = self._get_device_type(args.device)
+            serial, device_type = resolved
             self.info(f"?? D…sactivation DND sur '{args.device}'...")
 
             ctx = self.require_context()
@@ -271,7 +282,18 @@ class DNDCommand(BaseCommand):
             result = self.call_with_breaker(ctx.dnd_mgr.disable_dnd, serial, device_type)
 
             if result:
-                self.success(f"? DND d…sactiv… sur '{args.device}'")
+                # post-mutation verification
+                try:
+                    new_status = self.call_with_breaker(ctx.dnd_mgr.get_dnd_status, serial)
+                    if new_status is not None:
+                        if hasattr(args, "json_output") and args.json_output:
+                            print(json.dumps(new_status, indent=2, ensure_ascii=False))
+                        else:
+                            self._display_status(args.device, new_status)
+                except Exception:
+                    pass
+
+                self.success(f"✅ DND désactivé sur '{args.device}'")
                 return True
 
             return False
@@ -354,33 +376,45 @@ class DNDCommand(BaseCommand):
         except (ValueError, AttributeError):
             return False
 
-    def _display_status(self, device_name: str, status: dict) -> None:
+    def _display_status(self, device_name: str, status: dict[str, object]) -> None:
         """Affiche le statut DND."""
         print(f"\n?? Statut DND de '{device_name}':\n")
+        enabled = False
+        try:
+            enabled_val = status.get("enabled", False)
+            if isinstance(enabled_val, bool):
+                enabled = enabled_val
+            else:
+                # sometimes API returns string
+                enabled = str(enabled_val).lower() in ("true", "1", "yes")
+        except Exception:
+            enabled = False
 
-        enabled = status.get("enabled", False)
-        status_icon = "??" if enabled else "??"
-        status_text = "Activ…" if enabled else "D…sactiv…"
+        status_icon = "🟢" if enabled else "🔴"
+        status_text = "Activé" if enabled else "Désactivé"
 
-        print(f"  {status_icon} …tat: {status_text}")
+        print(f"  {status_icon} État: {status_text}")
 
         # Afficher la programmation si elle existe
-        if "schedule" in status and status["schedule"]:
-            schedule = status["schedule"]
-            start = schedule.get("start", "N/A")
-            end = schedule.get("end", "N/A")
-            days = schedule.get("days", [])
+        sched_obj = status.get("schedule")
+        if isinstance(sched_obj, dict) and sched_obj:
+            schedule = sched_obj
+            start = schedule.get("start", "N/A") if isinstance(schedule.get("start", "N/A"), str) else "N/A"
+            end = schedule.get("end", "N/A") if isinstance(schedule.get("end", "N/A"), str) else "N/A"
+            days_val = schedule.get("days", [])
 
-            print("\n  ?? Programmation:")
+            print("\n  📅 Programmation:")
             print(f"     Horaires: {start} - {end}")
 
-            if days:
-                days_text = ", ".join([self.DAYS.get(d, d) for d in days])
+            if isinstance(days_val, list) and days_val:
+                # ensure items are str
+                days_clean = [d for d in days_val if isinstance(d, str)]
+                days_text = ", ".join([self.DAYS.get(d, d) for d in days_clean])
                 print(f"     Jours: {days_text}")
             else:
                 print("     Jours: Tous les jours")
         else:
-            print("\n  ?? Aucune programmation configur…e")
+            print("\n  ℹ️  Aucune programmation configurée")
 
     def _get_device_type(self, device_name: str) -> str:
         """R…cup…re le type d'appareil (placeholder)."""

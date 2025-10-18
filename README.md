@@ -16,6 +16,22 @@ python -m alexa_cli --help
 
 ---
 
+### ✅ Quality checks and git hooks
+
+To ensure consistent quality, this repository includes scripts to run unit tests and static type checks before pushing.
+
+- Install the git hooks directory (one-time):
+
+  git config core.hooksPath .githooks
+
+- Populate the hooks (PowerShell):
+
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File Dev\scripts\install_git_hooks.ps1
+
+- The pre-push hook runs `Dev/scripts/run_quality_checks.ps1`, which executes `pytest` then `mypy` (using `mypy.ini`). If either step fails the push is blocked.
+
+If you need to bypass the hook for an exceptional case, use `git push --no-verify` but prefer to fix failing checks.
+
 ## 📚 Documentation
 
 **All documentation in `Dev/docs/`:**

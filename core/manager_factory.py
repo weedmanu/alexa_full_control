@@ -166,7 +166,8 @@ class ManagerFactory:
                 ManagerConfig(
                     name="device_settings_manager",
                     manager_class=DeviceSettingsManager,
-                    dependencies={"auth": "auth", "config": "config"},
+                    # DeviceSettingsManager expects first arg name 'auth_or_http'
+                    dependencies={"auth_or_http": "auth", "config": "config"},
                     cache_ttl=300,
                 )
             )

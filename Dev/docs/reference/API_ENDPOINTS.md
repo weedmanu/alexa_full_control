@@ -308,3 +308,20 @@ Configuration recommandée pour éviter les surcharges:
 
 **Mise à jour** : 16 octobre 2025  
 **Validé avec**: Python CLI 2.0.0, Windows/Linux/macOS
+
+---
+
+## 🧪 Échantillons JSON (générés)
+
+Un test Pytest `Dev/pytests/test_api_endpoints_all.py` peut interroger une série d'endpoints
+et sauvegarder les réponses JSON pour inspection manuelle dans `Dev/api_samples/`.
+
+Pour exécuter (nécessite la variable d'environnement `ALEXA_TEST_COOKIES` pointant vers le dossier
+contenant vos cookies `cookie-resultat.json` ou `cookie.txt`):
+
+```powershell
+$env:ALEXA_TEST_COOKIES = 'C:\chemin\vers\cookies'
+; .venv\Scripts\python.exe -m pytest Dev/pytests/test_api_endpoints_all.py -q
+```
+
+Les fichiers seront écrits dans `Dev/api_samples/` avec des noms dérivés du chemin de l'endpoint.

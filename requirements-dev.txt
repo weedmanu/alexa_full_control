@@ -1,0 +1,49 @@
+# Merged development requirements
+# Source: Dev/requirements-dev.txt
+# Generated on 2025-10-18
+
+# Testing
+pytest==8.3.2
+pytest-cov==4.1.0
+
+# Linters / formatters / static analysis
+ruff==0.12.1
+black==24.1.0
+isort==5.12.0
+mypy==1.7.0
+types-requests==2.31.0.10
+pydantic>=2.0
+flake8==6.1.0
+
+# Pre-commit
+pre-commit==3.4.0
+
+# Dependency & security
+pip-tools==7.0.0
+safety==2.2.0
+bandit==1.7.0
+pbr==6.0.0
+
+# Docs and diagrams
+sphinx==6.2.0
+mkdocs==1.5.2
+plantuml==0.2.1
+graphviz==0.20.1
+pydot==1.4.2
+
+# Optional helpers
+pipdeptree==2.3.0
+coverage-badge==1.1.2
+
+# Static analysis / dead code detection
+vulture==2.5
+pylint==3.3.1
+pydocstyle==6.3.0
+
+# Performance / profiling / caching helpers
+pytest-benchmark==3.4.1
+pyinstrument==0.11.0
+memory-profiler==0.61.0
+diskcache==5.6.1
+cachetools==5.3.1
+coverage

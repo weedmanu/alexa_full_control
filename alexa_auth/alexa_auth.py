@@ -201,9 +201,11 @@ class AlexaAuth:
 
                 domain, _, path, secure, expiration, name, value = parts
 
-                # Déterminer le domaine Amazon
-                if "amazon." in domain and not self.amazon_domain:
+                # Déterminer le domaine Amazon (toujours essayer d'extraire
+                # la partie amazon.<tld> depuis le cookie si présente).
+                if "amazon." in domain:
                     # Extraire amazon.XX du domain
+                    # Ex: ".amazon.fr" -> "amazon.fr"
                     self.amazon_domain = domain.lstrip(".")
 
                 # Ajouter le cookie à la session
@@ -268,6 +270,12 @@ class AlexaAuth:
         """
         if not self.cookies_loaded:
             logger.warning("GET sans cookies chargés")
+
+        # Ajouter le CSRF token si disponible (le script shell le met
+        # même pour les GET sur /api/devices). Ceci permet d'imiter
+        # le comportement du script `alexa_remote_control.sh`.
+        if self.csrf:
+            kwargs.setdefault("headers", {})["csrf"] = self.csrf
 
         params: Dict[str, Any] = dict(kwargs)
         params.setdefault("timeout", 15)

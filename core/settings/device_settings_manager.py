@@ -3,6 +3,7 @@ Gestionnaire des paramètres d'appareils - Thread-safe.
 """
 
 import json
+import re
 import threading
 from typing import Any, Dict, Optional, cast
 
@@ -182,7 +183,7 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
             logger.error(f"Erreur langue: {e}")
             return False
 
-    def set_volume(self, device_serial: str, device_type: str, volume: int) -> bool:
+    def set_volume(self, device_serial: str, device_type: str, volume: int, *, confirm: bool = False, timeout: int = 15) -> bool:
         """Définit le volume (0-100)."""
         if not self.state_machine.can_execute_commands:
             return False
@@ -229,7 +230,49 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
                 self._api_service.post(r"/api/behaviors/preview", json=payload, headers=headers, timeout=10)
             else:
                 self._api_call("post", r"/api/behaviors/preview", json=payload, headers=headers, timeout=10)
+
+            # Invalidate cached allDeviceVolumes so subsequent reads are fresh
+            try:
+                cache_key = self._make_cache_key(r"/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes", {})
+                if self.cache_service:
+                    self.cache_service.invalidate(cache_key)
+                    if getattr(self, '_debug_mode', False):
+                        logger.debug(f"Invalidated cache: {cache_key}")
+            except Exception:
+                logger.debug("Impossible d'invalider le cache volumes")
+
             logger.success(f"Volume: {volume}%")
+
+            if confirm:
+                # poll up to timeout seconds for confirmation via direct auth.get (bypass cache)
+                try:
+                    import time
+
+                    deadline = time.time() + int(timeout)
+                    url = f"https://alexa.{self.auth.amazon_domain}/api/devices/deviceType/dsn/audio/v1/allDeviceVolumes"
+                    while time.time() < deadline:
+                        try:
+                            resp = self.auth.get(url, timeout=10)
+                            js = resp.json() if resp is not None else None
+                            observed = None
+                            if isinstance(js, dict):
+                                for v in js.get('volumes', []):
+                                    dsn = v.get('dsn')
+                                    if dsn is None:
+                                        continue
+                                    if str(dsn).strip().lower() == str(device_serial).strip().lower():
+                                        observed = v.get('speakerVolume')
+                                        break
+                            if observed is not None and int(observed) == int(volume):
+                                return True
+                        except Exception:
+                            pass
+                        time.sleep(1)
+                    # timed out
+                    return False
+                except Exception:
+                    return False
+
             return True
         except Exception as e:
             logger.error(f"Erreur volume: {e}")
@@ -254,9 +297,37 @@ class DeviceSettingsManager(BaseManager[Dict[str, Any]]):
 
             # Chercher le volume pour le device serial spécifié
             if data and "volumes" in data:
+                # Helper to normalize ids: remove ALL whitespace/newlines and lowercase
+                def _normalize_id(value: Any) -> str:
+                    if value is None:
+                        return ""
+                    try:
+                        s = str(value)
+                    except Exception:
+                        s = ""
+                    # remove any whitespace (spaces, tabs, newlines) inside the id
+                    return re.sub(r"\s+", "", s).lower()
+
+                target = _normalize_id(device_serial)
+                # Candidate volume keys in order of preference
+                vol_keys = ("speakerVolume", "volume", "alertVolume")
                 for volume_info in data["volumes"]:
-                    if volume_info.get("dsn") == device_serial:
-                        return cast(int | None, volume_info.get("speakerVolume"))
+                    dsn = volume_info.get("dsn")
+                    if dsn is None:
+                        continue
+                    if _normalize_id(dsn) == target:
+                        # return first available candidate
+                        for k in vol_keys:
+                            if k in volume_info and volume_info.get(k) is not None:
+                                try:
+                                    return cast(int | None, int(volume_info.get(k)))
+                                except Exception:
+                                    # fallback: return raw value
+                                    return cast(int | None, volume_info.get(k))
+                        # If none of the known keys present, attempt to find any numeric field
+                        for k, v in volume_info.items():
+                            if isinstance(v, int):
+                                return cast(int | None, v)
 
             return None
 

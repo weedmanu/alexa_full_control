@@ -10,7 +10,7 @@ Usage:
     alexa <CATEGORY> <ACTION> [OPTIONS]
 
 Exemples:
-    alexa auth create
+    
     alexa device list
     alexa music play -d "Salon Echo" -s "Soleil bleu"
     alexa timer create -d "Cuisine" --duration 10 --label "Pâtes"
@@ -263,15 +263,16 @@ def main() -> int:
                 print(f"❌ Erreur: Catégorie '{args.category}' non reconnue", file=sys.stderr)
             return 1
 
-        # Phase 1: Initialize DI Container if auth is available
-        if context.auth:
-            try:
-                from core.di_container import setup_di_container
+        # Phase 1: Initialize DI Container (always) so managers are registered
+        try:
+            from core.di_container import setup_di_container
 
-                setup_di_container(context.auth, context.config, context.state_machine)
-                logger.debug("✅ DI Container initialisé avec context.auth")
-            except Exception as e:
-                logger.warning(f"⚠️  Erreur initialisation DI Container: {e}")
+            # Pass context.auth (may be None) — setup_di_container will register singletons
+            # context.auth may be None at runtime; setup_di_container handles it.
+            setup_di_container(context.auth, context.config, context.state_machine)  # type: ignore[arg-type]
+            logger.debug("✅ DI Container initialisé")
+        except Exception as e:
+            logger.warning(f"⚠️  Erreur initialisation DI Container: {e}")
 
         # Créer / exécuter la commande
         adapter = get_command_adapter()

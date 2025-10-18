@@ -273,3 +273,28 @@ C:\Users\weedm\AppData\Roaming\Python\Python313\Scripts\pytest.exe Dev/pytests/ 
 ```powershell
 Remove-Item -Recurse -Force __pycache__,*.pyc,.mypy_cache,.ruff_cache -ErrorAction SilentlyContinue
 ```
+
+---
+
+## 🗂️ Générateur de rapports d'API (`Dev/utils/generate_api_reports.py`)
+
+Ce petit utilitaire lit les échantillons JSON dans `Dev/api_samples/` et produit :
+
+- `Dev/docs/api_samples_summary.md` — résumé et exemples
+- `Dev/qualitytests/reports/notifications_stats.json` — statistiques agrégées
+- `Dev/qualitytests/reports/devices_map.json` — liste des devices (JSON)
+
+Usage depuis le dépôt (PowerShell) :
+
+```powershell
+# exécution avec chemins par défaut
+python Dev\utils\generate_api_reports.py
+
+# override des chemins
+python Dev\api_reports\generate_api_reports.py --samples-dir Dev\api_samples --out-docs Dev\docs --out-analysis Dev\qualitytests\reports
+```
+
+Notes:
+
+- Le générateur est non-destructif et lit uniquement les fichiers JSON. Il peut être invoqué depuis la CI ou localement.
+- Si vous préférez CSV pour l'analyse, la version actuelle génère JSON (pour conserver la structure complète des objets).

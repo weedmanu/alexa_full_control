@@ -512,13 +512,52 @@ class BaseCommand(ABC):
 
         try:
             devices = self.device_mgr.get_devices()
+
+            # Normalize input for case-insensitive matching
+            query = (device_name or "").strip()
+            q_lower = query.lower()
+
+            # Fast path: exact match on accountName or serial
             for device in devices:
-                if device.get("accountName") == device_name:
-                    serial = device.get("serialNumber")
-                    device_type = device.get("deviceType")
-                    # Only return if both serial and device_type are strings
+                acc = device.get("accountName") or ""
+                serial = device.get("serialNumber") or ""
+                device_type = device.get("deviceType") or ""
+                if acc == query or serial == query or acc == query.strip() or serial == query.strip():
                     if isinstance(serial, str) and isinstance(device_type, str):
                         return (serial, device_type)
+
+            # Collect partial matches (accountName, friendly name, serial substring)
+            candidates: list[tuple[str, str, str]] = []  # (serial, device_type, display_name)
+            for device in devices:
+                acc = (device.get("accountName") or "")
+                friendly = (device.get("deviceTypeFriendlyName") or "")
+                serial = (device.get("serialNumber") or "")
+                device_type = (device.get("deviceType") or "")
+
+                # case-insensitive contains
+                if q_lower and (q_lower in acc.lower() or q_lower in friendly.lower() or q_lower in serial.lower()):
+                    if isinstance(serial, str) and isinstance(device_type, str):
+                        display = acc or friendly or serial
+                        candidates.append((serial, device_type, display))
+
+            # If exactly one candidate, return it
+            if len(candidates) == 1:
+                return (candidates[0][0], candidates[0][1])
+
+            # If multiple candidates, show suggestions to the user
+            if len(candidates) > 1:
+                examples = ", ".join(f"{c[2]} (serial: {c[0]})" for c in candidates[:8])
+                self.error(f"Plusieurs appareils correspondent à '{device_name}': {examples}. Précisez le nom ou utilisez le serial.")
+                return None
+
+            # Fallback: if the query looks like a serial, try to match by serial ignoring case
+            if q_lower:
+                for device in devices:
+                    serial = (device.get("serialNumber") or "")
+                    device_type = (device.get("deviceType") or "")
+                    if serial and serial.lower() == q_lower:
+                        if isinstance(serial, str) and isinstance(device_type, str):
+                            return (serial, device_type)
 
             self.error(f"Appareil '{device_name}' non trouvé")
             return None
